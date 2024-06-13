@@ -13,8 +13,8 @@ const AreaFour: React.FC = () => {
     <div className="flex items-center mt-4 ml-4 mr-4 -mb-1.5">
       {/* Brightness Controls */}
       <div className="flex items-center space-x-2.5">
-        <BrightnessButton direction="up" onClick={() => console.log('Brightness Up')} />
-        <BrightnessButton direction="down" onClick={() => console.log('Brightness Down')} />
+        <BrightnessButton direction="up" />
+        <BrightnessButton direction="down" />
       </div>
 
       {/* Select Field Selector and Field Scroll Controls */}
@@ -27,13 +27,12 @@ const AreaFour: React.FC = () => {
       </div>
 
       {/* Scroll Indicator and Display Fields */}
-      <div className="flex items-end ml-14 space-x-2 justify-end">
+      <div className="flex items-end ml-10 space-x-2 justify-end">
         {/* Align ScrollIndicator with the bottom of the lower DisplayField box */}
         <div className="flex flex-col justify-end space-y-1">
-          <div className="flex items-center"> {/* Ensures the indicator aligns with the box */}
+          <div className="flex mb-0.5 items-center"> {/* Ensures the indicator aligns with the box */}
             <ScrollIndicator indicate={false} />
           </div>
-          <div className="flex items-center"></div> {/* Empty placeholder to balance the height */}
         </div>
         <div className="flex flex-col">
           <DisplayField label="IA DISPLAY" />

@@ -2,8 +2,10 @@
 'use client'
 
 import React, { useState } from 'react';
-import SquareButton from '../base_button/SquareButton';
+import DAButton from './DAButton';
 import SquareSelectorButton from '../base_button/SquareSelectorButton';
+
+import FrequencyConfig from 'example-config.json';
 
 const GroundGroundPage: React.FC = () => {
   const [currentPage, setCurrentPage] = useState(1); // State to track current page
@@ -13,19 +15,26 @@ const GroundGroundPage: React.FC = () => {
   };
 
   const renderButtons = () => {
-    const buttonsPerPage = 18; // 3 columns * 6 rows = 18 buttons per page
-    const buttons = [];
-
-    for (let i = 0; i < buttonsPerPage; i++) {
+    const buttons: React.JSX.Element[] = [];
+  
+    // Select the correct array from GGLines based on currentPage
+    const currentLines = FrequencyConfig.GGLines[currentPage - 1];
+  
+    // Map over the currentLines array to get the buttons
+    if(currentLines)
+    currentLines.map((line, index) => {
       buttons.push(
-        <SquareButton
-          key={i}
-          topLine={`BTN ${i + 1}`}
-          onClick={() => console.log(`Button ${i + 1} clicked on page ${currentPage}`)}
+        <DAButton
+          key={index}
+          topLine={line.name_top}
+          bottomLine={line.name_bottom}
+          onClick={() => console.log(`Ground Ground Button ${line.name_top} clicked`)}
+          latching={false}
+          dialLine={line.dial_line}
         />
       );
-    }
-
+    });
+  
     return buttons;
   };
 
@@ -34,7 +43,7 @@ const GroundGroundPage: React.FC = () => {
       {/* // extras left out flex flex-col items-center justify-center */}
       {/* Render 3 pages of buttons */}
       <div className="grid grid-cols-3 mb-2.5 gap-2.5">
-        {renderButtons().slice((currentPage - 1) * 18, currentPage * 18)}
+        {renderButtons()}
       </div>
 
       {/* Navigation buttons */}

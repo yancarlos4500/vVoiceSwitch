@@ -1,9 +1,10 @@
 import Link from "next/link";
-import AirGroundPage from "./components/air_ground/AirGroundPage";
-import GroundGroundPage from "./components/ground_ground/GroundGroundPage";
-import AreaThree from "./components/special_func/AreaThree";
-import StatusArea from "./components/status/StatusArea";
-import AreaFour from "./components/special_func/AreaFour";
+import Image from "next/image";
+import AirGroundPage from "./_components/air_ground/AirGroundPage";
+import GroundGroundPage from "./_components/ground_ground/GroundGroundPage";
+import AreaThree from "./_components/special_func/AreaThree";
+import StatusArea from "./_components/status/StatusArea";
+import AreaFour from "./_components/special_func/AreaFour";
 
 export default function HomePage() {
   return (

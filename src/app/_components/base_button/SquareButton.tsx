@@ -48,7 +48,7 @@ const SquareButton: React.FC<SquareButtonProps> = ({ topLine, bottomLine, onClic
         </span>
       </div>
       {isIndicatorVisible && (
-        <div className="absolute bottom-1 left-1 right-1 h-2 bg-customGreen"></div>
+        <div className="absolute bottom-1 left-1 right-1 h-3 bg-customGreen"></div>
       )}
     </button>
   );

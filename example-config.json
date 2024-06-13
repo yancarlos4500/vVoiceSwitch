@@ -1,0 +1,327 @@
+{
+  "AGLines": [
+    [
+      {
+        "name": "LC 1",
+        "frequency": "132.35"
+      },
+      {
+        "name": "LC 2",
+        "frequency": "124.3"
+      },
+      {
+        "name": "LC 3",
+        "frequency": "128.75"
+      },
+      {
+        "name": "LC 4",
+        "frequency": "135.3"
+      },
+      {
+        "name": "GUARD V",
+        "frequency": "121.5"
+      },
+      {
+        "name": "GUARD U",
+        "frequency": "243.0"
+      }
+    ],
+    [
+      {
+        "name": "LC 5",
+        "frequency": "126.5"
+      },
+      {
+        "name": "LC 6",
+        "frequency": "127.5"
+      },
+      {
+        "name": "LC 7",
+        "frequency": "134.25"
+      },
+      {
+        "name": "LC 8",
+        "frequency": "126.75"
+      },
+      {
+        "name": "LC 9",
+        "frequency": "133.0"
+      },
+      {
+        "name": "LC 10",
+        "frequency": "127.0"
+      }
+    ],
+    [
+      {
+        "name": "LC 11",
+        "frequency": "132.5",
+        "out_of_service": true
+      },
+      {
+        "name": "LC 12",
+        "frequency": "124.75",
+        "out_of_service": true
+      },
+      {
+        "name": "LC 13",
+        "frequency": "128.0",
+        "out_of_service": true
+      },
+      {
+        "name": "LC 14",
+        "frequency": "135.25",
+        "out_of_service": true
+      },
+      {
+        "name": "LC 15",
+        "frequency": "126.75",
+        "out_of_service": true
+      },
+      {
+        "name": "LC 16",
+        "frequency": "133.25",
+        "out_of_service": true
+      }
+    ]
+  ],
+  "GGLines": [
+    [
+      {
+        "name_top": "LOC",
+        "dial_line": 6403,
+        "monitor": false,
+        "override": false
+      },
+      {
+        "name_top": "LOC",
+        "name_bottom": "MON",
+        "dial_line": 6403,
+        "monitor": true
+      },
+      {
+        "name_top": "LOC",
+        "name_bottom": "OVR",
+        "dial_line": 6403,
+        "override": true
+      },
+      {
+        "name_top": "CIC",
+        "dial_line": 500
+      },
+      {
+        "name_top": "DEP",
+        "dial_line": 501
+      },
+      {
+        "name_top": "DEP",
+        "name_bottom": "OVR",
+        "dial_line": 501,
+        "override": true
+      },
+      {
+        "name_top": "DATA",
+        "dial_line": 502
+      },
+      {
+        "name_top": "DATA",
+        "name_bottom": "OVR",
+        "dial_line": 502,
+        "override": true
+      },
+      {
+        "name_top": "DATA",
+        "name_bottom": "MON",
+        "dial_line": 502,
+        "monitor": true
+      },
+      {
+        "name_top": "ZOA",
+        "dial_line": 18001,
+        "external": true
+      },
+      {
+        "name_top": "ZLA",
+        "dial_line": 19001,
+        "external": true
+      },
+      {
+        "name_top": "ZAB",
+        "dial_line": 17001,
+        "external": true
+      },
+      {
+        "name_top": "SMO",
+        "name_bottom": "TWR",
+        "dial_line": 15001,
+        "external": true
+      },
+      {
+        "name_top": "LAX",
+        "name_bottom": "LC-N",
+        "dial_line": 16001,
+        "external": true
+      },
+      {
+        "name_top": "LAX",
+        "name_bottom": "LC-S",
+        "dial_line": 16002,
+        "external": true
+      },
+      {
+        "name_top": "HOOK",
+        "name_bottom": "FLASH",
+        "dial_line": 5026
+      },
+      {
+        "name_top": "IA",
+        "name_bottom": "OVR",
+        "dial_line": 5028
+      },
+      {
+        "name_top": ""
+      }
+    ],
+    [
+      {
+        "name_top": "A/G",
+        "name_bottom": "HSLS",
+        "dial_line": 5023
+      },
+      {
+        "name_top": "HSLS",
+        "dial_line": 5011
+      },
+      {
+        "name_top": "G/G",
+        "name_bottom": "HSLS",
+        "dial_line": 5015
+      },
+      {
+        "name_top": "XFER",
+        "dial_line": 5030
+      },
+      {
+        "name_top": "HOLD",
+        "dial_line": 5007
+      },
+      {
+        "name_top": "CONF",
+        "dial_line": 5003
+      },
+      {
+        "name_top": "FREQ",
+        "name_bottom": "A/D",
+        "dial_line": 7
+      },
+      {
+        "name_top": "DOOR",
+        "name_bottom": "#1",
+        "dial_line": 5200
+      },
+      {
+        "name_top": "BRF",
+        "dial_line": 5067
+      },
+      {
+        "name_top": "ERAD",
+        "dial_line": 5100
+      },
+      {
+        "name_top": "IA",
+        "name_bottom": "OVR",
+        "dial_line": 5066,
+        "override": true
+      },
+      {
+        "name_top": "IA",
+        "name_bottom": "HOLD",
+        "dial_line": 5065
+      },
+      {
+        "name_top": "DSBL",
+        "name_bottom": "AGLS",
+        "dial_line": 5012
+      },
+      {
+        "name_top": "CHIME",
+        "name_bottom": "TYPE",
+        "dial_line": 5017
+      },
+      {
+        "name_top": "CHIME",
+        "name_bottom": "OFF",
+        "dial_line": 5020
+      },
+      {
+        "name_top": "RING",
+        "name_bottom": "MAN",
+        "dial_line": 5006
+      },
+      {
+        "name_top": "SVR",
+        "dial_line": 5028
+      },
+      {
+        "name_top": "PRIV",
+        "dial_line": 5024
+      }
+    ],
+    [
+      {
+        "name_top": ""
+      },
+      {
+        "name_top": ""
+      },
+      {
+        "name_top": ""
+      },
+      {
+        "name_top": ""
+      },
+      {
+        "name_top": ""
+      },
+      {
+        "name_top": ""
+      },
+      {
+        "name_top": ""
+      },
+      {
+        "name_top": ""
+      },
+      {
+        "name_top": ""
+      },
+      {
+        "name_top": ""
+      },
+      {
+        "name_top": ""
+      },
+      {
+        "name_top": ""
+      },
+      {
+        "name_top": ""
+      },
+      {
+        "name_top": ""
+      },
+      {
+        "name_top": ""
+      },
+      {
+        "name_top": ""
+      },
+      {
+        "name_top": ""
+      },
+      {
+        "name_top": ""
+      }
+    ]
+  ]
+}
