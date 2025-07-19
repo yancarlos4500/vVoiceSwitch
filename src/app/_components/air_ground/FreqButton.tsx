@@ -10,11 +10,14 @@ type FrequencyButtonProps = {
   name: string;
   prefMode: boolean; // True for headset (initial), False for loudspeaker
   currMode: boolean; // True for headset, False for loudspeaker
+  squareBtn?: boolean;
   style?: CSSProperties;
   onClick?: () => void;
 };
 
-const FrequencyButton: React.FC<FrequencyButtonProps> = ({ frequency, prefMode: initialprefMode, currMode: initialCurrentMode, name, style, onClick }) => {
+const FrequencyButton: React.FC<FrequencyButtonProps> = ({ frequency, prefMode: initialprefMode,
+                                                             currMode: initialCurrentMode, name, squareBtn = false,
+                                                             style, onClick }) => {
   const [isActive, setIsActive] = useState(false);
   const [isprefMode, setIsprefMode] = useState(initialprefMode); // Initialize prefMode to the provided prop
   const [isCurrentMode, setIsCurrentMode] = useState(initialCurrentMode); // Initialize current mode to false
@@ -32,7 +35,7 @@ const FrequencyButton: React.FC<FrequencyButtonProps> = ({ frequency, prefMode: 
 
   return (
     <button
-      className={`relative w-28 h-16 bg-customBlue text-customYellow border-t-2 border-l-2 border-b-2 border-r-2 flex items-start justify-center text-center group ${isActive ? 'border-customBlue' : ''}`}
+      className={`relative w-${squareBtn ? '16' : '28'} h-16 bg-customBlue text-customYellow border-t-2 border-l-2 border-b-2 border-r-2 flex items-start justify-center text-center group ${isActive ? 'border-customBlue' : ''}`}
       style={{
         borderTopColor: '#ffffff',
         borderLeftColor: '#ffffff',
@@ -67,7 +70,7 @@ const FrequencyButton: React.FC<FrequencyButtonProps> = ({ frequency, prefMode: 
       )}
 
       {/* Frequency Text */}
-      <span className="absolute bottom-0 text-2xl font-bold">{frequency}</span>
+      <span className={`absolute bottom-0 text-${ squareBtn ? "l" : "2xl"} font-bold`}>{frequency}</span>
 
       {/* Hover Info Box
       <div className="absolute bottom-full top-0 -left-1/2 transform -translate-x-1/2 mb-2 w-max max-w-xs p-2 mr-4 self-center text-center text-customYellow bg-customGray border border-customBlue rounded-md shadow-lg opacity-0 transition-opacity duration-300 group-hover:opacity-100 pointer-events-none">
