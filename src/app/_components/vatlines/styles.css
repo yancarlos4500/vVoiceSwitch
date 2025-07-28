@@ -1,0 +1,105 @@
+.app {
+    width: 800px !important;
+    height: 600px !important;
+}
+
+#audio {
+    display: none;
+}
+
+.rdvs-panel {
+    font-family: 'Courier New', Courier, monospace;
+    color: white;
+    width: 800px !important;
+    height: 600px !important;
+    font-weight: bold;
+}
+
+.rdvs-red {
+    border: 1px solid red;
+}
+
+.rdvs-green {
+    border: 1px solid green;
+}
+
+.rdvs-active-call {
+    background-color: cyan;
+}
+
+.static-active .indicator {
+    background-color: cyan;
+}
+
+.rdvs-held {
+    animation: 3s wink-background linear infinite;
+}
+@keyframes wink-background {
+    0% {
+        background-color: unset;
+    }
+    50% {
+        background-color: cyan;
+    }
+    100% {
+        background-color: unset;
+    }
+}
+
+.vscs-panel {
+    font-family: 'Courier New', Courier, monospace;
+    color: black;
+    width: 800px !important;
+    height: 600px !important;
+}
+
+.vscs-button {
+    background-color: white;
+    text-align: left;
+}
+
+.vscs-button > div {
+    padding-left: 10px;
+}
+
+.vscs-static-button {
+    text-align: left;
+    padding: 0 10px;
+}
+
+.vscs-active-call {
+    color: transparent;
+    user-select: none;
+}
+
+.vscs-active-bg {
+    background-color: seagreen;
+}
+
+.vscs-incoming-bg {
+    background-color: chocolate;
+}
+
+.vscs-held {
+    animation: 3s wink-text linear infinite;
+    background-color: yellow;
+}
+@keyframes wink-text {
+    0% {
+        color: unset;
+    }
+    50% {
+        color: transparent;
+    }
+    100% {
+        color: unset;
+    }
+}
+
+.modal {
+    margin: 0 0;
+    width: 800px;
+    height: 600px;
+    z-index: 99;
+    background-color: #666666;
+}
