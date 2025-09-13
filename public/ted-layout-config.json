@@ -1,0 +1,424 @@
+{
+  "metadata": {
+    "configVersion": "1.0",
+    "description": "TED Layout and Color Configuration",
+    "author": "User",
+    "lastModified": "2025-07-28"
+  },
+  "colorScheme": {
+    "screenColors": {
+      "text": "white",
+      "background": "black"
+    },
+    "buttonColorSets": {
+      "normal": {
+        "text": "blue",
+        "background": "blue",
+        "description": "Normal buttons (Intercom Ringback, Override, Control Monitor, Normal Radio, Sidetone, Preempt)"
+      },
+      "significantDA": {
+        "text": "black",
+        "background": "black",
+        "description": "Significant DA buttons (Interphone)"
+      },
+      "utility": {
+        "text": "cyan",
+        "background": "black",
+        "description": "Utility buttons (Special Function, Dial Digit)"
+      },
+      "significantRadio": {
+        "text": "red",
+        "background": "black",
+        "description": "Significant Radio buttons (Emergency Radio)"
+      }
+    }
+  },
+  "buttonLayout": {
+    "matrixSize": {
+      "rows": 8,
+      "columns": 10,
+      "totalCells": 80,
+      "description": "TED interior matrix - 8x10 = 80 cells per page"
+    },
+    "pages": [
+      {
+        "pageNumber": 1,
+        "name": "Primary Operations",
+        "buttons": [
+          {
+            "position": 0,
+            "buttonConfig": {
+              "name": "S-BAY",
+              "target": "LC1",
+              "type": "RING",
+              "tedType": "normal-radio",
+              "fillDesign": "solid",
+              "dialCode": "5001",
+              "borderColor": "blue"
+            }
+          },
+          {
+            "position": 1,
+            "buttonConfig": {
+              "name": "APCH",
+              "target": "LC2",
+              "type": "normal-radio",
+              "tedType": "emergency-radio",
+              "fillDesign": "solid",
+              "dialCode": "5002",
+              "borderColor": "blue"
+            }
+          },
+          {
+            "position": 2,
+            "buttonConfig": {
+              "name": "SUU-D",
+              "target": "TWR_CONTROL",
+              "type": "SHOUT",
+              "tedType": "normal-radio",
+              "fillDesign": "solid",
+              "dialCode": "101",
+              "borderColor": "blue"
+            }
+          },
+          {
+            "position": 3,
+            "buttonConfig": {
+              "name": "11-14",
+              "target": "GND_CONTROL",
+              "type": "SHOUT",
+              "tedType": "normal-radio",
+              "fillDesign": "solid",
+              "dialCode": "102",
+              "borderColor": "blue"
+            }
+          },
+          {
+            "position": 4,
+            "buttonConfig": {
+              "name": "40-42",
+              "target": "EMERGENCY",
+              "type": "normal-radio",
+              "tedType": "emergency-radio",
+              "fillDesign": "solid",
+              "dialCode": "911",
+              "borderColor": "blue"
+            }
+          },
+          {
+            "position": 5,
+            "buttonConfig": {
+              "variant": "radio",
+              "radioSize": "short",
+              "label": "135.1",
+              "checked": true,
+              "bgColor": "black",
+              "textColor": "cyan",
+              "labelColor": "green",
+              "indicatorColor": "red",
+              "indicatorBg": "black"
+            }
+          },
+          {
+            "position": 7,
+            "buttonConfig": {
+              "variant": "radio",
+              "radioSize": "short",
+              "label": "127.975",
+              "checked": true,
+              "bgColor": "black",
+              "textColor": "cyan",
+              "labelColor": "green",
+              "indicatorColor": "red",
+              "indicatorBg": "black"
+            }
+          },
+          {
+            "position": 10,
+            "buttonConfig": {
+              "name": "E/M/V",
+              "target": "APP_CONTROL",
+              "type": "SHOUT",
+              "tedType": "normal-radio",
+              "fillDesign": "dash-oes",
+              "dialCode": "103",
+              "borderColor": "blue"
+            }
+          },
+          {
+            "position": 11,
+            "buttonConfig": {
+              "name": "NTWRS",
+              "target": "DEP_CONTROL",
+              "type": "SHOUT",
+              "tedType": "normal-radio",
+              "fillDesign": "thick-slash",
+              "dialCode": "104",
+              "borderColor": "blue"
+            }
+          },
+          {
+            "position": 12,
+            "buttonConfig": {
+              "name": "OAK-1",
+              "target": "MAINTENANCE",
+              "type": "RING",
+              "tedType": "special-function",
+              "fillDesign": "solid",
+              "dialCode": "300",
+              "borderColor": "blue"
+            }
+          },
+          {
+            "position": 13,
+            "buttonConfig": {
+              "name": "OAK O1",
+              "target": "MAINTENANCE",
+              "type": "RING",
+              "tedType": "special-function",
+              "fillDesign": "solid",
+              "dialCode": "300",
+              "borderColor": "blue"
+            }
+          },
+          {
+            "position": 14,
+            "buttonConfig": {
+              "name": "29-32",
+              "target": "MAINTENANCE",
+              "type": "RING",
+              "tedType": "special-function",
+              "fillDesign": "solid",
+              "dialCode": "300",
+              "borderColor": "blue"
+            }
+          },
+          {
+            "position": 20,
+            "buttonConfig": {
+              "name": "AFSS",
+              "target": "MAINTENANCE",
+              "type": "RING",
+              "tedType": "special-function",
+              "fillDesign": "solid",
+              "dialCode": "300",
+              "borderColor": "blue"
+            }
+          },
+          {
+            "position": 21,
+            "buttonConfig": {
+              "name": "SFO",
+              "target": "MAINTENANCE",
+              "type": "RING",
+              "tedType": "special-function",
+              "fillDesign": "solid",
+              "dialCode": "300",
+              "borderColor": "blue"
+            }
+          },
+          {
+            "position": 22,
+            "buttonConfig": {
+              "name": "OAK-2",
+              "target": "MAINTENANCE",
+              "type": "RING",
+              "tedType": "special-function",
+              "fillDesign": "solid",
+              "dialCode": "300",
+              "borderColor": "blue"
+            }
+          },
+          {
+            "position": 23,
+            "buttonConfig": {
+              "name": "OAK O2",
+              "target": "MAINTENANCE",
+              "type": "RING",
+              "tedType": "special-function",
+              "fillDesign": "solid",
+              "dialCode": "300",
+              "borderColor": "blue"
+            }
+          },
+          {
+            "position": 24,
+            "buttonConfig": {
+              "name": "D34-44",
+              "target": "MAINTENANCE",
+              "type": "RING",
+              "tedType": "special-function",
+              "fillDesign": "solid",
+              "dialCode": "300",
+              "borderColor": "blue"
+            }
+          },
+          {
+            "position": 30,
+            "buttonConfig": {
+              "name": "SJC",
+              "target": "MAINTENANCE",
+              "type": "RING",
+              "tedType": "special-function",
+              "fillDesign": "solid",
+              "dialCode": "300",
+              "borderColor": "blue"
+            }
+          },
+          {
+            "position": 31,
+            "buttonConfig": {
+              "name": "SFO-O5",
+              "target": "MAINTENANCE",
+              "type": "RING",
+              "tedType": "special-function",
+              "fillDesign": "solid",
+              "dialCode": "300",
+              "borderColor": "blue"
+            }
+          },
+          {
+            "position": 32,
+            "buttonConfig": {
+              "name": "SQL",
+              "target": "MAINTENANCE",
+              "type": "RING",
+              "tedType": "special-function",
+              "fillDesign": "solid",
+              "dialCode": "300",
+              "borderColor": "blue"
+            }
+          },
+          {
+            "position": 33,
+            "buttonConfig": {
+              "name": "HWD",
+              "target": "MAINTENANCE",
+              "type": "RING",
+              "tedType": "special-function",
+              "fillDesign": "solid",
+              "dialCode": "300",
+              "borderColor": "blue"
+            }
+          },
+          {
+            "position": 34,
+            "buttonConfig": {
+              "name": "D-35",
+              "target": "MAINTENANCE",
+              "type": "RING",
+              "tedType": "special-function",
+              "fillDesign": "solid",
+              "dialCode": "300",
+              "borderColor": "blue"
+            }
+          },
+          {
+            "position": 40,
+            "buttonConfig": {
+              "name": "H-RIC",
+              "target": "TWR_CONTROL",
+              "type": "OVERRIDE",
+              "tedType": "normal",
+              "fillDesign": "solid",
+              "dialCode": "101",
+              "borderColor": "brown"
+            }
+          }
+        ]
+      }
+    ],
+    "tedButtonTypes": {
+      "normal-radio": {
+        "colorSet": "normal",
+        "description": "Standard radio communications"
+      },
+      "emergency-radio": {
+        "colorSet": "significantRadio",
+        "description": "Emergency radio communications"
+      },
+      "interphone": {
+        "colorSet": "significantDA",
+        "description": "Interphone system"
+      },
+      "special-function": {
+        "colorSet": "utility",
+        "description": "Special function buttons"
+      }
+    }
+  },
+  "availableFillDesigns": {
+    "description": "12 TED fill designs as defined in TI 6650.58",
+    "designs": {
+      "solid": {
+        "name": "SOLid",
+        "description": "Solid fill"
+      },
+      "dash-oes": {
+        "name": "DASHoes",
+        "description": "Diagonal slash pattern ///"
+      },
+      "empty": {
+        "name": "EMPty",
+        "description": "No fill - transparent"
+      },
+      "interleaved": {
+        "name": "INTerleaved",
+        "description": "Checkerboard pattern"
+      },
+      "thick-slash": {
+        "name": "THICK_///",
+        "description": "Thick diagonal lines"
+      },
+      "thick-backslash": {
+        "name": "THICK_\\\\\\",
+        "description": "Thick back diagonal lines"
+      },
+      "thick-hatch": {
+        "name": "THICK_HATch",
+        "description": "Thick crosshatch pattern"
+      },
+      "thick-i-hatch": {
+        "name": "THICK_IHATch",
+        "description": "Thick inverted crosshatch"
+      },
+      "close-dots": {
+        "name": "CLOSe_dots",
+        "description": "Close dot pattern"
+      },
+      "dots": {
+        "name": "DOTs",
+        "description": "Regular dot pattern"
+      },
+      "hatch": {
+        "name": "HATch",
+        "description": "Regular crosshatch pattern"
+      },
+      "i-hatch": {
+        "name": "IHATch",
+        "description": "Inverted crosshatch pattern"
+      }
+    }
+  },
+  "availableColors": {
+    "description": "16-color TED palette as defined in TI 6650.58",
+    "colors": {
+      "black": "#000000",
+      "blue": "#0000FF",
+      "green": "#008000",
+      "cyan": "#00FFFF",
+      "red": "#FF0000",
+      "magenta": "#FF00FF",
+      "brown": "#A52A2A",
+      "light-gray": "#D3D3D3",
+      "white": "#FFFFFF",
+      "light-blue": "#ADD8E6",
+      "light-green": "#90EE90",
+      "light-cyan": "#E0FFFF",
+      "light-red": "#FFB6C1",
+      "light-magenta": "#FFBBFF",
+      "yellow": "#FFFF00",
+      "dark-gray": "#A9A9A9"
+    }
+  }
+}

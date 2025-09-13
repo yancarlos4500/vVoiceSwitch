@@ -2,13 +2,41 @@ import Image from 'next/image';
 import { useEffect, useState, useMemo } from 'react';
 import {
   ActiveLandline,
-  Button,
-  ButtonLayout,
   ButtonType,
   CALL_TYPE,
   Configuration,
   IncomingLandline,
 } from './App';
+// Type-safe discriminated union for button config
+type StandardButton = {
+  variant?: 'button';
+  shortName?: string;
+  longName?: string;
+  name?: string;
+  target: string;
+  type: ButtonType;
+  fillDesign?: string;
+  textColor?: string;
+  frequency?: string;
+};
+type RadioButton = {
+  variant: 'radio';
+  radioSize: 'short' | 'long';
+  label: string;
+  value?: string;
+  checked?: boolean;
+  onChange?: (value: string) => void;
+  bgColor?: string;
+  textColor?: string;
+  labelColor?: string;
+  indicatorColor?: string;
+  indicatorBg?: string;
+};
+type ButtonConfig = StandardButton | RadioButton;
+interface ButtonLayout {
+  order: number;
+  button: ButtonConfig;
+}
 import Controls from './controls';
 import RdvsButtonComponent from './rdvs_button';
 
@@ -39,18 +67,27 @@ interface RdvsProps {
 }
 
 export default function RdvsComponent(props: RdvsProps) {
+  // TED (Telephone Exchange Device) Layout Implementation
+  // Based on TI 6650.58 specifications:
+  // - 10x10 matrix of cells total
+  // - Header row (top): brightness controls, activity display, page controls, IA/OVR/CA
+  // - 8x10 interior matrix (80 cells): grouped into 4 quadrants of 5x4 cells each
+  // - Footer row (bottom): overflow DA buttons, radio status, HS/LS indicators
+  // - Optional page tabs below footer
+  
   const [page, setCurrentPage] = useState(1);
   
   const btns: ButtonLayout[] = useMemo(() => {
     return props.config?.layouts || [];
   }, [props.config?.layouts]);
   
+  // TED has 80 interior cells (8 rows x 10 columns) per page
   const maxPageMath = Math.ceil(
-    (btns.length > 0 ? btns.sort((a, b) => b.order - a.order)[0]?.order || 0 : 0) / 60,
+    (btns.length > 0 ? btns.sort((a, b) => b.order - a.order)[0]?.order || 0 : 0) / 80,
   );
   const maxPage = isNaN(maxPageMath) ? 1 : maxPageMath < 1 ? 1 : maxPageMath;
   // const [func, setFunc] = useState('PRI');
-  const [buttons, setButtons] = useState<Button[]>(btns.map((l) => l.button));
+  const [buttons, setButtons] = useState<ButtonConfig[]>(btns.map((l) => l.button));
   const testFunc = (a: string, b: ButtonType) => {
     props.buttonPress(a, CALL_TYPE[b]);
   };
@@ -72,17 +109,20 @@ export default function RdvsComponent(props: RdvsProps) {
   };
 
   useEffect(() => {
+    // TED layout: 80 interior cells arranged in 8 rows x 10 columns
     const pageButtons = btns.filter(
-      (l) => l.order < page * 60 && l.order >= (page - 1) * 60,
+      (l) => l.order < page * 80 && l.order >= (page - 1) * 80,
     );
 
-    const slice: Button[] = [];
-    for (let i = (page - 1) * 60; i < page * 60; i++) {
+    const slice: ButtonConfig[] = [];
+    for (let i = (page - 1) * 80; i < page * 80; i++) {
       const found = pageButtons.find((l) => Number(l.order) === i);
       if (found) {
         slice.push(found.button);
       } else {
+        // Default to a standard button
         slice.push({
+          variant: 'button',
           shortName: '',
           longName: '',
           target: '',
@@ -151,14 +191,16 @@ export default function RdvsComponent(props: RdvsProps) {
       <div className="rdvs-panel select-none p-2 text-[#008000] bg-black">
         <div className="top-row grid grid-cols-4 mb-2">
           <div className="brightness flex">
-            <div className="bright w-16 text-center" onClick={playError}>
-              Bright &#9711;
+            <div className="bright w-16 text-center flex flex-col items-center" onClick={playError}>
+              <span>Bright</span>
+              <span className="inline-block w-8 h-8 rounded-full border-2 border-white bg-black mt-0.5"></span>
             </div>
-            <div id="brightness" className="px-2 pt-6">
-              50%
+            <div id="brightness" className="px-2 pt-8">
+              100%
             </div>
-            <div className="dim w-8 text-center" onClick={playError}>
-              Dim &#9711;
+            <div className="dim w-8 text-center flex flex-col items-center" onClick={playError}>
+              <span>Dim</span>
+              <span className="inline-block w-8 h-8 rounded-full border-2 border-white bg-black mt-0.5"></span>
             </div>
           </div>
           <div className="top-page grid grid-rows-3 leading-none">
@@ -169,20 +211,20 @@ export default function RdvsComponent(props: RdvsProps) {
                 onClick={() => setPage(page - 1)}
               >
                 <Image
-                  src="/rdvs/prev-arrow.png"
-                  width={50}
-                  height={50}
+                  src="/rdvs/prev-arrow.svg"
+                  width={75}
+                  height={75}
                   alt="Prev"
-                  style={{ width: '50px', height: 'auto' }}
+                  style={{ width: '75px', height: '40px' }}
                 />
               </div>
               <div className="cursor-pointer" onClick={() => setPage(page + 1)}>
                 <Image
-                  src="/rdvs/next-arrow.png"
-                  width={50}
-                  height={50}
+                  src="/rdvs/next-arrow.svg"
+                  width={75}
+                  height={75}
                   alt="Next"
-                  style={{ width: '50px', height: 'auto' }}
+                  style={{ width: '75px', height: '40px' }}
                 />
               </div>
             </div>
@@ -205,97 +247,80 @@ export default function RdvsComponent(props: RdvsProps) {
           </div>
           <div className="messages border"></div>
         </div>
-        <div className="grid grid-cols-10 gap-y-2">
-          {buttons.map((btn, i) => (
-            <RdvsButtonComponent
-              key={i}
-              config={btn}
-              typeString={btn.type.toString().substring(0, 1)}
-              callback={testFunc}
-              className={`${btn.target} ${btn.type} rdvs-button ${
-                btn.type === ButtonType.OVERRIDE ? 'rdvs-red' : 'rdvs-green'
-              } ${
-                btn.type !== ButtonType.NONE
-                  ? 'cursor-pointer'
-                  : 'cursor-not-allowed invisible'
-              }`}
-            />
-          ))}
-          {page === 1 ? (
-            <>
-              <RdvsButtonComponent
-                config={{
-                  shortName: '',
-                  longName: 'HOLD',
-                  target: '',
-                  type: ButtonType.NONE,
-                }}
-                typeString=""
-                className={`rdvs-static-btn bg-zinc-500`}
-                callback={props.holdBtn}
-              />
-              <RdvsButtonComponent
-                config={{
-                  shortName: '',
-                  longName: 'RLS',
-                  target: '',
-                  type: ButtonType.NONE,
-                }}
-                typeString=""
-                className={`rdvs-static-btn bg-zinc-500`}
-                callback={props.releaseBtn}
-              />
-              <RdvsButtonComponent
-                config={{
-                  shortName: '',
-                  longName: 'HL',
-                  target: '',
-                  type: ButtonType.NONE,
-                }}
-                typeString=""
-                className={`rdvs-static-btn bg-zinc-500 ${
-                  props.ggRoute ? 'static-active' : ''
-                }`}
-                callback={props.toggleGg}
-              />
-              <RdvsButtonComponent
-                config={{
-                  shortName: '',
-                  longName: 'OHL',
-                  target: '',
-                  type: ButtonType.NONE,
-                }}
-                typeString=""
-                className={`rdvs-static-btn bg-zinc-500 ${
-                  props.overrideRoute ? 'static-active' : ''
-                }`}
-                callback={props.toggleOver}
-              />
-              <RdvsButtonComponent
-                config={{
-                  shortName: '',
-                  longName: 'RHL',
-                  target: '',
-                  type: ButtonType.NONE,
-                }}
-                typeString=""
-                className={`rdvs-static-btn bg-zinc-500 cursor-not-allowed`}
-                callback={() => {}}
-              />
-            </>
-          ) : (
-            <div className="h-14"></div>
-          )}
+        
+        {/* TED Interior Matrix - 8 rows x 10 columns = 80 cells, with radio buttons in top right quadrant */}
+        <div className="grid grid-cols-10 gap-x-2 gap-y-2">
+          {(() => {
+            const radioBtns = buttons.filter(btn => btn.variant === 'radio');
+            const nonRadioBtns = buttons.filter(btn => btn.variant !== 'radio');
+            // Place radio buttons in the top row, rightmost columns
+            const cells = [];
+            for (let i = 0; i < 80; i++) {
+              // Top row: i = 0..9
+              if (i >= 7 && i < 7 + radioBtns.length) {
+                // Place radio buttons in columns 7, 8, 9
+                const radioBtn = radioBtns[i - 7] as RadioButton;
+                cells.push(
+                  <div key={`radio-cell-${i}`} className="mr-2">
+                    <RdvsButtonComponent
+                      variant="radio"
+                      label={radioBtn.label}
+                      value={radioBtn.value || ''}
+                      checked={radioBtn.checked || false}
+                      onChange={radioBtn.onChange || (() => {})}
+                      radioSize={radioBtn.radioSize}
+                      bgColor={radioBtn.bgColor}
+                      textColor={radioBtn.textColor}
+                      labelColor={radioBtn.labelColor}
+                      indicatorColor={radioBtn.indicatorColor}
+                      indicatorBg={radioBtn.indicatorBg}
+                    />
+                  </div>
+                );
+              } else {
+                // Fill with non-radio buttons in order
+                const stdBtn = nonRadioBtns.shift() as StandardButton | undefined;
+                if (stdBtn && typeof stdBtn.type !== 'undefined') {
+                  cells.push(
+                    <RdvsButtonComponent
+                      key={`std-${i}`}
+                      config={stdBtn}
+                      typeString={stdBtn.type ? stdBtn.type.toString().substring(0, 1) : ''}
+                      callback={testFunc}
+                      className={`${stdBtn.target} ${stdBtn.type} rdvs-button ${
+                        stdBtn.type === ButtonType.OVERRIDE ? 'rdvs-red' : 'rdvs-green'
+                      } ${
+                        stdBtn.type !== ButtonType.NONE
+                          ? 'cursor-pointer'
+                          : 'cursor-not-allowed invisible'
+                      }`}
+                    />
+                  );
+                } else {
+                  // Render an empty cell if no button is available
+                  cells.push(<div key={`empty-${i}`}></div>);
+                }
+              }
+            }
+            return cells;
+          })()}
         </div>
         <div className="bottom-bar flex tracking-tight">
           <div className="pages flex mt-auto px-2">
             {[...Array(maxPage)].map((_x, i) => (
               <div
                 key={i}
-                className="border rounded-t-xl px-1 mx-1 cursor-pointer"
+                className="cursor-pointer flex items-center justify-center"
                 onClick={() => setPage(i + 1)}
+                style={{ width: 80, height: 36 }}
               >
-                Page {i + 1}
+                <Image
+                  src={`/rdvs/Page${i + 1}.svg`}
+                  alt={`Page ${i + 1}`}
+                  width={80}
+                  height={36}
+                  style={{ width: '80px', height: '36px' }}
+                />
               </div>
             ))}
           </div>

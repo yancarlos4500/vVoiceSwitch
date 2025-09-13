@@ -8,9 +8,11 @@ type SquareButtonProps = {
   onClick?: () => void; // Optional onClick handler
   showIndicator?: boolean; // Optional prop to show indicator
   style?: React.CSSProperties;
+  controlledIndicator?: boolean; // if provided, indicator visibility is controlled by this prop
+  indicatorClassName?: string; // panel-style indicator class: e.g., "flutter active", "steady green"
 };
 
-const SquareButton: React.FC<SquareButtonProps> = ({ topLine, bottomLine, onClick, showIndicator = false, style }) => {
+const SquareButton: React.FC<SquareButtonProps> = ({ topLine, bottomLine, onClick, showIndicator = false, style, controlledIndicator, indicatorClassName }) => {
   const [isActive, setIsActive] = useState(false);
   const [isIndicatorVisible, setIndicatorVisible] = useState(showIndicator);
 
@@ -24,6 +26,7 @@ const SquareButton: React.FC<SquareButtonProps> = ({ topLine, bottomLine, onClic
     if (onClick) onClick();
   };
 
+  const indicatorVisible = controlledIndicator ?? isIndicatorVisible;
   return (
     <button
       className={`relative w-16 h-16 bg-customBlue text-customYellow 
@@ -49,7 +52,13 @@ const SquareButton: React.FC<SquareButtonProps> = ({ topLine, bottomLine, onClic
           </span>
         )}
       </div>
-      {isIndicatorVisible && (
+      {indicatorClassName ? (
+        <div className={indicatorClassName}>
+          <div className="ct">
+            <div className="inner"></div>
+          </div>
+        </div>
+      ) : indicatorVisible && (
         <div className="absolute bottom-0 left-0 right-0 h-3 bg-customGreen"></div>
       )}
     </button>

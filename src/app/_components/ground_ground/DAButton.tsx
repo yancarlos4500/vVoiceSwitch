@@ -11,9 +11,11 @@ type DAButtonProps = {
   showIndicator?: boolean; // Optional prop to show indicator
   dialLine?: number; // Dial line number. Could be phone number, IA code, or Function Code
   style?: React.CSSProperties;
+  controlledIndicator?: boolean;
+  indicatorClassName?: string;
 };
 
-const DAButton: React.FC<DAButtonProps> = ({ topLine, middleLine, bottomLine, onClick, showIndicator = false, style, latching, dialLine }) => {
+const DAButton: React.FC<DAButtonProps> = ({ topLine, middleLine, bottomLine, onClick, showIndicator = false, style, latching, dialLine, controlledIndicator, indicatorClassName }) => {
   const [isActive, setIsActive] = useState(false);
   const [isIndicatorVisible, setIndicatorVisible] = useState(showIndicator);
 
@@ -29,6 +31,7 @@ const DAButton: React.FC<DAButtonProps> = ({ topLine, middleLine, bottomLine, on
     if (!latching) setIndicatorVisible(false);
   };
 
+  const indicatorVisible = controlledIndicator ?? isIndicatorVisible;
   return (
     <button
       className={`relative w-16 h-16 bg-customBlue text-customYellow 
@@ -66,7 +69,13 @@ const DAButton: React.FC<DAButtonProps> = ({ topLine, middleLine, bottomLine, on
           )}
         </div>
       )}
-      {isIndicatorVisible && (
+      {indicatorClassName ? (
+        <div className={indicatorClassName}>
+          <div className="ct">
+            <div className="inner"></div>
+          </div>
+        </div>
+      ) : indicatorVisible && (
         <div className="absolute bottom-0 left-0 right-0 h-3 bg-customGreen"></div>
       )}
     </button>

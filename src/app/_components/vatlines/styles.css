@@ -1,3 +1,20 @@
+/* Font Declaration */
+@font-face {
+    font-family: 'TerminusTTF-Bold';
+    src: url('/TerminusTTF-Bold.ttf') format('truetype');
+    font-weight: bold;
+    font-style: normal;
+}
+
+@tailwind utilities;
+
+@layer utilities {
+
+  .clipped-boxSmall {
+    clip-path: polygon(14px 0,calc(100% - 14px) 0,100% 14px,100% 100%,0 100%,0 14px);
+  }
+}
+
 .app {
     width: 800px !important;
     height: 600px !important;
@@ -7,25 +24,413 @@
     display: none;
 }
 
+/* TED Configurable Color Scheme Variables */
+:root {
+    /* Base color palette */
+    --black: #000000;
+    --blue: #0000FF;
+    --green: #008000;
+    --cyan: #00FFFF;
+    --red: #FF0000;
+    --magenta: #FF00FF;
+    --brown: #A52A2A;
+    --light-gray: #D3D3D3;
+    --white: #FFFFFF;
+    --light-blue: #ADD8E6;
+    --light-green: #90EE90;
+    --light-cyan: #E0FFFF;
+    --light-red: #FFB6C1;
+    --light-magenta: #FFBBFF;
+    --yellow: #FFFF00;
+    --dark-gray: #A9A9A9;
+    
+    /* TED Color Scheme - User Configurable via JSON */
+    /* These will be overridden by TEDConfigurationLoader based on JSON configuration */
+    --ted-screen-text: var(--green);
+    --ted-screen-background: var(--black);
+    
+    /* Color Set #1 - Normal buttons (Intercom Ringback, Override, Control Monitor, Normal Radio, Sidetone, Preempt) */
+    --ted-color1-text: var(--green);
+    --ted-color1-background: var(--black);
+    
+    /* Color Set #2 - Significant DA buttons (Interphone) */
+    --ted-color2-text: var(--yellow);
+    --ted-color2-background: var(--black);
+    
+    /* Color Set #3 - Utility buttons (Special Function, Dial Digit) */
+    --ted-color3-text: var(--cyan);
+    --ted-color3-background: var(--black);
+    
+    /* Color Set #4 - Significant Radio buttons (Emergency Radio) */
+    --ted-color4-text: var(--red);
+    --ted-color4-background: var(--black);
+}
+
+/* TED Fill Designs - 12 defined patterns from TI 6650.58 */
+.fill-solid {
+    /* SOLid - Solid fill */
+    background: currentColor;
+}
+
+.fill-dash-oes {
+    /* DASHoes - Diagonal slash pattern */
+    background-image: repeating-linear-gradient(
+        45deg,
+        transparent,
+        transparent 2px,
+        currentColor 2px,
+        currentColor 4px
+    );
+}
+
+.fill-empty {
+    /* EMPty - No fill */
+    background: transparent;
+}
+
+.fill-interleaved {
+    /* INTerleaved - Checkerboard pattern */
+    background-image: 
+        linear-gradient(45deg, currentColor 25%, transparent 25%),
+        linear-gradient(-45deg, currentColor 25%, transparent 25%),
+        linear-gradient(45deg, transparent 75%, currentColor 75%),
+        linear-gradient(-45deg, transparent 75%, currentColor 75%);
+    background-size: 8px 8px;
+    background-position: 0 0, 0 4px, 4px -4px, -4px 0px;
+}
+
+.fill-thick-slash {
+    /* THICK_/// - Thick diagonal lines */
+    background-image: repeating-linear-gradient(
+        45deg,
+        transparent,
+        transparent 3px,
+        currentColor 3px,
+        currentColor 6px
+    );
+}
+
+.fill-thick-backslash {
+    /* THICK_\\\ - Thick back diagonal lines */
+    background-image: repeating-linear-gradient(
+        -45deg,
+        transparent,
+        transparent 3px,
+        currentColor 3px,
+        currentColor 6px
+    );
+}
+
+.fill-thick-hatch {
+    /* THICK_HATch - Thick crosshatch pattern */
+    background-image: 
+        repeating-linear-gradient(45deg, transparent, transparent 3px, currentColor 3px, currentColor 6px),
+        repeating-linear-gradient(-45deg, transparent, transparent 3px, currentColor 3px, currentColor 6px);
+}
+
+.fill-thick-i-hatch {
+    /* THICK_IHATch - Thick inverted crosshatch */
+    background-image: 
+        repeating-linear-gradient(45deg, currentColor, currentColor 3px, transparent 3px, transparent 6px),
+        repeating-linear-gradient(-45deg, currentColor, currentColor 3px, transparent 3px, transparent 6px);
+}
+
+.fill-close-dots {
+    /* CLOSe_dots - Close dot pattern */
+    background-image: radial-gradient(circle, currentColor 1px, transparent 1px);
+    background-size: 4px 4px;
+}
+
+.fill-dots {
+    /* DOTs - Regular dot pattern */
+    background-image: radial-gradient(circle, currentColor 1px, transparent 1px);
+    background-size: 8px 8px;
+}
+
+.fill-hatch {
+    /* HATch - Regular crosshatch pattern */
+    background-image: 
+        repeating-linear-gradient(45deg, transparent, transparent 2px, currentColor 2px, currentColor 3px),
+        repeating-linear-gradient(-45deg, transparent, transparent 2px, currentColor 2px, currentColor 3px);
+}
+
+.fill-i-hatch {
+    /* IHATch - Inverted crosshatch pattern */
+    background-image: 
+        repeating-linear-gradient(45deg, currentColor, currentColor 2px, transparent 2px, transparent 3px),
+        repeating-linear-gradient(-45deg, currentColor, currentColor 2px, transparent 2px, transparent 3px);
+}
+
+/* TED Button Type Assignments - JSON Configurable */
+.ted-intercom-ringback {
+    color: var(--ted-color1-text);
+    background-color: var(--ted-color1-background);
+}
+
+.ted-intercom-override {
+    color: var(--ted-color1-text);
+    background-color: var(--ted-color1-background);
+}
+
+.ted-control-monitor {
+    color: var(--ted-color1-text);
+    background-color: var(--ted-color1-background);
+}
+
+.ted-special-function {
+    color: var(--ted-color3-text);
+    background-color: var(--ted-color3-background);
+}
+
+.ted-interphone {
+    color: var(--ted-color2-text);
+    background-color: var(--ted-color2-background);
+}
+
+.ted-dial-digit {
+    color: var(--ted-color3-text);
+    background-color: var(--ted-color3-background);
+}
+
+.ted-normal-radio {
+    color: var(--ted-color1-text);
+    background-color: var(--ted-color1-background);
+}
+
+.ted-emergency-radio {
+    color: var(--ted-color4-text);
+    background-color: var(--ted-color4-background);
+}
+
+.ted-sidetone-radio {
+    color: var(--ted-color1-text);
+    background-color: var(--ted-color1-background);
+}
+
+.ted-preempt-radio {
+    color: var(--ted-color1-text);
+    background-color: var(--ted-color1-background);
+}
+
+/* Status Indicator Colors (not configurable) */
+.ted-status-indicator {
+    /* Status indicators are black when off, cyan when on */
+    background-color: var(--black);
+    border: 1px solid var(--cyan);
+}
+
+.ted-status-indicator.active {
+    background-color: var(--cyan);
+}
+
+/* Modifier indicators */
+.ted-modifier {
+    color: var(--white);
+}
+
+.ted-modifier.active {
+    color: var(--black);
+}
+
+/* Radio channel specific indicators */
+.ted-radio-hs-ls.off {
+    background-color: var(--black);
+    border: 1px solid var(--light-green);
+}
+
+.ted-radio-hs-ls.on {
+    background-color: var(--light-green);
+    border: 1px solid var(--light-green);
+}
+
+.ted-radio-main-standby.main {
+    background-color: var(--light-green);
+    color: var(--black);
+}
+
+.ted-radio-main-standby.standby {
+    background-color: var(--white);
+    color: var(--black);
+}
+
 .rdvs-panel {
-    font-family: 'Courier New', Courier, monospace;
-    color: white;
+    font-family: 'TerminusTTF-Bold', 'Courier New', Courier, monospace;
     width: 800px !important;
     height: 600px !important;
     font-weight: bold;
+    /* Use configurable TED color scheme */
+    color: var(--ted-screen-text);
+    background-color: var(--ted-screen-background);
 }
 
 .rdvs-red {
-    border: 1px solid red;
+    border: 1px solid var(--red);
+    /* Override buttons use significant DA colors */
+    color: var(--ted-color2-text);
+    background-color: var(--ted-color2-background);
 }
 
 .rdvs-green {
-    border: 1px solid green;
+    border: 1px solid var(--green);
+    /* Normal buttons use color set #1 */
+    color: var(--ted-color1-text);
+    background-color: var(--ted-color1-background);
 }
 
 .rdvs-active-call {
-    background-color: cyan;
+    background-color: var(--cyan) !important;
+    color: var(--black) !important;
 }
+
+/* TED Button Type Classes for RDVS */
+.rdvs-button.intercom-ringback {
+    color: var(--ted-color1-text);
+    background-color: var(--ted-color1-background);
+}
+
+.rdvs-button.intercom-override {
+    color: var(--ted-color1-text);
+    background-color: var(--ted-color1-background);
+}
+
+.rdvs-button.control-monitor {
+    color: var(--ted-color1-text);
+    background-color: var(--ted-color1-background);
+}
+
+.rdvs-button.special-function {
+    color: var(--ted-color3-text);
+    background-color: var(--ted-color3-background);
+}
+
+.rdvs-button.interphone {
+    color: var(--ted-color2-text);
+    background-color: var(--ted-color2-background);
+}
+
+.rdvs-button.dial-digit {
+    color: var(--ted-color3-text);
+    background-color: var(--ted-color3-background);
+}
+
+.rdvs-button.normal-radio {
+    color: var(--ted-color1-text);
+    background-color: var(--ted-color1-background);
+}
+
+.rdvs-button.emergency-radio {
+    color: var(--ted-color4-text);
+    background-color: var(--ted-color4-background);
+}
+
+.rdvs-button.sidetone-radio {
+    color: var(--ted-color1-text);
+    background-color: var(--ted-color1-background);
+}
+
+.rdvs-button.preempt-radio {
+    color: var(--ted-color1-text);
+    background-color: var(--ted-color1-background);
+}
+
+/* TED Status Indicators */
+.ted-header-indicator {
+    width: 16px;
+    height: 16px;
+    border: 1px solid var(--cyan);
+    background-color: var(--black);
+    display: inline-block;
+}
+
+.ted-header-indicator.active {
+    background-color: var(--cyan);
+}
+
+.ted-header-indicator.override {
+    background-color: var(--red);
+}
+
+/* TED Radio Status Indicators */
+.ted-radio-hs {
+    background-color: var(--black);
+    border: 1px solid var(--light-green);
+}
+
+.ted-radio-hs.active {
+    background-color: var(--light-green);
+}
+
+.ted-radio-ls {
+    background-color: var(--black);
+    border: 1px solid var(--light-green);
+}
+
+.ted-radio-ls.active {
+    background-color: var(--light-green);
+}
+
+/* Utility classes for theme switching */
+.ted-theme-dark {
+    --ted-screen-text: var(--green);
+    --ted-screen-background: var(--black);
+    --ted-color1-text: var(--green);
+    --ted-color1-background: var(--black);
+    --ted-color2-text: var(--yellow);
+    --ted-color2-background: var(--black);
+    --ted-color3-text: var(--cyan);
+    --ted-color3-background: var(--black);
+    --ted-color4-text: var(--red);
+    --ted-color4-background: var(--black);
+}
+
+.ted-theme-bright {
+    --ted-screen-text: var(--black);
+    --ted-screen-background: var(--light-gray);
+    --ted-color1-text: var(--black);
+    --ted-color1-background: var(--light-gray);
+    --ted-color2-text: var(--brown);
+    --ted-color2-background: var(--light-gray);
+    --ted-color3-text: var(--blue);
+    --ted-color3-background: var(--light-gray);
+    --ted-color4-text: var(--red);
+    --ted-color4-background: var(--light-gray);
+}
+
+/* Custom Button Color Classes - Use any palette color */
+.btn-color-black { color: var(--black) !important; }
+.btn-color-blue { color: var(--blue) !important; }
+.btn-color-green { color: var(--green) !important; }
+.btn-color-cyan { color: var(--cyan) !important; }
+.btn-color-red { color: var(--red) !important; }
+.btn-color-magenta { color: var(--magenta) !important; }
+.btn-color-brown { color: var(--brown) !important; }
+.btn-color-light-gray { color: var(--light-gray) !important; }
+.btn-color-white { color: var(--white) !important; }
+.btn-color-light-blue { color: var(--light-blue) !important; }
+.btn-color-light-green { color: var(--light-green) !important; }
+.btn-color-light-cyan { color: var(--light-cyan) !important; }
+.btn-color-light-red { color: var(--light-red) !important; }
+.btn-color-light-magenta { color: var(--light-magenta) !important; }
+.btn-color-yellow { color: var(--yellow) !important; }
+.btn-color-dark-gray { color: var(--dark-gray) !important; }
+
+/* Custom Button Background Classes */
+.btn-bg-black { background-color: var(--black) !important; }
+.btn-bg-blue { background-color: var(--blue) !important; }
+.btn-bg-green { background-color: var(--green) !important; }
+.btn-bg-cyan { background-color: var(--cyan) !important; }
+.btn-bg-red { background-color: var(--red) !important; }
+.btn-bg-magenta { background-color: var(--magenta) !important; }
+.btn-bg-brown { background-color: var(--brown) !important; }
+.btn-bg-light-gray { background-color: var(--light-gray) !important; }
+.btn-bg-white { background-color: var(--white) !important; }
+.btn-bg-light-blue { background-color: var(--light-blue) !important; }
+.btn-bg-light-green { background-color: var(--light-green) !important; }
+.btn-bg-light-cyan { background-color: var(--light-cyan) !important; }
+.btn-bg-light-red { background-color: var(--light-red) !important; }
+.btn-bg-light-magenta { background-color: var(--light-magenta) !important; }
+.btn-bg-yellow { background-color: var(--yellow) !important; }
+.btn-bg-dark-gray { background-color: var(--dark-gray) !important; }
 
 .static-active .indicator {
     background-color: cyan;

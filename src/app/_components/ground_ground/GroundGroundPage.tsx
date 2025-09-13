@@ -1,13 +1,14 @@
 // components/GroundGroundPage.tsx
 "use client";
 
-import React, { useState } from "react";
+import React, { useMemo, useState } from "react";
 import DAButton from "./DAButton";
 import SquareSelectorButton from "../base_button/SquareSelectorButton";
 import OOSButton from "../base_button/OOSButton";
 
 import FrequencyConfig from "example-config.json";
 import Keypad from "./Keypad";
+import { useCoreStore } from "~/model";
 
 const GroundGroundPage: React.FC = () => {
   const [currentPage, setCurrentPage] = useState(1); // State to track current page
@@ -16,54 +17,99 @@ const GroundGroundPage: React.FC = () => {
     setCurrentPage(page);
   };
 
+  const sendMsg = useCoreStore((s: any) => s.sendMessageNow);
+  const ptt = useCoreStore((s: any) => s.ptt);
+  const gg_status = useCoreStore((s: any) => s.gg_status);
+  const ITEM_PER_PAGE = 18;
+  const currentSlice = useMemo(() => {
+    const start = (currentPage - 1) * ITEM_PER_PAGE;
+    const end = start + ITEM_PER_PAGE;
+    const slice = gg_status.slice(start, end);
+    if (slice.length < ITEM_PER_PAGE) {
+      return [...slice, ...new Array(ITEM_PER_PAGE - slice.length).fill(undefined)];
+    }
+    return slice;
+  }, [gg_status, currentPage]);
+
   const renderButtons = () => {
     const buttons: React.JSX.Element[] = [];
-
-    // Select the correct array from GGLines based on currentPage
-    const currentLines = FrequencyConfig.GGLines[currentPage - 1];
-
-    // Map over the currentLines array to get the buttons
-    if (currentLines)
-      currentLines.map((line, index) => {
-        // Check if this is an out of service entry
-        if (line == null) {
-          buttons.push(<OOSButton key={index} />);
+    currentSlice.map((data: any, index: number) => {
+      if (!data) {
+        buttons.push(<OOSButton key={index} />);
+        return;
+      }
+      const call_type = data?.call?.substring(0, 2);
+      const call_id = data.call?.substring(3);
+  let onClick: (() => void) | undefined = undefined;
+  let indicator = false;
+  let indicatorClassName = '';
+      // Simplified mapping; follow panel.tsx behavior
+      if (call_type === 'SO') {
+        if (data.status === 'idle') {
+          onClick = () => sendMsg({ type: 'call', cmd1: call_id, dbl1: 2 });
+        } else if (data.status === 'online' || data.status === 'chime') {
+          indicatorClassName = 'flutter receive flashing';
+          onClick = () => sendMsg({ type: 'call', cmd1: call_id, dbl1: 2 });
+        } else if (data.status === 'ok') {
+          indicator = ptt;
+          indicatorClassName = indicator ? 'flutter active' : 'steady green';
+          onClick = () => sendMsg({ type: 'stop', cmd1: call_id, dbl1: 1 });
+        } else if (data.status === 'overridden' || data.status === 'terminate') {
+          onClick = undefined;
         } else {
-          buttons.push(
-            <DAButton
-              key={index}
-              topLine={line.name_top}
-              middleLine={"name_middle" in line ? line.name_middle : undefined}
-              bottomLine={"name_bottom" in line ? line.name_bottom : undefined}
-              onClick={() =>
-                console.log(`Ground Ground Button ${line.name_top} clicked`)
-              }
-              latching={false}
-              dialLine={"dial_line" in line ? line.dial_line : undefined}
-            />,
-          );
+          // fallback: allow hangup if not overridden/terminate
+          onClick = () => sendMsg({ type: 'stop', cmd1: call_id, dbl1: 1 });
         }
-      });
+      } else {
+        if (data.status === 'off' || data.status === '') {
+          onClick = () => sendMsg({ type: 'call', cmd1: call_id, dbl1: 2 });
+        } else if (data.status === 'busy') {
+          onClick = undefined;
+          indicatorClassName = 'steady red';
+        } else if (data.status === 'hold') {
+          onClick = undefined;
+          indicatorClassName = 'flutter hold';
+        } else if (data.status === 'pending' || data.status === 'terminate' || data.status === 'overridden') {
+          onClick = undefined;
+        } else if (data.status === 'ok' || data.status === 'active') {
+          onClick = () => sendMsg({ type: 'stop', cmd1: call_id, dbl1: 2 });
+          indicator = ptt || data.status === 'active';
+          indicatorClassName = indicator ? 'flutter active' : 'steady green';
+        } else if (data.status === 'chime' || data.status === 'ringing') {
+          onClick = () => sendMsg({ type: 'stop', cmd1: call_id, dbl1: 2 });
+          indicator = true;
+          indicatorClassName = 'flutter receive flashing';
+        }
+      }
 
+      buttons.push(
+        <DAButton
+          key={index}
+          topLine={data.call_name || data.call}
+          latching={false}
+          onClick={onClick}
+          controlledIndicator={indicator}
+          indicatorClassName={indicatorClassName}
+        />
+      );
+    });
     return buttons;
   };
 
   return (
-    <div className="p-4">
-      {/* // extras left out flex flex-col items-center justify-center */}
-      {/* Render 3 pages of buttons */}
-      <div className="mb-1 flex grid grid-cols-3 gap-1">
+  <div className="pt-4 pb-4 px-4">
+      {/* Render 3 pages of buttons or keypad */}
+      <div className="mb-0.5">
         {currentPage === 3 ? (
-          <>
-            <Keypad></Keypad>
-          </>
+          <Keypad />
         ) : (
-          <>{renderButtons()}</>
+          <div className="flex grid grid-cols-3 gap-1">
+            {renderButtons()}
+          </div>
         )}
       </div>
-
       {/* Navigation buttons */}
-      <div className="flex gap-1">
+      <div className="flex gap-1 mt-1 mb-0.5">
         {[1, 2, 3].map((page) => (
           <SquareSelectorButton
             key={page}
@@ -72,9 +118,8 @@ const GroundGroundPage: React.FC = () => {
           />
         ))}
       </div>
-
       {/* Selected page */}
-      <div className="items-center justify-center text-center text-sm font-bold text-white">
+      <div className="text-center text-sm font-bold text-white mt-0.5">
         G/G PAGE {currentPage}
       </div>
     </div>
