@@ -45,11 +45,8 @@ const ScrollButton: React.FC<ScrollButtonProps> = ({ direction, onClick, style }
       onMouseUp={handleMouseUp}
       onMouseLeave={() => setIsActive(false)} // Handle case where mouse leaves without release
     >
-      {/* <div className={`${direction === 'up' ? '' : 'rotate-180'} w-8 h-8 border-customYellow border-t-[3px] border-l-[3px] transform rotate-45 border-customYellow`}></div> */}
-
-      <span 
-        className={`text-[50px] ${direction === 'up' ? 'rotate-[-90deg]' : 'rotate-90'}`} 
-        style={{marginLeft: '-2px'}}
+      <span
+        className={`text-5xl leading-none select-none origin-center transform scale-100 ${direction === 'up' ? 'rotate-[-90deg]' : 'rotate-90'}`}
       >
         &#10095;
       </span>

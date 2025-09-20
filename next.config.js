@@ -5,6 +5,8 @@
 await import("./src/env.js");
 
 /** @type {import("next").NextConfig} */
-const config = {};
+const config = {
+  outputFileTracingRoot: process.cwd(),
+};
 
 export default config;

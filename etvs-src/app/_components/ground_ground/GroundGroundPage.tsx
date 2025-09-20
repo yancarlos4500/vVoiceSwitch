@@ -11,7 +11,11 @@ import Keypad from "./Keypad";
 import { useCoreStore } from "~/model";
 import ChiseledSelectorButton from "../base_button/ChiseledSelectorButton";
 
-const GroundGroundPage: React.FC = () => {
+type GroundGroundPageProps = {
+  onGG3Toggle?: (isActive: boolean, page: number) => void;
+};
+
+const GroundGroundPage: React.FC<GroundGroundPageProps> = ({ onGG3Toggle }) => {
   const [currentPage, setCurrentPage] = useState(1); // State to track current page
 
   const handlePageChange = (page: number) => {
@@ -49,11 +53,11 @@ const GroundGroundPage: React.FC = () => {
         if (data.status === 'idle') {
           onClick = () => sendMsg({ type: 'call', cmd1: call_id, dbl1: 2 });
         } else if (data.status === 'online' || data.status === 'chime') {
-          indicatorClassName = 'flutter receive flashing';
+          indicatorClassName = 'flutter receive flashing'; // Flash green for incoming calls
           onClick = () => sendMsg({ type: 'call', cmd1: call_id, dbl1: 2 });
         } else if (data.status === 'ok') {
           indicator = ptt;
-          indicatorClassName = indicator ? 'flutter active' : 'steady green';
+          indicatorClassName = indicator ? 'flutter active' : 'steady green'; // Flutter when PTT, steady when connected
           onClick = () => sendMsg({ type: 'stop', cmd1: call_id, dbl1: 1 });
         } else if (data.status === 'overridden' || data.status === 'terminate') {
           onClick = undefined;
@@ -66,7 +70,7 @@ const GroundGroundPage: React.FC = () => {
           onClick = () => sendMsg({ type: 'call', cmd1: call_id, dbl1: 2 });
         } else if (data.status === 'busy') {
           onClick = undefined;
-          indicatorClassName = 'steady red';
+          indicatorClassName = 'steady red'; // Solid red for busy lines
         } else if (data.status === 'hold') {
           onClick = undefined;
           indicatorClassName = 'flutter hold';
@@ -75,11 +79,11 @@ const GroundGroundPage: React.FC = () => {
         } else if (data.status === 'ok' || data.status === 'active') {
           onClick = () => sendMsg({ type: 'stop', cmd1: call_id, dbl1: 2 });
           indicator = ptt || data.status === 'active';
-          indicatorClassName = indicator ? 'flutter active' : 'steady green';
+          indicatorClassName = indicator ? 'flutter active' : 'steady green'; // Flutter when active/PTT, steady when connected
         } else if (data.status === 'chime' || data.status === 'ringing') {
           onClick = () => sendMsg({ type: 'stop', cmd1: call_id, dbl1: 2 });
           indicator = true;
-          indicatorClassName = 'flutter receive flashing';
+          indicatorClassName = 'flutter receive flashing'; // Flash green for incoming calls
         }
       }
 
@@ -120,7 +124,7 @@ const GroundGroundPage: React.FC = () => {
         ))}
       </div>
       {/* Selected page */}
-      <div className="text-center text-sm font-bold text-white mt-0.5">
+      <div className="text-center text-sm font-bold text-yellow-300 mt-0.5">
         G/G PAGE {currentPage}
       </div>
     </div>

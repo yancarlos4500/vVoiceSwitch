@@ -1,43 +1,46 @@
 // components/SquareButton.tsx
 
-import React, { useState } from 'react';
+import React from 'react';
 
-type SquareButtonProps = {
-  topLine: string;
+interface SquareButtonProps {
+  topLine?: string;
   bottomLine?: string;
-  onClick?: () => void; // Optional onClick handler
-  showIndicator?: boolean; // Optional prop to show indicator
-  style?: React.CSSProperties;
-};
+  showIndicator?: boolean;
+  indicatorClassName?: string; // panel-style indicator class: e.g., "flutter active", "steady green"
+  onClick?: () => void;
+}
 
-const SquareButton: React.FC<SquareButtonProps> = ({ topLine, bottomLine, onClick, showIndicator = false, style }) => {
-  const [isActive, setIsActive] = useState(false);
-  const [isIndicatorVisible, setIndicatorVisible] = useState(showIndicator);
-
-  const handleMouseDown = () => {
-    setIsActive(true);
-    setIndicatorVisible(!isIndicatorVisible); // Toggle indicator visibility
-  };
-
-  const handleMouseUp = () => {
-    setIsActive(false);
-    if (onClick) onClick();
-  };
-
+const SquareButton: React.FC<SquareButtonProps> = ({
+  topLine = '',
+  bottomLine = '',
+  showIndicator = false,
+  indicatorClassName = '',
+  onClick,
+}) => {
+  // Parse the indicatorClassName to determine if it should flutter
+  const shouldFlutter = indicatorClassName.includes('flutter active');
+  const shouldFlutterRed = indicatorClassName.includes('flutter red');
+  const isSteady = indicatorClassName.includes('steady');
+  
   return (
     <button
-      className={`etvs-btn ${isActive ? 'etvs-btn-active' : 'etvs-btn-inactive'}`}
-      onMouseDown={handleMouseDown}
-      onMouseUp={handleMouseUp}
-      onMouseLeave={() => setIsActive(false)}
-      style={style}
+      className="etvs-btn etvs-btn-inactive"
+      onClick={onClick}
+      style={{
+        position: 'relative',
+      }}
     >
+      {/* Button text content */}
       <div className="etvs-btn-label">
-        <span>{topLine}</span>
-        {bottomLine && <span>{bottomLine}</span>}
+        <div className="etvs-btn-label-small">{topLine}</div>
+        <div className="etvs-btn-label-small">{bottomLine}</div>
       </div>
-      {isIndicatorVisible && (
-        <div className="etvs-btn-indicator"></div>
+      
+      {/* ETVS-style indicator bar with flutter animation */}
+      {(showIndicator || indicatorClassName) && (
+        <div 
+          className={`etvs-btn-indicator ${shouldFlutter ? 'etvs-flutter' : ''} ${shouldFlutterRed ? 'etvs-flutter-red' : ''} ${isSteady ? 'etvs-steady' : ''}`}
+        />
       )}
     </button>
   );

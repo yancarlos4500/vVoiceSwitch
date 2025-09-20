@@ -1,11 +1,14 @@
 // ...existing code...
 import React, { useRef, useState, useCallback } from "react";
-// Knob component: scroll to rotate, animated
+// Knob component: scroll to rotate, animated with min/max detents
 const Knob: React.FC<{
   src: string;
   alt: string;
   style: React.CSSProperties;
-}> = ({ src, alt, style }) => {
+  minAngle?: number;
+  maxAngle?: number;
+  onChange?: (angle: number) => void;
+}> = ({ src, alt, style, minAngle = -135, maxAngle = 135, onChange }) => {
   const [angle, setAngle] = useState(0);
   const animRef = useRef<number | null>(null);
   const targetAngle = useRef(0);
@@ -14,7 +17,11 @@ const Knob: React.FC<{
   const animate = () => {
     setAngle((prev) => {
       const diff = targetAngle.current - prev;
-      if (Math.abs(diff) < 0.5) return targetAngle.current;
+      if (Math.abs(diff) < 0.5) {
+        const finalAngle = targetAngle.current;
+        onChange?.(finalAngle);
+        return finalAngle;
+      }
       return prev + diff * 0.2;
     });
     if (Math.abs(targetAngle.current - angle) > 0.5) {
@@ -24,10 +31,15 @@ const Knob: React.FC<{
     }
   };
 
-  // Handle scroll
+  // Handle scroll with min/max constraints
   const onWheel = (e: React.WheelEvent) => {
     e.preventDefault();
-    targetAngle.current += e.deltaY > 0 ? 10 : -10;
+    const increment = e.deltaY > 0 ? -10 : 10; // Reversed: scroll down = decrease, scroll up = increase
+    const newAngle = targetAngle.current + increment;
+    
+    // Constrain to min/max angles
+    targetAngle.current = Math.max(minAngle, Math.min(maxAngle, newAngle));
+    
     if (!animRef.current) {
       animRef.current = requestAnimationFrame(animate);
     }
@@ -49,17 +61,35 @@ const Knob: React.FC<{
   );
 };
 import StvsButton from "./StvsButton";
+import StvsKeypad from "./StvsKeypad";
+import StvsLever from "./StvsSwitch";
 import { useCoreStore } from "~/model";
 import { shallow } from "zustand/shallow";
+import SettingModal from "../components/SettingModal";
 // ...existing code...
 
 
 const StvsBase: React.FC = () => {
   const [mounted, setMounted] = React.useState(false);
+  const [settingModal, setSettingModal] = React.useState(false);
+  const [brightness, setBrightness] = React.useState(1.0); // Range 0.0 to 1.0
+  
   const freqSelector = useCallback((s: any) => s.ag_status || [], []);
   const ggSelector = useCallback((s: any) => s.gg_status || [], []);
+  const pttSelector = useCallback((s: any) => s.ptt || false, []);
   const freqData = useCoreStore(freqSelector);
   const ggData = useCoreStore(ggSelector);
+  const pttActive = useCoreStore(pttSelector);
+  const sendMsg = useCoreStore((s: any) => s.sendMessageNow);
+  
+  // Convert ILLUM knob angle (-135 to +135) to brightness (0.1 to 1.0)
+  const handleIllumChange = useCallback((angle: number) => {
+    // Map angle range (-135 to +135) to brightness range (0.1 to 1.0)
+    const normalizedAngle = (angle + 135) / 270; // 0 to 1
+    const brightness = 0.1 + (normalizedAngle * 0.9); // 0.1 to 1.0
+    setBrightness(brightness);
+  }, []);
+  
   React.useEffect(() => setMounted(true), []);
   if (!mounted) return null;
 
@@ -81,6 +111,7 @@ const StvsBase: React.FC = () => {
   const ggButtons = Array.from({ length: 12 }, (_, i) => ggData[i]?.call_name || ggData[i]?.call);
   return (
     <div className="w-full h-full flex flex-col items-center justify-center bg-black">
+      <SettingModal open={settingModal} setModal={setSettingModal} />
       {/* Responsive SVG container with aspect ratio matching viewBox 899.16x164.4 */}
       <div
         className="relative w-full max-w-full"
@@ -96,6 +127,8 @@ const StvsBase: React.FC = () => {
         <Knob
           src="/knob.png"
           alt="Trainee Knob"
+          minAngle={-135}
+          maxAngle={135}
           style={{
             left: `${(170/899.16)*33}%`,
             top: `${(120/164.4)*56}%`,
@@ -109,6 +142,8 @@ const StvsBase: React.FC = () => {
         <Knob
           src="/knob.png"
           alt="Instructor Knob"
+          minAngle={-135}
+          maxAngle={135}
           style={{
             left: `${(170/899.16)*33}%`,
             top: `${(120/164.4)*100}%`,
@@ -122,6 +157,8 @@ const StvsBase: React.FC = () => {
         <Knob
           src="/knob2.png"
           alt="SPKR"
+          minAngle={-135}
+          maxAngle={135}
           style={{
             left: `${(350/899.16)*70}%`,
             top: `${(40/164.4)*35}%`,
@@ -134,6 +171,9 @@ const StvsBase: React.FC = () => {
         <Knob
           src="/knob2.png"
           alt="ILLUM"
+          minAngle={-135}
+          maxAngle={135}
+          onChange={handleIllumChange}
           style={{
             left: `${(350/899.16)*70}%`,
             top: `${(40/164.4)*165}%`,
@@ -146,6 +186,8 @@ const StvsBase: React.FC = () => {
         <Knob
           src="/knob2.png"
           alt="CHIME"
+          minAngle={-135}
+          maxAngle={135}
           style={{
             left: `${(350/899.16)*70}%`,
             top: `${(40/164.4)*300}%`,
@@ -160,10 +202,48 @@ const StvsBase: React.FC = () => {
         {ggButtons.map((gg, idx) => {
           const row = Math.floor(idx / 3);
           const col = idx % 3;
+          const ggItem = ggData[idx]; // Get the corresponding G/G data item
+          
+          // Implement click logic matching IVSR/ETVS behavior
+          let onClick: (() => void) | undefined = undefined;
+          
+          if (ggItem && ggItem.call) {
+            const call_type = ggItem.call?.substring(0, 2);
+            const call_id = ggItem.call?.substring(3);
+            
+            if (call_type === 'SO') {
+              // Special Operator calls
+              if (ggItem.status === 'idle') {
+                onClick = () => sendMsg({ type: 'call', cmd1: call_id, dbl1: 2 });
+              } else if (ggItem.status === 'online' || ggItem.status === 'chime') {
+                onClick = () => sendMsg({ type: 'call', cmd1: call_id, dbl1: 2 }); // Answer/Join
+              } else if (ggItem.status === 'ok') {
+                onClick = () => sendMsg({ type: 'stop', cmd1: call_id, dbl1: 1 }); // Hangup SO
+              } else if (ggItem.status === 'overridden' || ggItem.status === 'terminate') {
+                onClick = undefined; // No action available
+              }
+            } else {
+              // Direct Line calls (DL_xxx) and others
+              if (ggItem.status === 'off' || ggItem.status === '' || ggItem.status === 'idle') {
+                onClick = () => sendMsg({ type: 'call', cmd1: call_id, dbl1: 2 }); // Initiate call
+              } else if (ggItem.status === 'busy' || ggItem.status === 'hold') {
+                onClick = undefined; // No action available
+              } else if (ggItem.status === 'pending' || ggItem.status === 'terminate' || ggItem.status === 'overridden') {
+                onClick = undefined; // No action available
+              } else if (ggItem.status === 'ok' || ggItem.status === 'active' || ggItem.status === 'chime' || ggItem.status === 'ringing') {
+                onClick = () => sendMsg({ type: 'stop', cmd1: call_id, dbl1: 2 }); // Hangup DL
+              }
+            }
+          }
+          
           return (
             <StvsButton
               key={"gg-"+idx}
               label={gg}
+              callStatus={ggItem?.status}
+              pttActive={pttActive}
+              brightness={brightness}
+              onClick={onClick}
               style={{
                 left: `${(895 + col*60)/899.16*59}%`,
                 top: `${(20 + row*38)/164.4*90}%`,
@@ -177,11 +257,31 @@ const StvsBase: React.FC = () => {
             />
           );
         })}
-        {/* Row of up to 6 frequency buttons above XMIT buttons */}
+        
+        {Array.from({ length: 6 }, (_, i) => (
+          <StvsLever
+            key={"lever-"+i}
+            defaultPosition={0.5}
+            brightness={brightness}
+            onPositionChange={(position) => console.log(`Lever ${i+1} set to: ${position.toFixed(2)}`)}
+            style={{
+              left: `${(515 + i*59)/899.16*60}%`,
+              top: `${(25/164.4)*90}%`,
+              width: `${(40/899.16)*55}%`,
+              height: `${(40/164.4)*55}%`,
+              maxWidth: 'none',
+              maxHeight: 'none',
+            }}
+          />
+        ))}
+        
         {freqButtons.map((freq, i) => (
           <StvsButton
             key={"freq-"+i}
             label={freq}
+            hasFreq={!!freq}
+            pttActive={pttActive && !!freq}
+            brightness={brightness}
             style={{
               left: `${(515 + i*60)/899.16*59}%`,
               top: `${(52/164.4)*100}%`,
@@ -194,188 +294,46 @@ const StvsBase: React.FC = () => {
             }}
           />
         ))}
-        <StvsButton
-          label="XMIT"
-          style={{
-            left: `${(423/899.16)*72}%`,
-            top: `${(60/164.4)*145}%`,
-            width: `${(40/899.16)*75}%`,
-            height: `${(40/164.4)*75}%`,
-            maxWidth: 'none',
-            maxHeight: 'none',
-            zIndex: 15,
-          }}
-        />
-        <StvsButton
-          label="XMIT"
-          active
-          style={{
-            left: `${(425/899.16)*80}%`,
-            top: `${(60/164.4)*145}%`,
-            width: `${(40/899.16)*75}%`,
-            height: `${(40/164.4)*75}%`,
-            maxWidth: 'none',
-            maxHeight: 'none',
-            zIndex: 15,
-          }}
-        />   
-        <StvsButton
-          label="XMIT"
-          style={{
-            left: `${(422/899.16)*89}%`,
-            top: `${(60/164.4)*145}%`,
-            width: `${(40/899.16)*75}%`,
-            height: `${(40/164.4)*75}%`,
-            maxWidth: 'none',
-            maxHeight: 'none',
-            zIndex: 15,
-          }}
-        />
-        <StvsButton
-          label="XMIT"
-          active
-          style={{
-            left: `${(426/899.16)*96}%`,
-            top: `${(60/164.4)*145}%`,
-            width: `${(40/899.16)*75}%`,
-            height: `${(40/164.4)*75}%`,
-            maxWidth: 'none',
-            maxHeight: 'none',
-            zIndex: 15,
-          }}
-        />   
-        <StvsButton
-          label="XMIT"
-          active
-          style={{
-            left: `${(427/899.16)*96}%`,
-            top: `${(60/164.4)*145}%`,
-            width: `${(40/899.16)*75}%`,
-            height: `${(40/164.4)*75}%`,
-            maxWidth: 'none',
-            maxHeight: 'none',
-            zIndex: 15,
-          }}
-        /> 
-        <StvsButton
-          label="XMIT"
-          active
-          style={{
-            left: `${(445/899.16)*100}%`,
-            top: `${(60/164.4)*145}%`,
-            width: `${(40/899.16)*75}%`,
-            height: `${(40/164.4)*75}%`,
-            maxWidth: 'none',
-            maxHeight: 'none',
-            zIndex: 15,
-          }}
-        />
-        <StvsButton
-          label="XMIT"
-          active
-          style={{
-            left: `${(481/899.16)*100}%`,
-            top: `${(60/164.4)*145}%`,
-            width: `${(40/899.16)*75}%`,
-            height: `${(40/164.4)*75}%`,
-            maxWidth: 'none',
-            maxHeight: 'none',
-            zIndex: 15,
-          }}
-        />        
-        <StvsButton
-          label="RCV"
-          style={{
-            left: `${(423/899.16)*72}%`,
-            top: `${(60/164.4)*205}%`,
-            width: `${(40/899.16)*75}%`,
-            height: `${(40/164.4)*75}%`,
-            maxWidth: 'none',
-            maxHeight: 'none',
-            zIndex: 15,
-          }}
-        />
-        <StvsButton
-          label="RCV"
-          active
-          style={{
-            left: `${(723/899.16)*47}%`,
-            top: `${(60/164.4)*205}%`,
-            width: `${(40/899.16)*75}%`,
-            height: `${(40/164.4)*75}%`,
-            maxWidth: 'none',
-            maxHeight: 'none',
-            zIndex: 15,
-          }}
-        />
-        <StvsButton
-          label="RCV"
-          active
-          style={{
-            left: `${(723/899.16)*52}%`,
-            top: `${(60/164.4)*205}%`,
-            width: `${(40/899.16)*75}%`,
-            height: `${(40/164.4)*75}%`,
-            maxWidth: 'none',
-            maxHeight: 'none',
-            zIndex: 15,
-          }}
-        />
-        <StvsButton
-          label="RCV"
-          active
-          style={{
-            left: `${(721/899.16)*57}%`,
-            top: `${(60/164.4)*205}%`,
-            width: `${(40/899.16)*75}%`,
-            height: `${(40/164.4)*75}%`,
-            maxWidth: 'none',
-            maxHeight: 'none',
-            zIndex: 15,
-          }}
-        />
-        <StvsButton
-          label="RCV"
-          active
-          style={{
-            left: `${(720/899.16)*62}%`,
-            top: `${(60/164.4)*205}%`,
-            width: `${(40/899.16)*75}%`,
-            height: `${(40/164.4)*75}%`,
-            maxWidth: 'none',
-            maxHeight: 'none',
-            zIndex: 15,
-          }}
-        />
-        <StvsButton
-          label="RCV"
-          active
-          style={{
-            left: `${(718/899.16)*67}%`,
-            top: `${(60/164.4)*205}%`,
-            width: `${(40/899.16)*75}%`,
-            height: `${(40/164.4)*75}%`,
-            maxWidth: 'none',
-            maxHeight: 'none',
-            zIndex: 15,
-          }}
-        />
-        <StvsButton
-          label="RCV"
-          active
-          style={{
-            left: `${(718/899.16)*67}%`,
-            top: `${(60/164.4)*205}%`,
-            width: `${(40/899.16)*75}%`,
-            height: `${(40/164.4)*75}%`,
-            maxWidth: 'none',
-            maxHeight: 'none',
-            zIndex: 15,
-          }}
-        />
+        {/* XMIT buttons, linked to freqButtons[i] */}
+        {Array.from({ length: 6 }, (_, i) => (
+          <StvsButton
+            key={"xmit-"+i}
+            label="XMIT"
+            hasFreq={!!freqButtons[i]}
+            brightness={brightness}
+            style={{
+              left: `${(423 + i*49)/899.16*72}%`,
+              top: `${(60/164.4)*145}%`,
+              width: `${(40/899.16)*75}%`,
+              height: `${(40/164.4)*75}%`,
+              maxWidth: 'none',
+              maxHeight: 'none',
+              zIndex: 15,
+            }}
+          />
+        ))}
+        {/* RCV buttons, linked to freqButtons[i] */}
+        {Array.from({ length: 6 }, (_, i) => (
+          <StvsButton
+            key={"rcv-"+i}
+            label="RCV"
+            hasFreq={!!freqButtons[i]}
+            brightness={brightness}
+            style={{
+              left: `${(423 + i*49)/899.16*72}%`,
+              top: `${(60/164.4)*205}%`,
+              width: `${(40/899.16)*75}%`,
+              height: `${(40/164.4)*75}%`,
+              maxWidth: 'none',
+              maxHeight: 'none',
+              zIndex: 15,
+            }}
+          />
+        ))}
         <StvsButton
           label="RING"
           active
+          brightness={brightness}
           style={{
             left: `${(718/899.16)*90}%`,
             top: `${(60/164.4)*28}%`,
@@ -389,6 +347,7 @@ const StvsBase: React.FC = () => {
         <StvsButton
           label="IA"
           active
+          brightness={brightness}
           style={{
             left: `${(718/899.16)*95}%`,
             top: `${(60/164.4)*28}%`,
@@ -402,6 +361,7 @@ const StvsBase: React.FC = () => {
         <StvsButton
           label="BRF"
           active
+          brightness={brightness}
           style={{
             left: `${(718/899.16)*90}%`,
             top: `${(60/164.4)*88}%`,
@@ -415,6 +375,7 @@ const StvsBase: React.FC = () => {
         <StvsButton
           label="CA"
           active
+          brightness={brightness}
           style={{
             left: `${(718/899.16)*95}%`,
             top: `${(60/164.4)*88}%`,
@@ -428,6 +389,7 @@ const StvsBase: React.FC = () => {
         <StvsButton
           label="HOLD"
           active
+          brightness={brightness}
           style={{
             left: `${(718/899.16)*90}%`,
             top: `${(88/164.4)*100}%`,
@@ -441,6 +403,7 @@ const StvsBase: React.FC = () => {
         <StvsButton
           label="REL"
           active
+          brightness={brightness}
           style={{
             left: `${(718/899.16)*95}%`,
             top: `${(88/164.4)*100}%`,
@@ -454,6 +417,7 @@ const StvsBase: React.FC = () => {
         <StvsButton
           label="HL"
           active
+          brightness={brightness}
           style={{
             left: `${(718/899.16)*90}%`,
             top: `${(122/164.4)*100}%`,
@@ -467,6 +431,8 @@ const StvsBase: React.FC = () => {
         <StvsButton
           label="CONF"
           active
+          brightness={brightness}
+          onClick={() => setSettingModal(true)}
           style={{
             left: `${(718/899.16)*95}%`,
             top: `${(122/164.4)*100}%`,
@@ -477,6 +443,21 @@ const StvsBase: React.FC = () => {
             zIndex: 15,
           }}
         />                                                                                                        
+        
+        {/* STVS Keypad positioned manually like other buttons */}
+        <div 
+          className="absolute z-50"
+          style={{
+            left: `${(700/899.16)*94}%`,  
+            top: `${(20/164.4)*75}%`,     
+            width: `${(180/899.16)*100}%`, 
+            height: `${(140/164.4)*100}%`, 
+            transform: 'scale(1.5)',       
+            transformOrigin: 'top left'
+          }}
+        >
+          <StvsKeypad brightness={brightness} />
+        </div>
       </div>
     </div>
   );

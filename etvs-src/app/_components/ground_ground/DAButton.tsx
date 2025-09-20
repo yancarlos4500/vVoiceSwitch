@@ -44,6 +44,14 @@ const DAButton: React.FC<DAButtonProps> = ({ topLine, middleLine, bottomLine, on
   };
 
   const indicatorVisible = controlledIndicator ?? isIndicatorVisible;
+  
+  // Parse the indicatorClassName to determine the correct state
+  const shouldFlutter = indicatorClassName?.includes('flutter active');
+  const shouldFlutterRed = indicatorClassName?.includes('flutter red');
+  const shouldFlashGreen = indicatorClassName?.includes('flutter receive flashing'); // Incoming calls
+  const shouldSolidRed = indicatorClassName?.includes('steady red'); // Busy lines
+  const isSteady = indicatorClassName?.includes('steady green'); // Connected steady
+  
   return (
     <button
       className={`etvs-btn relative flex items-center justify-center text-center select-none ${isActive ? 'etvs-btn-active' : 'etvs-btn-inactive'}`}
@@ -58,15 +66,18 @@ const DAButton: React.FC<DAButtonProps> = ({ topLine, middleLine, bottomLine, on
         {middleLine && <span>{middleLine}</span>}
         {bottomLine && <span>{bottomLine}</span>}
       </div>
-      {/* Indicator bar, if needed */}
-      {indicatorClassName ? (
-        <div className={indicatorClassName}>
-          <div className="ct">
-            <div className="inner"></div>
-          </div>
-        </div>
-      ) : indicatorVisible && (
-        <div className="etvs-btn-indicator"></div>
+      
+      {/* ETVS-style indicator bar with G/G state animations */}
+      {(indicatorVisible || indicatorClassName) && (
+        <div 
+          className={`etvs-btn-indicator ${
+            shouldFlutter ? 'etvs-flutter' : 
+            shouldFlutterRed ? 'etvs-flutter-red' : 
+            shouldFlashGreen ? 'etvs-flash-green' : 
+            shouldSolidRed ? 'etvs-solid-red' : 
+            isSteady ? 'etvs-steady' : ''
+          }`}
+        />
       )}
     </button>
   );

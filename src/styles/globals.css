@@ -55,3 +55,67 @@ body {
 
 .green { background: #00fd3f; }
 .red { background: #ff001c; }
+
+/* STVS Diode Flutter Animations - 72 times/minute = 833ms cycle, 90% on/10% off */
+@keyframes stvs-flutter-green {
+  0% { 
+    background-color: #00ff00; 
+    box-shadow: 0 0 8px 2px #00ff00, 0 0 2px #00ff00;
+    filter: brightness(1.2) drop-shadow(0 0 6px #00ff00);
+  }
+  90% { 
+    background-color: #00ff00; 
+    box-shadow: 0 0 8px 2px #00ff00, 0 0 2px #00ff00;
+    filter: brightness(1.2) drop-shadow(0 0 6px #00ff00);
+  }
+  91% { 
+    background-color: #004400; 
+    box-shadow: none;
+    filter: none;
+  }
+  100% { 
+    background-color: #004400; 
+    box-shadow: none;
+    filter: none;
+  }
+}
+
+.stvs-flutter-green {
+  animation: stvs-flutter-green 833ms infinite;
+}
+
+/* STVS G/G Button Animations */
+/* Flash green for incoming calls - 60 times/minute = 1000ms cycle, 50% on/50% off */
+@keyframes stvs-flash-green {
+  0% { 
+    background-color: #00ff00; 
+    box-shadow: 0 0 8px 2px #00ff00, 0 0 2px #00ff00;
+    filter: brightness(1.2) drop-shadow(0 0 6px #00ff00);
+  }
+  50% { 
+    background-color: #00ff00; 
+    box-shadow: 0 0 8px 2px #00ff00, 0 0 2px #00ff00;
+    filter: brightness(1.2) drop-shadow(0 0 6px #00ff00);
+  }
+  51% { 
+    background-color: #004400; 
+    box-shadow: none;
+    filter: none;
+  }
+  100% { 
+    background-color: #004400; 
+    box-shadow: none;
+    filter: none;
+  }
+}
+
+.stvs-flash-green {
+  animation: stvs-flash-green 1000ms infinite;
+}
+
+/* Solid red for busy lines */
+.stvs-solid-red {
+  background-color: #ff0000 !important;
+  box-shadow: 0 0 8px 2px #ff0000, 0 0 2px #ff0000 !important;
+  filter: brightness(1.2) drop-shadow(0 0 6px #ff0000) !important;
+}

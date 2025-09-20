@@ -6,7 +6,7 @@ import { useCoreStore } from '~/model';
 import SquareSelectorButton from "../base_button/SquareSelectorButton";
 import OOSButton from "../base_button/OOSButton";
 
-const AreaThree: React.FC = () => {
+const AreaThree: React.FC<{ setSettingModal: (v: boolean) => void }> = ({ setSettingModal }) => {
   const [currentPage, setCurrentPage] = useState(1); // State to track current page
 
   const sendMsg = useCoreStore((s: any) => s.sendMessageNow);
@@ -34,7 +34,7 @@ const AreaThree: React.FC = () => {
     {
       topLine: "RECN",
       bottomLine: "ENB",
-      action: () => console.log("RECN ENB clicked"),
+      action: () => setSettingModal(true),
     },
     {
       topLine: "CALL",

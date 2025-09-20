@@ -1,7 +1,7 @@
 import Modal from 'antd/es/modal';
 import Tree from 'antd/es/tree';
 import { Form, type TreeDataNode, type TreeProps } from 'antd';
-import { useCoreStore, type Facility } from '~/model';
+import { useCoreStore, type Facility } from '../../../model';
 import { useMemo, useState, useEffect, type Key } from 'react';
 import axios from 'axios';
 

@@ -151,3 +151,85 @@ html {
     margin-bottom: 7px !important;
   }
 }
+
+/* Flutter animation styles matching IVSR */
+.flutter {
+	position: absolute;
+	bottom: 4px;
+	left: -1px;
+	height: 9px;
+	width: calc(100% - 10px);
+	margin-left: 4px;
+	margin-right: 4px;
+	border-radius: 1px;
+}
+.flutter .ct { position: relative; width: 100%; height: 100%; }
+.flutter .inner {
+	height: 0px;
+	width: 0px;
+	border-style: solid;
+	border-width: 5px 26px 5px 26px;
+}
+
+.active { border: 2px solid #00fd3f; }
+.active .inner { border-color: #00fd3f transparent #00fd3f transparent; }
+
+.receive { border: 2px solid #00fd3f; }
+.receive .inner { border-color: transparent #00fd3f #00fd3f transparent; }
+
+.inuse { border: 2px solid #ff001c; }
+.inuse .inner { border-color: transparent #ff001c #ff001c transparent; }
+
+.hold { border: 2px solid #ff001c; }
+.hold .inner { border-color: #ff001c transparent #ff001c transparent; }
+
+.steady { border: 2px solid #00fd3f; }
+.steady .inner { border-color: #00fd3f transparent #00fd3f transparent; }
+
+.green { border: 2px solid #00fd3f; }
+.green .inner { border-color: #00fd3f transparent #00fd3f transparent; }
+
+/* ETVS Flutter animation: 72 times per minute = 833ms per cycle, 90% on (750ms) / 10% off (83ms) */
+.etvs-btn-indicator.etvs-flutter {
+  animation: etvs-flutter-effect 833ms infinite;
+}
+
+.etvs-btn-indicator.etvs-flutter-red {
+  animation: etvs-flutter-effect 833ms infinite;
+  background-color: #ff001c !important; /* Red background for remote TX */
+}
+
+/* ETVS Flash animation for incoming calls: 60 times per minute = 1000ms per cycle, 50% on/50% off */
+.etvs-btn-indicator.etvs-flash-green {
+  animation: etvs-flash-effect 1000ms infinite;
+  background-color: #00fd3f !important; /* Green background for incoming calls */
+}
+
+/* ETVS Solid red for busy lines */
+.etvs-btn-indicator.etvs-solid-red {
+  animation: none;
+  background-color: #ff001c !important;
+  opacity: 1;
+}
+
+.etvs-btn-indicator.etvs-steady {
+  /* Steady state - no animation */
+  animation: none;
+  opacity: 1;
+}
+
+/* Correct flutter timing: 90% on, 10% off */
+@keyframes etvs-flutter-effect {
+  0% { opacity: 1; }
+  90% { opacity: 1; }
+  90.1% { opacity: 0.1; }
+  100% { opacity: 0.1; }
+}
+
+/* Flash timing: 50% on, 50% off */
+@keyframes etvs-flash-effect {
+  0% { opacity: 1; }
+  50% { opacity: 1; }
+  50.1% { opacity: 0.1; }
+  100% { opacity: 0.1; }
+}
