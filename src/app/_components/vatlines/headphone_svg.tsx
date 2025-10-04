@@ -2,7 +2,7 @@ export default function HeadphoneSvgComponent() {
   return (
     <svg className="flex justify-center items-center pl-3 w-16 h-8">
       <g
-        transform="translate(-5.000000, 40.000000) scale(0.100000,-0.100000)"
+        transform="translate(-10.000000, 45.000000) scale(0.120000,-0.120000)"
         fill="#000000"
       >
         <path

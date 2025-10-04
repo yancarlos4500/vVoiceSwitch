@@ -2,7 +2,7 @@ export default function SpeakerSvgComponent() {
   return (
     <svg className="flex justify-center items-center pl-5 w-14 h-6">
       <g
-        transform="translate(-10.000000, 30.000000) scale(0.100000,-0.100000)"
+        transform="translate(-5.000000, 45.000000) scale(0.120000,-0.120000)"
         fill="#000000"
       >
         <path

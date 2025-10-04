@@ -1,0 +1,298 @@
+import { useEffect, useMemo } from 'react';
+import { useCoreStore } from '~/model';
+import VscsButtonComponent from './vscs_button';
+import HeadphoneSvgComponent from './headphone_svg';
+import SpeakerSvgComponent from './speaker_svg';
+import { ButtonType } from './App';
+
+interface VscsAGProps {
+  page: number; // 1 for A/G 1, 2 for A/G 2
+  sendMsg: (data: any) => void;
+}
+
+export default function VscsAG({ page, sendMsg }: VscsAGProps) {
+  const ag_status = useCoreStore((s: any) => s.ag_status);
+  const ptt = useCoreStore((s: any) => s.ptt);
+  const positionData = useCoreStore((s: any) => s.positionData);
+  
+  const ITEMS_PER_PAGE = 12; // 4x3 grid
+  
+  // Helper function to get radio sites for a frequency
+  const getRadioSitesForFreq = (freq: number): string[] => {
+    if (!positionData || !freq) return [];
+    
+    // Search through positions to find matching frequency
+    const searchPositions = (positions: any[]): string[] => {
+      for (const position of positions) {
+        if (position.freq === freq && position.rn) {
+          // Split by comma and trim whitespace
+          return position.rn.split(',').map((site: string) => site.trim());
+        }
+      }
+      return [];
+    };
+    
+    // Handle both array and single object formats
+    if (Array.isArray(positionData)) {
+      return searchPositions(positionData);
+    } else if (positionData.positions) {
+      return searchPositions(positionData.positions);
+    }
+    
+    return [];
+  };
+  
+  // Filter A/G status data for the specific page
+  const currentSlice = useMemo(() => {
+    const start = (page - 1) * ITEMS_PER_PAGE;
+    const end = start + ITEMS_PER_PAGE;
+    const slice = ag_status.slice(start, end);
+    // Pad with empty slots if needed
+    if (slice.length < ITEMS_PER_PAGE) {
+      return [...slice, ...new Array(ITEMS_PER_PAGE - slice.length).fill(undefined)];
+    }
+    return slice;
+  }, [ag_status, page]);
+
+  // Convert A/G data to button format - expand for multiple radio sites
+  const buttons = useMemo(() => {
+    const expandedButtons: any[] = [];
+    
+    currentSlice.forEach((data: any, index: number) => {
+      if (!data) {
+        // Empty/unassigned button
+        expandedButtons.push({
+          shortName: '',
+          longName: '',
+          target: '',
+          type: ButtonType.NONE,
+          radioSiteIndex: 0,
+          originalData: null
+        });
+      } else {
+        // Get radio sites for this frequency
+        const radioSites = getRadioSitesForFreq(parseInt(data.freq));
+        const formattedFreq = data.freq ? (parseInt(data.freq) / 1000000).toFixed(3) : '';
+        
+        if (radioSites.length <= 1) {
+          // Single or no radio site - create one button
+          expandedButtons.push({
+            shortName: formattedFreq,
+            longName: data.call_name || '',
+            target: data.freq || '',
+            type: ButtonType.RING,
+            radioSiteIndex: 0,
+            originalData: data,
+            radioSite: radioSites[0] || 'ZOA'
+          });
+        } else {
+          // Multiple radio sites - create separate buttons for each
+          radioSites.forEach((radioSite: string, siteIndex: number) => {
+            expandedButtons.push({
+              shortName: formattedFreq,
+              longName: data.call_name || '',
+              target: data.freq || '',
+              type: ButtonType.RING,
+              radioSiteIndex: siteIndex,
+              originalData: data,
+              radioSite: radioSite
+            });
+          });
+        }
+      }
+    });
+
+    // Separate Guard frequencies from regular frequencies
+    const guardFreqs = expandedButtons.filter(btn => 
+      btn.type !== ButtonType.NONE && 
+      (parseInt(btn.target) === 121500000 || parseInt(btn.target) === 243000000)
+    );
+    
+    const regularFreqs = expandedButtons.filter(btn => 
+      btn.type === ButtonType.NONE || 
+      (parseInt(btn.target) !== 121500000 && parseInt(btn.target) !== 243000000)
+    );
+
+    // Create a 4x3 grid (12 positions total) arranged column-wise
+    const grid: any[] = new Array(ITEMS_PER_PAGE).fill(null);
+    
+    // Fill column-wise starting from top-left (0,3,6,9 then 1,4,7,10 then 2,5,8,11)
+    const columnOrder = [0, 4, 8, 1, 5, 9, 2, 6, 10, 3, 7, 11];
+    
+    // Place Guard frequencies in the last positions (bottom-right first)
+    const guardPositions = [11, 7, 3]; // Bottom-right, middle-right, top-right
+    let guardIndex = 0;
+    
+    for (const guardFreq of guardFreqs) {
+      if (guardIndex < guardPositions.length) {
+        const position = guardPositions[guardIndex];
+        if (position !== undefined) {
+          grid[position] = guardFreq;
+        }
+        guardIndex++;
+      }
+    }
+    
+    // Place regular frequencies in remaining positions, filling column-wise
+    let regularIndex = 0;
+    for (const pos of columnOrder) {
+      if (grid[pos] === null && regularIndex < regularFreqs.length) {
+        grid[pos] = regularFreqs[regularIndex];
+        regularIndex++;
+      }
+    }
+    
+    // Fill any remaining positions with empty buttons
+    for (let i = 0; i < ITEMS_PER_PAGE; i++) {
+      if (grid[i] === null) {
+        grid[i] = {
+          shortName: '',
+          longName: '',
+          target: '',
+          type: ButtonType.NONE,
+          radioSiteIndex: 0,
+          originalData: null
+        };
+      }
+    }
+    
+    return grid;
+  }, [currentSlice]);
+
+  // Helper function to get A/G visual state
+  const getAGState = (data: any) => {
+    if (!data) return 'ag-unassigned';
+    if (data.busy || data.status === 'busy') return 'ag-busy';
+    if (data.talking) return 'ag-monitoring';
+    if (data.r || data.t) return 'ag-active'; // Active if either RX or TX selected
+    // When all buttons are off (no RX, no TX), return to unselected state (white background)
+    return 'state-unselected';
+  };
+
+  // Handle sub-button clicks for TX, RX, and Headset
+  const handleAGSubButtonClick = (freq: string, type: 'tx' | 'rx' | 'hs') => {
+    if (!freq) return;
+    
+    // Find the button data from currentSlice
+    const buttonData = currentSlice.find((data: any) => 
+      data && (data.freq === freq)
+    );
+    
+    if (!buttonData) return;
+    
+    // Don't allow interaction with busy frequencies
+    if (buttonData.busy || buttonData.status === 'busy') {
+      console.log('Cannot interact with busy frequency:', freq);
+      return;
+    }
+    
+    // Send appropriate message based on button type and current state
+    switch (type) {
+      case 'tx':
+        // Toggle TX selection (on/off)
+        sendMsg({ type: 'tx', cmd1: '' + freq, dbl1: !buttonData.t });
+        break;
+      case 'rx':
+        // RCVR behaves like radio button - if on, turn off and go back to unselected
+        // If off, turn on
+        sendMsg({ type: 'rx', cmd1: '' + freq, dbl1: !buttonData.r });
+        break;
+      case 'hs':
+        // Toggle headset selection
+        sendMsg({ type: 'set_hs', cmd1: '' + freq, dbl1: !buttonData.h });
+        break;
+    }
+  };
+
+  // Handle dynamic button states for A/G frequencies
+  useEffect(() => {
+    // For the new 3-button layout, we don't need to manipulate CSS classes
+    // The state is handled directly in the React component via currentSlice data
+    
+    // We can keep this for any future dynamic styling needs
+    // Currently the button states are managed by React state in the JSX
+    
+  }, [currentSlice, ag_status, buttons]);
+
+  return (
+    <div className="grid grid-cols-3 gap-y-2 gap-x-6" style={{gridTemplateColumns: 'repeat(3, minmax(240px, 1fr))'}}>
+      {buttons.map((btn: any, i: number) => (
+        <div key={i} className="ag-frequency-container">
+          {btn.type !== ButtonType.NONE ? (
+            // Assigned A/G frequency - show frequency above buttons
+            <>
+              {/* Frequency header above the buttons */}
+              <div className={`ag-freq-header ${
+                (parseInt(btn.target) === 121500000 || parseInt(btn.target) === 243000000) ? 'guard-frequency' : ''
+              }`}>
+                {btn.shortName}
+              </div>
+              
+              {/* Three sub-buttons container */}
+              <div className={`ag-frequency-button ${getAGState(btn.originalData)}`}>
+                <div className="ag-sub-buttons">
+                  {/* XMTR ON/OFF button (left) */}
+                  <button
+                    className={`vscs-static-button ag-sub-button vscs-button ${
+                      btn.originalData?.t ? (
+                        ptt ? 'state-ptt-confirm' : 'active'
+                      ) : ''
+                    }`}
+                    onClick={() => handleAGSubButtonClick(btn.target, 'tx')}
+                  >
+                    <div className="ag-sub-content">
+                      <div className="ag-sub-text-container">
+                        <span className="ag-sub-text">XMTR</span>
+                        <span className="ag-sub-text">{btn.originalData?.t ? 'ON' : 'OFF'}</span>
+                      </div>
+                    </div>
+                  </button>
+                  
+                  {/* Radio site button (center) with toggleable headphone/speaker icon - only active when RCVR is on */}
+                  <button
+                    className={`vscs-static-button ag-sub-button vscs-button ${!btn.originalData?.r ? 'disabled' : 'active'}`}
+                    onClick={() => btn.originalData?.r ? handleAGSubButtonClick(btn.target, 'hs') : undefined}
+                    disabled={!btn.originalData?.r}
+                  >
+                    <div className="ag-sub-content">
+                      <span className="ag-sub-text">{btn.radioSite}</span>
+                      <div className="ag-sub-icon">
+                        {btn.originalData?.h ? <HeadphoneSvgComponent /> : <SpeakerSvgComponent />}
+                      </div>
+                    </div>
+                  </button>
+                  
+                  {/* RCVR ON/OFF button (right) */}
+                  <button
+                    className={`vscs-static-button ag-sub-button vscs-button ${
+                      btn.originalData?.talking ? 'state-squelch-active' : 
+                      btn.originalData?.r ? 'active' : ''
+                    }`}
+                    onClick={() => handleAGSubButtonClick(btn.target, 'rx')}
+                  >
+                    <div className="ag-sub-content">
+                      <div className="ag-sub-text-container">
+                        <span className="ag-sub-text">RCVR</span>
+                        <span className="ag-sub-text">{btn.originalData?.r ? 'ON' : 'OFF'}</span>
+                      </div>
+                    </div>
+                  </button>
+                </div>
+              </div>
+            </>
+          ) : (
+            // Unassigned button - show as empty with consistent container structure
+            <div className="ag-frequency-button" style={{ height: '78px' }}>
+              <VscsButtonComponent
+                config={btn}
+                typeString=""
+                callback={undefined}
+                className={`${btn.target} ${btn.type} vscs-button ag-button unassigned cursor-not-allowed`}
+              />
+            </div>
+          )}
+        </div>
+      ))}
+    </div>
+  );
+}

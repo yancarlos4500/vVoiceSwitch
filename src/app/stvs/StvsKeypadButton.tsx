@@ -35,7 +35,6 @@ const StvsKeypadButton: React.FC<StvsKeypadButtonProps> = ({
         ${isActive ? 'bg-gray-200 border-gray-600' : 'bg-white border-gray-400'}
         hover:bg-gray-100 transition-colors select-none`}
       style={{
-        opacity: brightness,
         boxShadow: isActive ? 'inset 0 2px 4px rgba(0,0,0,0.3)' : '0 2px 4px rgba(0,0,0,0.1)',
         transform: isActive ? 'translateY(1px)' : 'none',
         fontFamily: 'Arial, sans-serif',

@@ -2,7 +2,14 @@
 @font-face {
     font-family: 'TerminusTTF-Bold';
     src: url('/TerminusTTF-Bold.ttf') format('truetype');
-    font-weight: bold;
+    font-weight: lighter;
+    font-style: normal;
+}
+
+@font-face {
+    font-family: 'VSCS';
+    src: url('/VSCS.ttf') format('truetype');
+    font-weight: lighter;
     font-style: normal;
 }
 
@@ -451,54 +458,811 @@
     }
 }
 
+/* ===== VSCS BUTTON STYLES - Based on Manual Pages 68-74 ===== */
+
 .vscs-panel {
-    font-family: 'Courier New', Courier, monospace;
+    font-family: 'VSCS', 'Courier New', Courier, monospace;
     color: black;
-    width: 800px !important;
+    width: 790px !important;
     height: 600px !important;
+    background-color: #27272A; /* Dark grey screen background */
 }
 
+/* Base VSCS Button Styling */
 .vscs-button {
-    background-color: white;
-    text-align: left;
-}
-
-.vscs-button > div {
-    padding-left: 10px;
-}
-
-.vscs-static-button {
-    text-align: left;
-    padding: 0 10px;
-}
-
-.vscs-active-call {
-    color: transparent;
+    width: 75px;
+    height: 80px;
+    display: flex;
+    flex-direction: column;
+    justify-content: top;
+    align-items: center;
+    font-size: 18px;
+    font-weight: lighter;
+    text-align: center;
+    border: none;
+    cursor: pointer;
     user-select: none;
+    position: relative;
+    padding: 4px;
+    
+    /* Default state - Unselected/Idle (White background, black text) */
+    background-color: white;
+    color: black;
+    border: 1px solid #333333;
+}
+
+/* VSCS Button States - Based on Manual Table 3-6 */
+
+/* Unselected frequency/Idle DA call/Idle test state */
+.vscs-button.state-unselected {
+    background-color: white !important; /* Light grey outer frame like the image */
+    color: black !important;
+    border: 2px solid white !important; /* Outer grey border */
+    width: 250px !important; /* Force the width to override base button style */
+    height: 80px !important; /* Ensure proper height */
+    padding: 6px !important;
+    position: relative;    
+}
+
+.vscs-button.state-unselected::before {
+    content: '';
+    position: absolute;
+    top: 6px;
+    left: 6px;
+    right: 6px;
+    bottom: 6px;
+    background-color: white; /* White inner background */
+    border: 1px solid #000000; /* Thin black inner border frame */
+    z-index: 0;
+}
+
+.vscs-button.state-unselected > div {
+    position: relative;
+    z-index: 1; /* Ensure text appears above the pseudo-element */
+}
+
+/* Emergency frequency state */
+.vscs-button.state-emergency {
+    background-color: white;
+    color: red;
+    border: 1px solid #666666;
+}
+
+/* XMTR/RCVR disabled state */
+.vscs-button.state-disabled {
+    background-color: black;
+    color: white;
+}
+
+/* PTT Timeout (radio not responding) */
+.vscs-button.state-timeout {
+    background-color: black;
+    color: yellow;
+}
+
+.vscs-button.state-timeout * {
+    animation: flash-1s 1s infinite;
+}
+
+/* RCVR locally OFF with squelch break */
+.vscs-button.state-squelch-break {
+    background-color: black;
+    color: #FFA500; /* Amber */
+}
+
+.vscs-button.state-squelch-break * {
+    animation: flutter-8hz 0.125s infinite;
+}
+
+/* RCVR remotely muted, locally ON */
+.vscs-button.state-muted {
+    background-color: black;
+    color: green;
+}
+
+/* BUEC mode XMTR or RCVR OFF */
+.vscs-button.state-buec-off {
+    background-color: black;
+    color: yellow;
+}
+
+/* DA Busy */
+.vscs-button.state-busy {
+    background-color: black;
+    color: green;
+}
+
+.vscs-button.state-busy * {
+    animation: flash-1s 1s infinite;
+}
+
+/* Function button unavailable */
+.vscs-button.state-unavailable {
+    background-color: #78716c; /* Light grey */
+    color: black;
+    cursor: not-allowed;
+}
+
+/* Function button available */
+.vscs-button.state-available {
+    background-color: #40E0D0; /* Turquoise */
+    color: black;
+}
+
+/* Function button touched */
+.vscs-button.state-touched {
+    background-color: blue;
+    color: white;
+}
+
+/* Function button active */
+.vscs-button.state-active {
+    background-color: green;
+    color: black;
+}
+
+/* Function button activated (two-step) */
+.vscs-button.state-activated {
+    background-color: green;
+    color: black;
+}
+
+.vscs-button.state-activated * {
+    animation: flash-1s 1s infinite;
+}
+
+/* Active voice monitoring */
+.vscs-button.state-monitoring {
+    background-color: green;
+    color: white;
+}
+
+/* Emergency PTT button or frequency indicator */
+.vscs-button.state-emergency-ptt {
+    background-color: red;
+    color: white;
+}
+
+/* Active message area / Blocked PTT / Failed test */
+.vscs-button.state-blocked {
+    background-color: #FFC0CB; /* Pink */
+    color: black;
+}
+
+/* PTT confirmation */
+.vscs-button.state-ptt-confirm {
+    background-color: #FFA500; /* Amber */
+    color: black;
+}
+
+/* Squelch break, RCVR ON, not remotely muted */
+.vscs-button.state-squelch-active {
+    background-color: #FFA500; /* Amber */
+    color: black;
+}
+
+.vscs-button.state-squelch-active * {
+    animation: flutter-8hz 0.125s infinite;
+}
+
+/* Ringing DA/CA */
+.vscs-button.state-ringing {
+    background-color: #FFA500; /* Amber */
+    color: black;
+}
+
+.vscs-button.state-ringing * {
+    animation: flash-1s 1s infinite;
+}
+
+/* BUEC mode XMTR and RCVR ON */
+.vscs-button.state-buec-on {
+    background-color: yellow;
+    color: black;
+}
+
+/* DA/CA ON hold */
+.vscs-button.state-hold {
+    background-color: yellow;
+    color: black;
+}
+
+.vscs-button.state-hold * {
+    animation: wink-1s 1s infinite;
+}
+
+/* ===== A/G 3-BUTTON LAYOUT STYLES (Manual Pages 15-16) ===== */
+
+.ag-frequency-container {
+    width: 250px;
+    height: 78px; /* Back to original button height */
+    margin-top: 10px; /* Always reserve space at top for header */
+    display: flex;
+    flex-direction: column;
+    position: relative;
+}
+
+/* Frequency header positioned in the top margin space */
+.ag-freq-header {
+    position: absolute;
+    top: -20px; /* Position higher up to use the main grid's top margin space */
+    left: 0;
+    right: 0;
+    height: 20px;
+    background-color: #40E0D0; /* Match VSCS panel background */
+    color: black;
+    font-size: 16px;
+    font-weight: normal;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: 'VSCS', monospace;
+}
+
+/* Left horizontal line with vertical end cap */
+.ag-freq-header::before {
+    content: '';
+    position: absolute;
+    left: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 50px;
+    height: 2px;
+    background-color: black;
+    /* Use box-shadow to create vertical end cap at the left */
+    box-shadow: 0 -6px 0 -4px black, 0 6px 0 -4px black;
+}
+
+/* Right horizontal line with vertical end cap */
+.ag-freq-header::after {
+    content: '';
+    position: absolute;
+    right: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 50px;
+    height: 2px;
+    background-color: black;
+    /* Use box-shadow to create vertical end cap at the right */
+    box-shadow: 50px -6px 0 -4px black, 50px 6px 0 -4px black;
+}
+
+.ag-frequency-button {
+    width: 100%;
+    height: 110%; /* Take full container height (78px) */
+    background-color: #78716c;
+    border: none;
+    position: relative;
+    display: flex;
+    font-family: 'VSCS', monospace; /* Use VSCS font */
+}
+
+/* Remove external frequency labels */
+.ag-freq-label {
+    display: none; /* Not using left-positioned labels */
+}
+
+.ag-sub-buttons {
+    display: flex;
+    height: 100%; /* Take full button height */
+    width: 100%;
+    gap: 12px; /* Only gap between buttons, no padding around container */
+}
+
+.ag-sub-button {
+    border: none !important; /* Force remove all borders */
+    outline: none; /* Remove any outline */
+    flex: 1; /* Equal width distribution with gaps */
+    /* Inherit most styles from .vscs-static-button */
+    font-size: 10px !important; /* Override the larger font size */
+    font-weight: bold !important;
+    font-family: 'VSCS', monospace; /* Use VSCS font */
+    height: 100%;
+    /* Removed transition for instant color changes */
+    
+    /* Default "off" state - black background with white text */
+    background-color: black !important;
+    color: white !important;
+}
+
+/* Active state for A/G sub-buttons - green background with black text */
+.ag-sub-button.active {
+    background-color: green !important;
+    color: black !important;
+}
+
+/* PTT confirmation state for A/G XMTR button - amber background with black text */
+.ag-sub-button.state-ptt-confirm {
+    background-color: #FFA500 !important; /* Amber */
+    color: black !important;
+}
+
+/* Squelch active state for A/G RCVR button - amber background with black text and flutter */
+.ag-sub-button.state-squelch-active {
+    background-color: #FFA500 !important; /* Amber */
+    color: black !important;
+}
+
+.ag-sub-button.state-squelch-active * {
+    animation: flutter-8hz 0.125s infinite;
+}
+
+/* Ensure AG sub-content alignment is preserved when VSCS button classes are added */
+.ag-sub-button.vscs-button .ag-sub-content {
+    justify-content: flex-start !important; /* Force top alignment */
+}
+
+/* Disabled state for A/G sub-buttons (when RCVR is off) */
+.ag-sub-button.disabled {
+    background-color: black !important; /* Dark gray */
+    color: white !important; /* Light gray text */
+    cursor: not-allowed !important;
+}
+
+/* Ensure SVG icons in disabled state are also grayed out */
+.ag-sub-button.disabled .ag-sub-icon svg g {
+    fill: white !important;
+}
+
+.ag-sub-button:last-child {
+    border-right: none !important;
+}
+
+.ag-sub-button:focus {
+    outline: none; /* Remove focus outline */
+    border: none !important; /* Ensure no borders on focus */
+}
+
+.ag-sub-content {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-start; /* Align content to top */
+    height: 100%;
+    padding-top: 4px; /* Small top padding for spacing */
+}
+
+.ag-sub-text-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin-bottom: 4px; /* Add space between text and icon */
+}
+
+.ag-sub-text {
+    line-height: 1;
+    margin: 1px 0;
+    font-size: 18px;
+    font-weight: normal;
+}
+
+.ag-sub-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 4px 0; /* Center the icon with equal margins */
+}
+
+.ag-sub-icon svg {
+    width: 40px !important;
+    height: 50px !important;
+    padding: 0 !important;
+}
+
+.ag-sub-icon svg g {
+    fill: white !important; /* Default white fill for black background buttons */
+}
+
+/* SVG icons when button is active (green background) */
+.ag-sub-button.active .ag-sub-icon svg g {
+    fill: black !important; /* Black fill for green background */
+}
+
+/* Ensure SVG icons in disabled state are also grayed out */
+.ag-sub-button.disabled .ag-sub-icon svg g {
+    fill: white !important;
+}
+
+/* Ensure SVG icons are visible in busy state */
+.ag-frequency-button.ag-busy .ag-sub-icon svg g {
+    fill: green !important;
+}
+
+/* Remove the old custom active styling since we're using .vscs-static-button.active */
+/* .ag-sub-button.active styles are handled by .vscs-static-button.active */
+
+/* G/G Button 5-Line Layout - Based on Manual Page 27 */
+.gg-button-content {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-evenly;
+    align-items: center;
+    width: 100%;
+    height: 100%;
+    font-size: 14px;
+    line-height: 1.1;
+    padding: 2px;
+}
+
+.gg-line1,
+.gg-line2,
+.gg-line3,
+.gg-line4,
+.gg-line5 {
+    text-align: center;
+    width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-size: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+}
+
+/* Speaker icon styling for G/G shout lines */
+.gg-speaker-icon {
+    display: inline-flex;
+    align-items: center;
+    width: 16px;
+    height: 16px;
+    flex-shrink: 0;
+}
+
+.gg-speaker-icon svg {
+    width: 100%;
+    height: 100%;
+}
+
+/* A/G Button States */
+.ag-frequency-button.ag-busy {
+    animation: flash-1s 1s infinite;
+}
+
+.ag-frequency-button.ag-busy .ag-freq-header {
+    background-color: black;
+    color: green;
+}
+
+.ag-frequency-button.ag-busy .ag-sub-button {
+    background-color: black !important;
+    color: green !important;
+}
+
+.ag-frequency-button.ag-busy .ag-sub-button.active {
+    background-color: #006600 !important;
+    color: green !important;
+}
+
+.ag-frequency-button.ag-monitoring .ag-freq-header {
+    background-color: green;
+    color: white;
+}
+
+/* ===== END A/G 3-BUTTON LAYOUT STYLES ===== */
+
+/* ===== A/G BUTTON SPECIFIC STATES ===== */
+/* A/G buttons use their own state system, separate from VSCS states */
+
+/* A/G Idle state - populated frequency but not selected */
+.vscs-button.ag-idle {
+    background-color: white !important; /* Light grey outer frame */
+    color: black !important;
+    border: 2px solid #333333 !important; /* Outer grey border */
+    width: 250px !important; /* Wide A/G button format */
+    height: 80px !important;
+    padding: 6px !important;
+    position: relative;
+}
+
+.vscs-button.ag-idle::before {
+    content: '';
+    position: absolute;
+    top: 6px;
+    left: 6px;
+    right: 6px;
+    bottom: 6px;
+    background-color: white; /* White inner background */
+    border: 2px solid #000000; /* Thin black inner border frame */
+    z-index: 0;
+}
+
+.vscs-button.ag-idle > div,
+.vscs-button.ag-active > div,
+.vscs-button.ag-busy > div,
+.vscs-button.ag-monitoring > div {
+    position: relative; /* Changed from absolute to relative */
+    z-index: 1; /* Ensure text appears above the pseudo-element */
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    padding: 6px; /* Add padding inside the inner border area */
+    pointer-events: none; /* Allow clicks to pass through to the button */
+    height: 100%; /* Take full height of parent button */
+}
+
+/* Reset the button's internal structure for A/G buttons */
+.vscs-button.ag-idle .first-line,
+.vscs-button.ag-active .first-line,
+.vscs-button.ag-busy .first-line,
+.vscs-button.ag-monitoring .first-line {
+    display: block !important; /* Show the first line containing frequency */
+    font-weight: bold;
+    font-size: 14px;
+    margin-bottom: 4px;
+}
+
+.vscs-button.ag-idle .second-line,
+.vscs-button.ag-active .second-line,
+.vscs-button.ag-busy .second-line,
+.vscs-button.ag-monitoring .second-line {
+    display: block !important; /* Show the second line containing call name */
+    font-size: 12px;
+}
+
+.vscs-button.ag-idle .landline-type,
+.vscs-button.ag-active .landline-type,
+.vscs-button.ag-busy .landline-type,
+.vscs-button.ag-monitoring .landline-type,
+.vscs-button.unassigned .landline-type,
+.vscs-button.ag-button .landline-type {
+    display: none !important; /* Hide the type string for all A/G buttons including unassigned */
+}
+
+/* A/G Active state - frequency is connected/active */
+.vscs-button.ag-active {
+    background-color: green !important;
+    color: black !important;
+    width: 250px !important;
+    height: 80px !important;
+    padding: 6px !important;
+    position: relative;
+}
+
+.vscs-button.ag-active::before {
+    content: '';
+    position: absolute;
+    top: 6px;
+    left: 6px;
+    right: 6px;
+    bottom: 6px;
+    background-color: green; /* Green inner background for active state */
+    border: 1px solid #000000; /* Thin black inner border frame */
+    z-index: 0;
+}
+
+/* A/G Busy state - frequency is busy */
+.vscs-button.ag-busy {
+    background-color: black !important;
+    color: green !important;
+    width: 250px !important;
+    height: 80px !important;
+    padding: 6px !important;
+    animation: flash-1s 1s infinite;
+    position: relative;
+}
+
+.vscs-button.ag-busy::before {
+    content: '';
+    position: absolute;
+    top: 6px;
+    left: 6px;
+    right: 6px;
+    bottom: 6px;
+    background-color: black; /* Black inner background for busy state */
+    border: 1px solid #000000;
+    z-index: 0;
+}
+
+/* A/G Monitoring state - someone is talking */
+.vscs-button.ag-monitoring {
+    background-color: green !important;
+    color: white !important;
+    width: 250px !important;
+    height: 80px !important;
+    padding: 6px !important;
+    position: relative;
+}
+
+.vscs-button.ag-monitoring::before {
+    content: '';
+    position: absolute;
+    top: 6px;
+    left: 6px;
+    right: 6px;
+    bottom: 6px;
+    background-color: green; /* Green inner background */
+    border: 1px solid #000000;
+    z-index: 0;
+}
+
+/* Button Border Types - Based on Manual Figure 3-8 */
+
+/* No Border - for DA buttons */
+.vscs-button.border-none {
+    border: none;
+}
+
+/* Thin Border - for unassigned frequency buttons */
+.vscs-button.border-thin {
+    border: 1px solid #78716c;
+}
+
+/* Unassigned button styling - grey frame with inner border like the image */
+.vscs-button.unassigned {
+    background-color: #78716c; /* Light grey background matching the image */
+    width: 100%; /* Use full container width instead of fixed 250px */
+    height: 100%; /* Use full container height */
+    padding: 6px;
+    position: relative;
+    border: 2px solid #333333; /* Outer grey border */
+}
+
+.vscs-button.unassigned::before {
+    content: '';
+    position: absolute;
+    top: 6px;
+    left: 6px;
+    right: 6px;
+    bottom: 6px;
+    background-color: transparent;
+    border: 2px solid #000000; /* Thin black inner border */
+    z-index: 1;
+}
+
+/* Thick Border - for MAN RING and non-latching utility test buttons */
+.vscs-button.border-thick {
+    border: 3px solid #333333;
+}
+
+/* Cut Off Corners - for non-latching DA and Emergency PTT buttons */
+.vscs-button.border-cutoff {
+    border: none;
+    clip-path: polygon(8px 0%, 100% 0%, 100% calc(100% - 8px), calc(100% - 8px) 100%, 0% 100%, 0% 8px);
+    background-color: white;
+    position: relative;
+}
+
+.vscs-button.border-cutoff::before {
+    content: '';
+    position: absolute;
+    top: -1px;
+    left: -1px;
+    right: -1px;
+    bottom: -1px;
+    background-color: #333333;
+    clip-path: polygon(8px 0%, 100% 0%, 100% calc(100% - 8px), calc(100% - 8px) 100%, 0% 100%, 0% 8px);
+    z-index: -1;
+}
+
+/* Static buttons styling (CALL ANS, HOLD, RLS, etc.) */
+.vscs-static-button {
+    background-color: #40E0D0; /* Turquoise - Available state */
+    color: black;
+    font-weight: lighter;
+    text-align: center;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid #333333;
+    font-size: 20px;
+    width: 165px;
+    height: 80px;
+    transition: none; /* Remove any transitions for instant color changes */
+}
+
+/* Screen selection mode - violet background for bottom row */
+.vscs-button.state-available.screen-select,
+.vscs-button.state-touched.screen-select,
+.vscs-static-button.screen-select {
+    background-color: #FF00FF !important;
+    color: white !important;
+    font-weight: lighter !important;
+}
+
+/* SCRN ALT button activated state - flashing text only */
+.vscs-button.state-available.scrn-alt-active,
+.vscs-button.state-touched.scrn-alt-active,
+.vscs-static-button.scrn-alt-active {
+    background-color: green !important; 
+    color: black;
+    animation: flash-text-1s 1s infinite;
+}
+
+/* Active state for static buttons */
+.vscs-static-button.active {
+    background-color: green;
+    color: black;
+}
+
+/* Unavailable state for static buttons */
+.vscs-static-button.unavailable {
+    background-color: #D3D3D3; /* Light grey */
+    color: black;
+    cursor: not-allowed;
+}
+
+/* VSCS Button Content Styling */
+.vscs-button > div {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    height: 100%;
+}
+
+.vscs-button .button-label {
+    font-size: 9px;
+    font-weight: lighter;
+    text-align: center;
+    line-height: 1.1;
+    word-wrap: break-word;
+    max-width: 100%;
+}
+
+.vscs-button .button-type {
+    font-size: 7px;
+    margin-top: 2px;
+    opacity: 0.8;
+}
+
+/* Animations - Based on Manual Specifications */
+
+/* Flashing text - 1 cycle per second, 50% duty cycle - text color only */
+@keyframes flash-text-1s {
+    0% { color: black; }
+    49.99% { color: black; }
+    50% { color: transparent; }
+    99.99% { color: transparent; }
+    100% { color: black; }
+}
+
+/* Flashing - 1 cycle per second, 50% duty cycle - INSTANT on/off */
+@keyframes flash-1s {
+    0% { opacity: 1; }
+    49.99% { opacity: 1; }
+    50% { opacity: 0; }
+    99.99% { opacity: 0; }
+    100% { opacity: 1; }
+}
+
+/* Winking - 1 cycle per second, 95% on, 5% off */
+@keyframes wink-1s {
+    0% { opacity: 1; }
+    95% { opacity: 1; }
+    97.5% { opacity: 0; }
+    100% { opacity: 1; }
+}
+
+/* Fluttering - 8 cycles per second, 80% on, 20% off */
+@keyframes flutter-8hz {
+    0% { opacity: 1; }
+    80% { opacity: 1; }
+    90% { opacity: 0; }
+    100% { opacity: 1; }
+}
+
+/* Legacy state classes for compatibility */
+.vscs-active-call {
+    background-color: green !important;
+    color: white !important;
 }
 
 .vscs-active-bg {
-    background-color: seagreen;
+    background-color: green !important;
 }
 
 .vscs-incoming-bg {
-    background-color: chocolate;
+    background-color: #FFA500 !important; /* Amber */
+    animation: flash-1s 1s infinite;
 }
 
 .vscs-held {
-    animation: 3s wink-text linear infinite;
-    background-color: yellow;
-}
-@keyframes wink-text {
-    0% {
-        color: unset;
-    }
-    50% {
-        color: transparent;
-    }
-    100% {
-        color: unset;
-    }
+    background-color: yellow !important;
+    animation: wink-1s 1s infinite;
 }
 
 .modal {
@@ -507,4 +1271,292 @@
     height: 600px;
     z-index: 99;
     background-color: #666666;
+}
+
+/* ===== UTIL PAGE STYLES - Based on UTIL_Page.svg ===== */
+
+.util-page {
+    background-color: #404040; /* Dark gray background */
+    width: 790px !important;
+    height: 600px !important;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+}
+
+.util-header {
+    background-color: #ccc; /* Light gray header */
+    color: black;
+    font-size: 6.5px;
+    font-weight: bold;
+    text-align: center;
+    padding: 8px;
+    border: 1px solid #404040;
+    margin: 6px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.util-main-grid {
+    display: grid;
+    grid-template-columns: 1fr 140px 140px 200px;
+    grid-template-rows: 1fr;
+    gap: 8px;
+    padding: 0 8px;
+    flex: 1;
+    height: 400px;
+}
+
+.util-manual-test-panel {
+    background-color: white;
+    border: 1px solid #fff;
+    display: flex;
+    flex-direction: column;
+    position: relative;
+}
+
+.util-manual-test-header {
+    background-color: #f0ff00; /* Yellow header */
+    color: black;
+    font-size: 6.5px;
+    font-weight: bold;
+    text-align: center;
+    padding: 4px;
+    height: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.util-manual-test-content {
+    padding: 12px;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+}
+
+.util-test-selection {
+    font-size: 6.5px;
+    line-height: 1.2;
+    color: black;
+}
+
+.util-control-buttons {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding: 8px 0;
+}
+
+.util-control-group {
+    display: flex;
+    justify-content: center;
+}
+
+.util-control-btn {
+    width: 120px !important;
+    height: 72px !important;
+    font-size: 16px !important;
+}
+
+.util-audio-display {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 72px;
+    background-color: white;
+    border: 1px solid #333;
+    margin: 4px 0;
+}
+
+.util-audio-icon {
+    font-size: 24px;
+}
+
+.util-test-buttons {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding: 8px 0;
+}
+
+.util-test-btn {
+    width: 120px !important;
+    height: 72px !important;
+    font-size: 12px !important;
+}
+
+.util-sliders {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    padding: 8px;
+}
+
+.util-slider-group {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.util-slider-container {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    background-color: white;
+    padding: 4px 8px;
+    border: 1px solid #333;
+}
+
+.util-slider-label-left,
+.util-slider-label-right {
+    font-size: 7px;
+    color: black;
+    font-weight: bold;
+}
+
+.util-slider-track {
+    flex: 1;
+    height: 8px;
+    position: relative;
+}
+
+.util-slider {
+    width: 100%;
+    height: 8px;
+    background: #9e91ff; /* Purple slider track */
+    border: none;
+    outline: none;
+    cursor: pointer;
+    appearance: none;
+}
+
+.util-slider::-webkit-slider-thumb {
+    appearance: none;
+    width: 12px;
+    height: 12px;
+    background: #333;
+    border-radius: 2px;
+    cursor: pointer;
+}
+
+.util-slider::-moz-range-thumb {
+    width: 12px;
+    height: 12px;
+    background: #333;
+    border-radius: 2px;
+    cursor: pointer;
+    border: none;
+}
+
+.util-slider-button {
+    background-color: #a8ffff; /* Cyan button */
+    color: black;
+    font-size: 6px;
+    font-weight: bold;
+    text-align: center;
+    padding: 4px;
+    border: 1px solid #333;
+    height: 72px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.util-slider-text {
+    line-height: 1.1;
+}
+
+.util-slider-arrows {
+    font-size: 8px;
+    line-height: 0.8;
+}
+
+.util-rt-toggle {
+    position: absolute;
+    top: 380px;
+    left: 350px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+}
+
+.util-rt-label {
+    background-color: white;
+    color: black;
+    font-size: 6.5px;
+    font-weight: bold;
+    padding: 2px 8px;
+    border: 1px solid #333;
+}
+
+.util-rt-btn {
+    width: 64px !important;
+    height: 24px !important;
+    font-size: 12px !important;
+}
+
+.util-bottom-nav {
+    display: flex;
+    align-items: stretch;
+    gap: 8px;
+    padding: 8px;
+    height: 120px;
+    background-color: #404040;
+}
+
+.util-nav-group {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+}
+
+.util-nav-header {
+    background-color: white;
+    color: black;
+    font-size: 6.5px;
+    font-weight: bold;
+    padding: 2px 8px;
+    text-align: center;
+    min-width: 40px;
+}
+
+.util-nav-btn {
+    width: 120px !important;
+    height: 80px !important;
+    font-size: 12px !important;
+}
+
+.util-logical-psn {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.util-logical-btn {
+    width: 200px !important;
+    height: 80px !important;
+    font-size: 12px !important;
+}
+
+/* Guard frequency styling - red background for Guard frequencies (121.5 MHz, 243.0 MHz) */
+.ag-freq-header.guard-frequency {
+    background-color: #ff0000 !important; /* Red background for Guard frequencies */
+    color: white !important; /* White text for better contrast on red */
+}
+
+.ag-freq-header.guard-frequency::before {
+    background-color: white !important; /* White lines for contrast on red background */
+    box-shadow: 0 -6px 0 -4px white, 0 6px 0 -4px white !important;
+}
+
+.ag-freq-header.guard-frequency::after {
+    background-color: white !important; /* White lines for contrast on red background */
+    box-shadow: 50px -6px 0 -4px white, 50px 6px 0 -4px white !important;
 }

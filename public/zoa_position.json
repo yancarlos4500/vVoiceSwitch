@@ -4,8 +4,8 @@
             "cs": "OAK_10_CTR",
             "pos": "Sector 10",
             "freq": 128700000,
-            "rn": "Oakland Center",
-            "ui": "ivsr",
+            "rn": "ROM 7, SBPA 10",
+            "ui": "vscs",
             "lines": [
                 [
                     "1010006",
@@ -153,8 +153,8 @@
             "cs": "OAK_11_CTR",
             "pos": "Sector 11",
             "freq": 133700000,
-            "rn": "Oakland Center",
-            "ui": "ivsr",
+            "rn": "HAF 2, ROM 5, FAT 18",
+            "ui": "vscs",
             "lines": [
                 [
                     "1010007",
@@ -297,8 +297,8 @@
             "cs": "OAK_13_CTR",
             "pos": "Sector 13",
             "freq": 127450000,
-            "rn": "Oakland Center",
-            "ui": "ivsr",
+            "rn": "HAF 1, QHL 15, FATA 22",
+            "ui": "vscs",
             "lines": [
                 [
                     "1010008",
@@ -421,8 +421,8 @@
             "cs": "OAK_14_CTR",
             "pos": "Sector 14",
             "freq": 134550000,
-            "rn": "Oakland Center",
-            "ui": "ivsr",
+            "rn": "ROM 8",
+            "ui": "vscs",
             "lines": [
                 [
                     "1010001",
@@ -565,8 +565,8 @@
             "cs": "OAK_15_CTR",
             "pos": "Sector 15",
             "freq": 132800000,
-            "rn": "Oakland Center",
-            "ui": "ivsr",
+            "rn": "ROM 6, FAT 16, FATA 21",
+            "ui": "vscs",
             "lines": [
                 [
                     "1010009",
@@ -694,8 +694,8 @@
             "cs": "OAK_16_CTR",
             "pos": "Sector 16",
             "freq": 123800000,
-            "rn": "Oakland Center",
-            "ui": "ivsr",
+            "rn": "FAT 19",
+            "ui": "vscs",
             "lines": [
                 [
                     "1010001",
@@ -823,8 +823,8 @@
             "cs": "OAK_22_CTR",
             "pos": "Sector 22",
             "freq": 121250000,
-            "rn": "Oakland Center",
-            "ui": "ivsr",
+            "rn": "QQAA 14",
+            "ui": "vscs",
             "lines": [
                 [
                     "1010010",
@@ -967,8 +967,8 @@
             "cs": "OAK_29_CTR",
             "pos": "Sector 29",
             "freq": 119750000,
-            "rn": "Oakland Center",
-            "ui": "ivsr",
+            "rn": "QQAA 13",
+            "ui": "vscs",
             "lines": [
                 [
                     "1010011",
@@ -1091,8 +1091,8 @@
             "cs": "OAK_30_CTR",
             "pos": "Sector 30",
             "freq": 127175000,
-            "rn": "Oakland Center",
-            "ui": "ivsr",
+            "rn": "MVA 53",
+            "ui": "vscs",
             "lines": [
                 [
                     "1010012",
@@ -1215,8 +1215,8 @@
             "cs": "OAK_31_CTR",
             "pos": "Sector 31",
             "freq": 134975000,
-            "rn": "Oakland Center",
-            "ui": "ivsr",
+            "rn": "RBL 24, UKI 28",
+            "ui": "vscs",
             "lines": [
                 [
                     "1010013",
@@ -1344,8 +1344,8 @@
             "cs": "OAK_32_CTR",
             "pos": "Sector 32",
             "freq": 132950000,
-            "rn": "Oakland Center",
-            "ui": "ivsr",
+            "rn": "QQAA 12, QQA 23, SMF 47",
+            "ui": "vscs",
             "lines": [
                 [
                     "1010014",
@@ -1483,8 +1483,8 @@
             "cs": "OAK_33_CTR",
             "pos": "Sector 33",
             "freq": 132050000,
-            "rn": "Oakland Center",
-            "ui": "ivsr",
+            "rn": "FLX 30, TPH 34",
+            "ui": "vscs",
             "lines": [
                 [
                     "1010015",
@@ -1607,8 +1607,8 @@
             "cs": "OAK_34_CTR",
             "pos": "Sector 34",
             "freq": 134375000,
-            "rn": "Oakland Center",
-            "ui": "ivsr",
+            "rn": "QQA 11, FATA 17 ",
+            "ui": "vscs",
             "lines": [
                 [
                     "1010016",
@@ -1756,8 +1756,8 @@
             "cs": "OAK_35_CTR",
             "pos": "Sector 35",
             "freq": 134150000,
-            "rn": "Oakland Center",
-            "ui": "ivsr",
+            "rn": "HAF 4, QQB 27",
+            "ui": "vscs",
             "lines": [
                 [
                     "1010017",
@@ -1895,8 +1895,8 @@
             "cs": "OAK_36_CTR",
             "pos": "Sector 36",
             "freq": 119975000,
-            "rn": "Oakland Center",
-            "ui": "ivsr",
+            "rn": "UKI 20, RBL 25, QZW 42",
+            "ui": "vscs",
             "lines": [
                 [
                     "1010002",
@@ -2019,8 +2019,8 @@
             "cs": "OAK_40_CTR",
             "pos": "Sector 40",
             "freq": 127800000,
-            "rn": "Oakland Center",
-            "ui": "ivsr",
+            "rn": "UKI 38, QZW 45",
+            "ui": "vscs",
             "lines": [
                 [
                     "1010018",
@@ -2158,8 +2158,8 @@
             "cs": "OAK_41_CTR",
             "pos": "Sector 41",
             "freq": 125850000,
-            "rn": "Oakland Center",
-            "ui": "ivsr",
+            "rn": "QZW 41",
+            "ui": "vscs",
             "lines": [
                 [
                     "1010003",
@@ -2302,8 +2302,8 @@
             "cs": "OAK_42_CTR",
             "pos": "Sector 42",
             "freq": 132200000,
-            "rn": "Oakland Center",
-            "ui": "ivsr",
+            "rn": "RBL 26, UKI 37",
+            "ui": "vscs",
             "lines": [
                 [
                     "1010019",
@@ -2436,8 +2436,8 @@
             "cs": "OAK_43_CTR",
             "pos": "Sector 43",
             "freq": 134450000,
-            "rn": "Oakland Center",
-            "ui": "ivsr",
+            "rn": "FLX 31, RNO 36",
+            "ui": "vscs",
             "lines": [
                 [
                     "1010020",
@@ -2560,8 +2560,8 @@
             "cs": "OAK_44_CTR",
             "pos": "Sector 44",
             "freq": 127950000,
-            "rn": "Oakland Center",
-            "ui": "ivsr",
+            "rn": "SMF 40, QQAA 46, SWR 51",
+            "ui": "vscs",
             "lines": [
                 [
                     "1010004",
@@ -2699,8 +2699,8 @@
             "cs": "OAK_45_CTR",
             "pos": "Sector 45",
             "freq": 128800000,
-            "rn": "Oakland Center",
-            "ui": "ivsr",
+            "rn": "FLX 33, RNO 39",
+            "ui": "vscs",
             "lines": [
                 [
                     "1010021",
@@ -2823,8 +2823,8 @@
             "cs": "OAK_46_CTR",
             "pos": "Sector 46",
             "freq": 125750000,
-            "rn": "Oakland Center",
-            "ui": "ivsr",
+            "rn": "BIH 29, TPH 35",
+            "ui": "vscs",
             "lines": [
                 [
                     "1010022",

@@ -25,6 +25,7 @@ interface CoreState {
 
     ag_status: any[],
     gg_status: any[],
+    vscs_status: any[],
 
     setPositionData: (data: any) => void;
     setConnected: (status: boolean) => void;
@@ -85,7 +86,8 @@ export const useCoreStore = create<CoreState>((set: any, get: any) => {
         selectedPositions: [],
 
         ag_status: [],
-    gg_status: [],
+        gg_status: [],
+        vscs_status: [],
     sendMessageNow: () => {},
         setConnected: (status: boolean) => {
             set({
@@ -225,9 +227,14 @@ export const useCoreStore = create<CoreState>((set: any, get: any) => {
                     const cns = data.data as any[];
                     const new_ag: any[] = []
                     const new_gg: any[] = []
+                    const new_vscs: any[] = []
             cns.map((k: any) => {
                         if (k.call === 'A/G') {
                             new_ag.push({ ...k })
+                        } else if (k.call?.startsWith('VSCS_')) {
+                            // Handle VSCS buttons - similar to G/G processing
+                            k.call_name = call_table[k.call?.substring(5)]?.[0] || k.call?.substring(5)
+                            new_vscs.push({ ...k })
                         } else {
                 k.call_name = call_table[k.call?.substring(3)]?.[0]
                             new_gg.push({ ...k })
@@ -247,6 +254,7 @@ export const useCoreStore = create<CoreState>((set: any, get: any) => {
                     debounce_set({
                         ag_status: new_ag,
                         gg_status: new_gg,
+                        vscs_status: new_vscs,
                     })
                 } else if (data.type === 'call_sign') {
             ds.setCallsign(data.cmd1, data.dbl1)

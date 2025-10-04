@@ -90,7 +90,6 @@ const StvsLever: React.FC<StvsLeverProps> = ({
     <div 
       className="absolute cursor-pointer select-none"
       style={{ 
-        opacity: brightness,
         ...style 
       }}
     >
