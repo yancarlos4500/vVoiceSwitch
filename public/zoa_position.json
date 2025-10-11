@@ -2,7 +2,7 @@
     "positions": [
         {
             "cs": "OAK_10_CTR",
-            "pos": "Sector 10",
+            "pos": "R10",
             "freq": 128700000,
             "rn": "ROM 7, SBPA 10",
             "ui": "vscs",
@@ -125,33 +125,33 @@
                 [
                     "811056",
                     2,
-                    "NCT-B"
+                    "BOULDR,CEDAR,NILES"
                 ],
                 [
                     "811047",
                     2,
-                    "NCT-B"
+                    "BOULDR,CEDAR,NILES"
                 ],
                 [
                     "811089",
                     2,
-                    "NCT-C"
+                    "SUNOL,GROVE"
                 ],
                 [
                     "811048",
                     2,
-                    "NCT-D"
+                    "QUAKE,RICHMD,SUT/DI,188"
                 ],
                 [
                     "811099",
                     2,
-                    "NCT-A"
+                    "MOR/TU,SEC/FR,TOGA"
                 ]
             ]
         },
         {
             "cs": "OAK_11_CTR",
-            "pos": "Sector 11",
+            "pos": "R11",
             "freq": 133700000,
             "rn": "HAF 2, ROM 5, FAT 18",
             "ui": "vscs",
@@ -274,28 +274,28 @@
                 [
                     "811056",
                     2,
-                    "NCT-B"
+                    "BOULDR,CEDAR,NILES"
                 ],
                 [
                     "811089",
                     2,
-                    "NCT-C"
+                    "SUNOL,GROVE"
                 ],
                 [
                     "811048",
                     2,
-                    "NCT-D"
+                    "QUAKE,RICHMD,SUT/DI,188"
                 ],
                 [
                     "811099",
                     2,
-                    "NCT-A"
+                    "MOR/TU,SEC/FR,TOGA"
                 ]
             ]
         },
         {
             "cs": "OAK_13_CTR",
-            "pos": "Sector 13",
+            "pos": "R13",
             "freq": 127450000,
             "rn": "HAF 1, QHL 15, FATA 22",
             "ui": "vscs",
@@ -419,7 +419,7 @@
         },
         {
             "cs": "OAK_14_CTR",
-            "pos": "Sector 14",
+            "pos": "R14",
             "freq": 134550000,
             "rn": "ROM 8",
             "ui": "vscs",
@@ -542,28 +542,28 @@
                 [
                     "811056",
                     2,
-                    "NCT-B"
+                    "BOULDR,CEDAR,NILES"
                 ],
                 [
                     "811047",
                     2,
-                    "NCT-B"
+                    "BOULDR,CEDAR,NILES"
                 ],
                 [
                     "811048",
                     2,
-                    "NCT-D"
+                    "QUAKE,RICHMD,SUT/DI,188"
                 ],
                 [
                     "811099",
                     2,
-                    "NCT-A"
+                    "MOR/TU,SEC/FR,TOGA"
                 ]
             ]
         },
         {
             "cs": "OAK_15_CTR",
-            "pos": "Sector 15",
+            "pos": "R15",
             "freq": 132800000,
             "rn": "ROM 6, FAT 16, FATA 21",
             "ui": "vscs",
@@ -686,13 +686,13 @@
                 [
                     "811074",
                     2,
-                    "NCT-B"
+                    "BOULDR,CEDAR,NILES"
                 ]
             ]
         },
         {
             "cs": "OAK_16_CTR",
-            "pos": "Sector 16",
+            "pos": "R16",
             "freq": 123800000,
             "rn": "FAT 19",
             "ui": "vscs",
@@ -821,7 +821,7 @@
         },
         {
             "cs": "OAK_22_CTR",
-            "pos": "Sector 22",
+            "pos": "R22",
             "freq": 121250000,
             "rn": "QQAA 14",
             "ui": "vscs",
@@ -944,12 +944,12 @@
                 [
                     "811075",
                     2,
-                    "NCT-C"
+                    "SUNOL,GROVE"
                 ],
                 [
                     "811074",
                     2,
-                    "NCT-B"
+                    "BOULDR,CEDAR,NILES"
                 ],
                 [
                     "811311",
@@ -959,13 +959,13 @@
                 [
                     "811098",
                     2,
-                    "NCT-A"
+                    "MOR/TU,SEC/FR,TOGA"
                 ]
             ]
         },
         {
             "cs": "OAK_29_CTR",
-            "pos": "Sector 29",
+            "pos": "R29",
             "freq": 119750000,
             "rn": "QQAA 13",
             "ui": "vscs",
@@ -1089,7 +1089,7 @@
         },
         {
             "cs": "OAK_30_CTR",
-            "pos": "Sector 30",
+            "pos": "R30",
             "freq": 127175000,
             "rn": "MVA 53",
             "ui": "vscs",
@@ -1213,7 +1213,7 @@
         },
         {
             "cs": "OAK_31_CTR",
-            "pos": "Sector 31",
+            "pos": "R31",
             "freq": 134975000,
             "rn": "RBL 24, UKI 28",
             "ui": "vscs",
@@ -1336,13 +1336,13 @@
                 [
                     "811090",
                     2,
-                    "NCT-D"
+                    "QUAKE,RICHMD,SUT/DI,188"
                 ]
             ]
         },
         {
             "cs": "OAK_32_CTR",
-            "pos": "Sector 32",
+            "pos": "R32",
             "freq": 132950000,
             "rn": "QQAA 12, QQA 23, SMF 47",
             "ui": "vscs",
@@ -1465,23 +1465,23 @@
                 [
                     "811046",
                     2,
-                    "NCT-A"
+                    "MOR/TU,SEC/FR,TOGA"
                 ],
                 [
                     "811090",
                     2,
-                    "NCT-D"
+                    "QUAKE,RICHMD,SUT/DI,188"
                 ],
                 [
                     "811094",
                     2,
-                    "NCT-B"
+                    "BOULDR,CEDAR,NILES"
                 ]
             ]
         },
         {
             "cs": "OAK_33_CTR",
-            "pos": "Sector 33",
+            "pos": "R33",
             "freq": 132050000,
             "rn": "FLX 30, TPH 34",
             "ui": "vscs",
@@ -1605,7 +1605,7 @@
         },
         {
             "cs": "OAK_34_CTR",
-            "pos": "Sector 34",
+            "pos": "R34",
             "freq": 134375000,
             "rn": "QQA 11, FATA 17 ",
             "ui": "vscs",
@@ -1728,22 +1728,22 @@
                 [
                     "811046",
                     2,
-                    "NCT-A"
+                    "MOR/TU,SEC/FR,TOGA"
                 ],
                 [
                     "811064",
                     2,
-                    "NCT-B"
+                    "BOULDR,CEDAR,NILES"
                 ],
                 [
                     "811078",
                     2,
-                    "NCT-C"
+                    "SUNOL,GROVE"
                 ],
                 [
                     "811307",
                     2,
-                    "NCT-D"
+                    "QUAKE,RICHMD,SUT/DI,188"
                 ],
                 [
                     "811308",
@@ -1754,7 +1754,7 @@
         },
         {
             "cs": "OAK_35_CTR",
-            "pos": "Sector 35",
+            "pos": "R35",
             "freq": 134150000,
             "rn": "HAF 4, QQB 27",
             "ui": "vscs",
@@ -1877,12 +1877,12 @@
                 [
                     "811046",
                     2,
-                    "NCT-A"
+                    "MOR/TU,SEC/FR,TOGA"
                 ],
                 [
                     "811088",
                     2,
-                    "NCT-B"
+                    "BOULDR,CEDAR,NILES"
                 ],
                 [
                     "811312",
@@ -1893,7 +1893,7 @@
         },
         {
             "cs": "OAK_36_CTR",
-            "pos": "Sector 36",
+            "pos": "R36",
             "freq": 119975000,
             "rn": "UKI 20, RBL 25, QZW 42",
             "ui": "vscs",
@@ -2017,7 +2017,7 @@
         },
         {
             "cs": "OAK_40_CTR",
-            "pos": "Sector 40",
+            "pos": "R40",
             "freq": 127800000,
             "rn": "UKI 38, QZW 45",
             "ui": "vscs",
@@ -2140,23 +2140,23 @@
                 [
                     "811049",
                     2,
-                    "NCT-D"
+                    "QUAKE,RICHMD,SUT/DI,188"
                 ],
                 [
                     "811062",
                     2,
-                    "NCT-C"
+                    "SUNOL,GROVE"
                 ],
                 [
                     "811094",
                     2,
-                    "NCT-B"
+                    "BOULDR,CEDAR,NILES"
                 ]
             ]
         },
         {
             "cs": "OAK_41_CTR",
-            "pos": "Sector 41",
+            "pos": "R41",
             "freq": 125850000,
             "rn": "QZW 41",
             "ui": "vscs",
@@ -2279,12 +2279,12 @@
                 [
                     "811049",
                     2,
-                    "NCT-D"
+                    "QUAKE,RICHMD,SUT/DI,188"
                 ],
                 [
                     "811062",
                     2,
-                    "NCT-C"
+                    "SUNOL,GROVE"
                 ],
                 [
                     "811310",
@@ -2294,13 +2294,13 @@
                 [
                     "811094",
                     2,
-                    "NCT-B"
+                    "BOULDR,CEDAR,NILES"
                 ]
             ]
         },
         {
             "cs": "OAK_42_CTR",
-            "pos": "Sector 42",
+            "pos": "R42",
             "freq": 132200000,
             "rn": "RBL 26, UKI 37",
             "ui": "vscs",
@@ -2423,7 +2423,7 @@
                 [
                     "811049",
                     2,
-                    "NCT-D"
+                    "QUAKE,RICHMD,SUT/DI,188"
                 ],
                 [
                     "811310",
@@ -2434,7 +2434,7 @@
         },
         {
             "cs": "OAK_43_CTR",
-            "pos": "Sector 43",
+            "pos": "R43",
             "freq": 134450000,
             "rn": "FLX 31, RNO 36",
             "ui": "vscs",
@@ -2558,7 +2558,7 @@
         },
         {
             "cs": "OAK_44_CTR",
-            "pos": "Sector 44",
+            "pos": "R44",
             "freq": 127950000,
             "rn": "SMF 40, QQAA 46, SWR 51",
             "ui": "vscs",
@@ -2681,12 +2681,12 @@
                 [
                     "811078",
                     2,
-                    "NCT-C"
+                    "SUNOL,GROVE"
                 ],
                 [
                     "811307",
                     2,
-                    "NCT-D"
+                    "QUAKE,RICHMD,SUT/DI,188"
                 ],
                 [
                     "811308",
@@ -2697,7 +2697,7 @@
         },
         {
             "cs": "OAK_45_CTR",
-            "pos": "Sector 45",
+            "pos": "R45",
             "freq": 128800000,
             "rn": "FLX 33, RNO 39",
             "ui": "vscs",
@@ -2821,7 +2821,7 @@
         },
         {
             "cs": "OAK_46_CTR",
-            "pos": "Sector 46",
+            "pos": "R46",
             "freq": 125750000,
             "rn": "BIH 29, TPH 35",
             "ui": "vscs",
@@ -2945,10 +2945,10 @@
         },
         {
             "cs": "OAK_62_CTR",
-            "pos": "Sector 62",
+            "pos": "R62",
             "freq": 132200000,
             "rn": "Oakland Center",
-            "ui": "ivsr",
+            "ui": "vscs",
             "lines": [
                 [
                     "1010005",
@@ -3072,7 +3072,7 @@
             "pos": "Tahoe Clearance",
             "freq": 134300000,
             "rn": "Oakland Center",
-            "ui": "ivsr",
+            "ui": "vscs",
             "lines": [
                 [
                     "1010023",
@@ -3196,15 +3196,15 @@
             "pos": "TMU FD",
             "freq": 133800000,
             "rn": "Oakland Center Flight Data",
-            "ui": "ivsr",
+            "ui": "vscs",
             "lines": []
         },
         {
             "cs": "OAK_CTR",
             "pos": "ZOA Guard",
             "freq": 121500000,
-            "rn": "Guard",
-            "ui": "ivsr",
+            "rn": "FLX 32, RBL 54, PRB 55, ZOA 60",
+            "ui": "vscs",
             "lines": []
         }
     ],

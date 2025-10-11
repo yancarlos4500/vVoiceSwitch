@@ -463,8 +463,8 @@
 .vscs-panel {
     font-family: 'VSCS', 'Courier New', Courier, monospace;
     color: black;
-    width: 790px !important;
-    height: 600px !important;
+    width: 780px !important;
+    height: 585px !important;
     background-color: #27272A; /* Dark grey screen background */
 }
 
@@ -491,34 +491,46 @@
     border: 1px solid #333333;
 }
 
+/* A/G buttons need to be wider than G/G buttons - force with highest specificity */
+.ag-frequency-container .vscs-button.ag-button,
+.ag-frequency-container .vscs-button.ag-button.state-unselected {
+    width: 100% !important;
+    min-width: 0 !important;
+    max-width: none !important;
+}
+
+
 /* VSCS Button States - Based on Manual Table 3-6 */
 
 /* Unselected frequency/Idle DA call/Idle test state */
-.vscs-button.state-unselected {
+.ag-frequency-container .vscs-button.state-unselected {
     background-color: white !important; /* Light grey outer frame like the image */
     color: black !important;
     border: 2px solid white !important; /* Outer grey border */
-    width: 250px !important; /* Force the width to override base button style */
+    width: 100% !important; /* Make responsive instead of fixed width */
     height: 80px !important; /* Ensure proper height */
     padding: 6px !important;
     position: relative;    
 }
 
-.vscs-button.state-unselected::before {
-    content: '';
-    position: absolute;
-    top: 6px;
-    left: 6px;
-    right: 6px;
-    bottom: 6px;
-    background-color: white; /* White inner background */
-    border: 1px solid #000000; /* Thin black inner border frame */
-    z-index: 0;
+.ag-frequency-container .vscs-button.state-unselected::before,
+.ag-frequency-container .vscs-button.ag-button.state-unselected::before {
+    content: '' !important;
+    position: absolute !important;
+    top: 6px !important;
+    left: 6px !important;
+    right: 6px !important;
+    bottom: 6px !important;
+    background-color: white !important; /* White inner background */
+    border: 2px solid #000000; /* Remove !important to allow guard frequency override */
+    z-index: 0 !important;
+    display: block !important;
 }
 
-.vscs-button.state-unselected > div {
-    position: relative;
-    z-index: 1; /* Ensure text appears above the pseudo-element */
+.ag-frequency-container .vscs-button.state-unselected > div,
+.ag-frequency-container .vscs-button.ag-button.state-unselected > div {
+    position: relative !important;
+    z-index: 1 !important; /* Ensure text appears above the pseudo-element */
 }
 
 /* Emergency frequency state */
@@ -547,7 +559,7 @@
 /* RCVR locally OFF with squelch break */
 .vscs-button.state-squelch-break {
     background-color: black;
-    color: #FFA500; /* Amber */
+    color: rgb(255, 123, 0); /* Amber */
 }
 
 .vscs-button.state-squelch-break * {
@@ -617,10 +629,43 @@
     color: white;
 }
 
-/* Emergency PTT button or frequency indicator */
+/* Emergency PTT button specific styling */
 .vscs-button.state-emergency-ptt {
-    background-color: red;
-    color: white;
+    background-color: red !important;
+    color: white !important;
+    width: 75px !important;
+    height: 80px !important;
+    font-size: 12pt !important;
+    z-index: 1 !important; /* Ensure emergency PTT buttons appear above the border-cutoff background */
+}
+
+/* Emergency PTT button touched state - blue background overrides red */
+.vscs-button.state-emergency-ptt.state-touched {
+    background-color: blue !important;
+    color: white !important;
+}
+
+/* Emergency PTT button touched state border-cutoff - blue background to match button */
+.vscs-button.state-emergency-ptt.state-touched.border-cutoff::before {
+    background-color: blue !important;
+}
+
+/* Emergency PTT button border-cutoff override - make border red to match button */
+.vscs-button.state-emergency-ptt.border-cutoff::before {
+    background-color: red !important;
+}
+
+/* Emergency PTT buttons when guard frequencies are unavailable */
+.vscs-button.state-emergency-ptt.state-unavailable {
+    background-color: #78716c !important; /* Grey background */
+    color: black !important; /* Light grey text */
+    cursor: not-allowed !important;
+    z-index: 1 !important; /* Ensure unavailable PTT buttons also appear above the border-cutoff background */
+}
+
+/* Emergency PTT unavailable button border-cutoff override - make border grey to match button */
+.vscs-button.state-emergency-ptt.state-unavailable.border-cutoff::before {
+    background-color: #78716c !important;
 }
 
 /* Active message area / Blocked PTT / Failed test */
@@ -631,13 +676,13 @@
 
 /* PTT confirmation */
 .vscs-button.state-ptt-confirm {
-    background-color: #FFA500; /* Amber */
+    background-color: rgb(255, 123, 0); /* Amber */
     color: black;
 }
 
 /* Squelch break, RCVR ON, not remotely muted */
 .vscs-button.state-squelch-active {
-    background-color: #FFA500; /* Amber */
+    background-color: rgb(255, 123, 0); /* Amber */
     color: black;
 }
 
@@ -647,7 +692,7 @@
 
 /* Ringing DA/CA */
 .vscs-button.state-ringing {
-    background-color: #FFA500; /* Amber */
+    background-color: rgb(255, 123, 0); /* Amber */
     color: black;
 }
 
@@ -674,7 +719,9 @@
 /* ===== A/G 3-BUTTON LAYOUT STYLES (Manual Pages 15-16) ===== */
 
 .ag-frequency-container {
-    width: 250px;
+    width: 100% !important;
+    max-width: none !important;
+    min-width: 0 !important;
     height: 78px; /* Back to original button height */
     margin-top: 10px; /* Always reserve space at top for header */
     display: flex;
@@ -691,8 +738,8 @@
     height: 20px;
     background-color: #40E0D0; /* Match VSCS panel background */
     color: black;
-    font-size: 16px;
-    font-weight: normal;
+    font-size: 14pt;
+    font-weight: lighter;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -755,7 +802,7 @@
     flex: 1; /* Equal width distribution with gaps */
     /* Inherit most styles from .vscs-static-button */
     font-size: 10px !important; /* Override the larger font size */
-    font-weight: normal !important;
+    font-weight: lighter !important;
     font-family: 'VSCS', monospace; /* Use VSCS font */
     height: 100%;
     /* Removed transition for instant color changes */
@@ -773,13 +820,13 @@
 
 /* PTT confirmation state for A/G XMTR button - amber background with black text */
 .ag-sub-button.state-ptt-confirm {
-    background-color: #FFA500 !important; /* Amber */
+    background-color: rgb(255, 123, 0) !important; /* Amber */
     color: black !important;
 }
 
 /* Squelch active state for A/G RCVR button - amber background with black text and flutter */
 .ag-sub-button.state-squelch-active {
-    background-color: #FFA500 !important; /* Amber */
+    background-color: rgb(255, 123, 0) !important; /* Amber */
     color: black !important;
 }
 
@@ -899,14 +946,16 @@
     align-items: center;
     justify-content: center;
     gap: 4px;
+    min-height: 16px; /* Ensure each line takes up space even when empty */
+    flex: 1; /* Distribute space evenly among all 5 lines */
 }
 
 /* Speaker icon styling for G/G shout lines */
 .gg-speaker-icon {
     display: inline-flex;
     align-items: center;
-    width: 16px;
-    height: 16px;
+    width: 24px;
+    height: 20px;
     flex-shrink: 0;
 }
 
@@ -1117,11 +1166,51 @@
     border: 3px solid #333333;
 }
 
+/* Guard frequency unselected buttons - thick red border per Manual Page 13 */
+.ag-frequency-container .vscs-button.guard-frequency-unselected,
+.vscs-button.guard-frequency-unselected {
+    border: 3px solid #FF0000 !important; /* Thick red border for guard frequencies */
+}
+
+/* Guard frequency unselected buttons - red inner border to match outer border */
+.ag-frequency-container .vscs-button.guard-frequency-unselected::before,
+.vscs-button.guard-frequency-unselected::before {
+    border: 3px solid #FF0000 !important; /* Red inner border for guard frequencies */
+}
+
+/* Regular transmitting buttons - rgb(255, 123, 0) inner border only per Manual Page 13 */
+.ag-frequency-container .vscs-button.transmitting::before,
+.vscs-button.transmitting::before {
+    border: 3px solid rgb(255, 123, 0) !important; /* rgb(255, 123, 0) inner border for transmitting buttons */
+}
+
+/* Regular transmitting with flutter - rgb(255, 123, 0) inner border with flutter animation per Manual Page 13 */
+.ag-frequency-container .vscs-button.transmitting-flutter::before,
+.vscs-button.transmitting-flutter::before {
+    border: 3px solid rgb(255, 123, 0) !important; /* rgb(255, 123, 0) inner border for transmitting buttons */
+    animation: flutter-border-8hz 0.125s infinite;
+}
+
+/* Large square button with inner border similar to A/G unselected buttons */
+.vscs-large-square-button {
+    position: relative;
+}
+
+.vscs-large-square-button::before {
+    content: '';
+    position: absolute;
+    top: 6px;
+    left: 6px;
+    right: 6px;
+    bottom: 6px;
+    border: 2px solid black;
+    pointer-events: none;
+}
+
 /* Cut Off Corners - for non-latching DA and Emergency PTT buttons */
 .vscs-button.border-cutoff {
     border: none;
-    clip-path: polygon(8px 0%, 100% 0%, 100% calc(100% - 8px), calc(100% - 8px) 100%, 0% 100%, 0% 8px);
-    background-color: white;
+    clip-path: polygon(12px 0%, calc(100% - 12px) 0%, 100% 12px, 100% calc(100% - 12px), calc(100% - 12px) 100%, 12px 100%, 0% calc(100% - 12px), 0% 12px);
     position: relative;
 }
 
@@ -1132,8 +1221,8 @@
     left: -1px;
     right: -1px;
     bottom: -1px;
-    background-color: #333333;
-    clip-path: polygon(8px 0%, 100% 0%, 100% calc(100% - 8px), calc(100% - 8px) 100%, 0% 100%, 0% 8px);
+    background-color: #78716c;
+    clip-path: polygon(8px 0%, calc(100% - 8px) 0%, 100% 8px, 100% calc(100% - 8px), calc(100% - 8px) 100%, 8px 100%, 0% calc(100% - 8px), 0% 8px);
     z-index: -1;
 }
 
@@ -1245,6 +1334,14 @@
     100% { opacity: 1; }
 }
 
+/* Border fluttering for guard frequencies - 8 cycles per second, border visibility flutter */
+@keyframes flutter-border-8hz {
+    0% { border-color: rgb(255, 123, 0); }
+    80% { border-color: rgb(255, 123, 0); }
+    90% { border-color: transparent; }
+    100% { border-color: rgb(255, 123, 0); }
+}
+
 /* Legacy state classes for compatibility */
 .vscs-active-call {
     background-color: green !important;
@@ -1256,7 +1353,7 @@
 }
 
 .vscs-incoming-bg {
-    background-color: #FFA500 !important; /* Amber */
+    background-color: rgb(255, 123, 0) !important; /* Amber */
     animation: flash-1s 1s infinite;
 }
 

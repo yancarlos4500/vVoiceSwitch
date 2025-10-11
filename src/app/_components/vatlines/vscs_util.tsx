@@ -3,6 +3,7 @@ import VscsButtonComponent from './vscs_button';
 import VscsStaticButton from './vscs_static_button';
 import { ButtonType } from './App';
 import SettingModal from './SettingModal';
+import { useCoreStore } from '../../../model';
 
 interface VscsUtilProps {
   sendMsg: (data: any) => void;
@@ -10,6 +11,24 @@ interface VscsUtilProps {
 
 export default function VscsUtil({ sendMsg }: VscsUtilProps) {
   const [settingModal, setSettingModal] = useState(false);
+  const selectedPositions = useCoreStore((s: any) => s.selectedPositions);
+  const positionData = useCoreStore((s: any) => s.positionData);
+  
+  // Get the current position identifier
+  const getCurrentPositionName = () => {
+    // If there are selected positions, use the first one
+    if (selectedPositions && selectedPositions.length > 0) {
+      return selectedPositions[0].pos;
+    }
+    
+    // Otherwise, try to get the first position from positionData
+    if (positionData?.positions && positionData.positions.length > 0) {
+      return positionData.positions[0].pos;
+    }
+    
+    // Fallback to default
+    return 'FD/CD';
+  };
 
   return (
     <div className="vscs-panel relative w-full h-full">
@@ -18,8 +37,8 @@ export default function VscsUtil({ sendMsg }: VscsUtilProps) {
       <div 
         className="absolute"
         style={{ 
-          left: '619px', 
-          top: '93px', 
+          left: '611px', 
+          top: '91px', 
           width: '80px', 
           height: '50px',
           zIndex: 15 
@@ -37,8 +56,8 @@ export default function VscsUtil({ sendMsg }: VscsUtilProps) {
       <div 
         className="absolute"
         style={{ 
-          left: '706px', 
-          top: '93px', 
+          left: '695px', 
+          top: '91px', 
           width: '80px', 
           height: '50px',
           zIndex: 15 
@@ -56,8 +75,8 @@ export default function VscsUtil({ sendMsg }: VscsUtilProps) {
       <div 
         className="absolute"
         style={{ 
-          left: '619px', 
-          top: '197px', 
+          left: '611px', 
+          top: '194px', 
           width: '80px', 
           height: '50px',
           zIndex: 15 
@@ -75,8 +94,8 @@ export default function VscsUtil({ sendMsg }: VscsUtilProps) {
       <div 
         className="absolute"
         style={{ 
-          left: '706px', 
-          top: '197px', 
+          left: '695px', 
+          top: '194px', 
           width: '80px', 
           height: '50px',
           zIndex: 15 
@@ -94,8 +113,8 @@ export default function VscsUtil({ sendMsg }: VscsUtilProps) {
       <div 
         className="absolute"
         style={{ 
-          left: '619px', 
-          top: '301px', 
+          left: '611px', 
+          top: '297px', 
           width: '80px', 
           height: '50px',
           zIndex: 15 
@@ -113,8 +132,8 @@ export default function VscsUtil({ sendMsg }: VscsUtilProps) {
       <div 
         className="absolute"
         style={{ 
-          left: '706px', 
-          top: '301px', 
+          left: '695px', 
+          top: '297px', 
           width: '80px', 
           height: '50px',
           zIndex: 15 
@@ -132,8 +151,8 @@ export default function VscsUtil({ sendMsg }: VscsUtilProps) {
       <div 
         className="absolute"
         style={{ 
-          left: '619px', 
-          top: '407px', 
+          left: '611px', 
+          top: '401px', 
           width: '80px', 
           height: '50px',
           zIndex: 15 
@@ -150,8 +169,8 @@ export default function VscsUtil({ sendMsg }: VscsUtilProps) {
       <div 
         className="absolute"
         style={{ 
-          left: '706px', 
-          top: '407px', 
+          left: '695px', 
+          top: '401px', 
           width: '80px', 
           height: '50px',
           zIndex: 15 
@@ -187,7 +206,23 @@ export default function VscsUtil({ sendMsg }: VscsUtilProps) {
         title="Click to open position settings"
       >
         {/* Visible clickable area with subtle highlight */}
-        <div className="w-full h-full opacity-0 hover:opacity-20 hover:bg-blue-500 transition-opacity rounded border-2 border-transparent hover:border-blue-300"></div>
+        <div className="w-full h-full opacity-0"></div>
+      </div>
+
+      {/* Position Text Overlay - positioned over the logical PSN area */}
+      <div
+        className="absolute pointer-events-none flex items-center justify-center"
+        style={{
+          right: '1%',    // Match the clickspot position
+          top: '89%',
+          width: '20%',   // Match the clickspot area
+          height: '15%',  // Match the clickspot area
+          zIndex: 35      // Above the clickspot
+        }}
+      >
+        <span className="text-black text-lg bottom-0">
+          {getCurrentPositionName()}
+        </span>
       </div>
 
       {/* Settings Modal */}

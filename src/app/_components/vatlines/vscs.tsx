@@ -17,53 +17,36 @@ import { useCoreStore } from '~/model';
 import './styles.css';
 
 // Utility function to get line type from position configuration data
-const getLineTypeFromConfig = (lineId: string, positionData: any): number | null => {
-  if (!positionData || !lineId) return null;
+const getLineTypeFromConfig = (description: string, positionData: any): number | null => {
+  if (!positionData || !description) {
+    console.log('Debug - getLineTypeFromConfig early return:', { description, positionData: !!positionData });
+    return null;
+  }
   
-  // Recursively search through facilities and positions
-  const searchFacilities = (facilities: any[]): number | null => {
-    for (const facility of facilities) {
-      // Search positions in current facility
-      if (facility.positions) {
-        for (const position of facility.positions) {
-          // Check if lines array format exists [lineId, lineType, description]
-          if (position.lines && Array.isArray(position.lines)) {
-            for (const line of position.lines) {
-              if (Array.isArray(line) && line[0] === lineId) {
-                return line[1]; // Return line type (0, 1, or 2)
-              }
-            }
-          }
-          
-          // Check if lines_obj format exists {lineId: lineType}
-          if (position.lines_obj && typeof position.lines_obj === 'object') {
-            if (position.lines_obj[lineId] !== undefined) {
-              return position.lines_obj[lineId];
+  console.log('Debug - Searching for description:', description);
+  
+  // Check if this is the zoa_position.json format with root "positions" array
+  if (positionData.positions && Array.isArray(positionData.positions)) {
+    console.log('Debug - Searching in positions array, total positions:', positionData.positions.length);
+    for (const position of positionData.positions) {
+      if (position.lines && Array.isArray(position.lines)) {
+        console.log(`Debug - Checking position ${position.pos}, lines count:`, position.lines.length);
+        for (const line of position.lines) {
+          if (Array.isArray(line) && line.length >= 3) {
+            if (line[2] === description) { // Match on description (third element)
+              console.log('Debug - FOUND MATCH! Line:', { description, lineType: line[1], fullLine: line, position: position.pos });
+              return line[1]; // Return line type (0, 1, or 2)
             }
           }
         }
       }
-      
-      // Recursively search child facilities
-      if (facility.childFacilities && facility.childFacilities.length > 0) {
-        const result = searchFacilities(facility.childFacilities);
-        if (result !== null) return result;
-      }
     }
-    return null;
-  };
-  
-  // Handle both single facility and array of facilities
-  if (Array.isArray(positionData)) {
-    return searchFacilities(positionData);
-  } else if (positionData.childFacilities) {
-    return searchFacilities([positionData]);
+    console.log('Debug - No match found for description:', description);
   }
   
+  console.log('Debug - Fallback: returning null for description:', description);
   return null;
-};
-
-// Map numeric line types to ButtonType enum
+};// Map numeric line types to ButtonType enum
 const mapLineTypeToButtonType = (lineType: number | null): ButtonType => {
   switch (lineType) {
     case 0: return ButtonType.OVERRIDE; // Override line
@@ -99,16 +82,40 @@ interface VscsProps {
   };
 }
 
-export default function VscsComponent(props: VscsProps) {
+// Individual VSCS Panel Component
+function VscsPanel(props: VscsProps & { panelId?: string; defaultScreenMode?: string }) {
   const [page, setPage] = useState(1);
   const [func, setFunc] = useState('PRI');
-  const [screenMode, setScreenMode] = useState('GG1'); // 'GG1', 'GG2', 'AG1', 'AG2', 'AG_STATUS', 'UTIL'
+  const [screenMode, setScreenMode] = useState(props.defaultScreenMode || 'GG1'); // Use default or fallback to 'GG1'
   const [isAltScreen, setIsAltScreen] = useState(false); // Track if we're in alternate screen selection mode
   const [rtEnabled, setRtEnabled] = useState(false); // Track R/T button state (default OFF)
+  const [emergencyPttPressed, setEmergencyPttPressed] = useState({
+    uhf: false,
+    both: false,
+    vhf: false
+  }); // Track emergency PTT button press states
   
   const gg_status = useCoreStore((s: any) => s.gg_status);
+  const ag_status = useCoreStore((s: any) => s.ag_status);
   const sendMsg = useCoreStore((s: any) => s.sendMessageNow);
   const positionData = useCoreStore((s: any) => s.positionData);
+  
+  // Check if guard frequencies (121.500, 243.000) are currently active in A/G status
+  const hasGuardFrequencies = useMemo(() => {
+    if (!ag_status || !Array.isArray(ag_status)) return false;
+    
+    // Guard frequencies in both MHz and Hz formats to handle different WebSocket data formats
+    const guardFreqsMHz = [121.5, 121.500, 243.0, 243.000];
+    const guardFreqsHz = [121500000, 121500000.0, 243000000, 243000000.0];
+    
+    // Check if any of the A/G frequencies in the WebSocket data are guard frequencies
+    return ag_status.some((agData: any) => {
+      if (!agData || !agData.freq) return false;
+      const freq = parseFloat(agData.freq);
+      // Check both MHz and Hz values
+      return guardFreqsMHz.includes(freq) || guardFreqsHz.includes(freq);
+    });
+  }, [ag_status]);
   
   const ITEMS_PER_PAGE = 27;
   
@@ -132,7 +139,7 @@ export default function VscsComponent(props: VscsProps) {
     }, [gg_status, screenMode]);
 
   const btns: Button[] = useMemo(() => {
-    return currentSlice.map((data: any) => {
+    return currentSlice.map((data: any, index: number) => {
       if (!data) {
         // Empty/unavailable button
         return {
@@ -143,12 +150,22 @@ export default function VscsComponent(props: VscsProps) {
         };
       }
       
-      // Get line ID from call field (skip 5-character prefix)
-      const lineId = data.call?.substring(5) || '';
+      // Get line type from JSON based on button index
+      let lineType = null;
+      if (positionData?.positions && Array.isArray(positionData.positions)) {
+        // Find the current position and get the line type from the JSON array
+        for (const position of positionData.positions) {
+          if (position.lines && Array.isArray(position.lines) && position.lines[index]) {
+            const line = position.lines[index];
+            if (Array.isArray(line) && line.length >= 2) {
+              lineType = line[1]; // Get line type (0, 1, or 2)
+              break;
+            }
+          }
+        }
+      }
       
-      // Look up line type from configuration data
-      const configLineType = getLineTypeFromConfig(lineId, positionData);
-      const buttonType = mapLineTypeToButtonType(configLineType);
+      const buttonType = mapLineTypeToButtonType(lineType);
       
       // Convert WebSocket data to Button format
       return {
@@ -161,7 +178,7 @@ export default function VscsComponent(props: VscsProps) {
   }, [currentSlice, positionData]);
 
   // Generate multi-line data for G/G buttons based on Manual Page 27
-  const generateGGMultiLineData = (data: any) => {
+  const generateGGMultiLineData = (data: any, buttonIndex: number) => {
     if (!data) return undefined;
     
     // Extract meaningful parts from the data
@@ -169,15 +186,71 @@ export default function VscsComponent(props: VscsProps) {
     const callName = data.call_name || callId;
     
     // Parse the call_name or call to extract different components
-    // This may need adjustment based on actual data format
-    const parts = callName.split(/[-_\s]/);
+    // Don't split on hyphens to avoid breaking "D-42" into "D" and "42"
+    const parts = callName.split(/[_\s]/); // Only split on underscore and space, not hyphen
+    
+    // Get line type from JSON based on button index
+    let lineType = null;
+    console.log('Debug - Button index:', buttonIndex, 'Call name:', callName);
+    
+    if (positionData?.positions && Array.isArray(positionData.positions)) {
+      // Find the current position and get the line type from the JSON array
+      for (const position of positionData.positions) {
+        if (position.lines && Array.isArray(position.lines) && position.lines[buttonIndex]) {
+          const line = position.lines[buttonIndex];
+          if (Array.isArray(line) && line.length >= 2) {
+            lineType = line[1]; // Get line type (0, 1, or 2)
+            console.log('Debug - Found line type:', lineType, 'for button', buttonIndex, 'line:', line);
+            break;
+          }
+        }
+      }
+    }
+    
+    console.log('Debug - Final line type for button', buttonIndex, ':', lineType);
+    
+    // Split callName by commas if it contains them
+    const callNameParts = callName.includes(',') ? callName.split(',').map((part: string) => part.trim()) : [callName];
+    
+    // Determine display based on line type from JSON
+    let line1Content, line2Content, line3Content, line4Content, line5Content;
+    
+    if (lineType === 2) {
+      // Shout lines: speaker icon will be handled by the component on line1, distribute call name parts across lines 2-5
+      line1Content = '';
+      line2Content = callNameParts[0] || '';
+      line3Content = callNameParts[1] || '';
+      line4Content = callNameParts[2] || '';
+      line5Content = callNameParts[3] || '';
+    } else if (lineType === 1) {
+      // Ring lines: empty line1, distribute call name parts across lines 2-4, RING on line5
+      line1Content = '';
+      line2Content = callNameParts[0] || '';
+      line3Content = callNameParts[1] || '';
+      line4Content = callNameParts[2] || '';
+      line5Content = callNameParts[3] || 'RING';
+    } else if (lineType === 0) {
+      // Override lines: empty line1, distribute call name parts across lines 2-4, OVRD on line5
+      line1Content = '';
+      line2Content = callNameParts[0] || '';
+      line3Content = callNameParts[1] || '';
+      line4Content = callNameParts[2] || '';
+      line5Content = callNameParts[3] || 'OVRD';
+    } else {
+      // Default: empty line1, distribute call name parts across lines 2-4, RING on line5
+      line1Content = '';
+      line2Content = callNameParts[0] || '';
+      line3Content = callNameParts[1] || '';
+      line4Content = callNameParts[2] || '';
+      line5Content = callNameParts[3] || 'RING';
+    }
     
     return {
-      line1: parts[0] || callName.substring(0, 8), // Agency name (first part or first 8 chars)
-      line2: parts[1] || '', // Position designation
-      line3: data.frequency || parts[2] || '', // Frequency designation
-      line4: data.backup_status || data.status_info || '', // Additional info
-      line5: 'RING' // Type indicator - will be overridden by typeString if provided
+      line1: line1Content, // Reserved for indicators (speaker icon, etc.)
+      line2: line2Content, // First part of call name
+      line3: line3Content, // Second part of call name (or frequency if no comma split)
+      line4: line4Content, // Third part of call name (or status info if no comma split)
+      line5: line5Content // Fourth part of call name or type indicator (RING, OVRD, etc.)
     };
   };
   const [buttons, setButtons] = useState(btns);
@@ -597,7 +670,7 @@ export default function VscsComponent(props: VscsProps) {
   return (
     <>
       <div className="bg-zinc-700 p-0.5 vscs-panel tracking-tight leading-none select-none">
-        <div className="grid grid-cols-9 gap-y-3 mt-2">
+        <div className={`grid grid-cols-9 gap-y-3 mt-2 ${screenMode.startsWith('GG') ? 'mt-7' : ''}`}>
           {/* Always show the current screen content - no screen selection in main grid */}
           {screenMode === 'AG1' ? (
             // A/G 1 screen
@@ -620,7 +693,7 @@ export default function VscsComponent(props: VscsProps) {
                 <VscsUtil sendMsg={sendMsg} />
                 
                 {/* Overlay the UTIL function buttons on top of the content */}
-                <div className="absolute bottom-1 left-2 flex flex-wrap gap-3 justify-center" style={{ zIndex: 25 }}>
+                <div className="absolute flex flex-wrap gap-3 justify-start" style={{ bottom: '-100px', left: '5px', zIndex: 25 }}>
                   {screenMode === 'UTIL' ? (
                     isAltScreen ? (
                       // Screen selection mode - show SCRN ALT + magenta screen options in overlay position
@@ -670,19 +743,19 @@ export default function VscsComponent(props: VscsProps) {
                         {/* R/T button positioned in overlay for UTIL mode */}
                         <div className="col-span-2 relative">
                           {/* R/T Indicator positioned above the static button */}
-                          <div className="absolute -top-[117px] right-[265px] text-black bg-zinc-50 text-center w-[165px] h-5">
+                          <div className="absolute text-black bg-zinc-50 text-center w-[165px] h-5" style={{ bottom: '280px', left: '345px', zIndex: 25 }}>
                             <div className="text-center text-lg leading-tight">
                               {rtEnabled ? 'R/T ON' : 'R/T OFF'}
                             </div>
                           </div>
                           <div 
-                            className="relative -top-[105px] right-[265px] vscs-static-button w-[80px] h-20 bg-cyan-400 cursor-pointer mt-2"
-                            onClick={() => setRtEnabled(!rtEnabled)}
+                            className="relative vscs-static-button w-[80px] h-20 bg-cyan-400 cursor-pointer mt-2"
+                            onClick={() => setRtEnabled(!rtEnabled)} style={{ bottom: '200px', left: '345px', zIndex: 25 }}
                           >
                           </div>
                         </div>
                         {/* Large grey area positioned next to R/T button in UTIL mode */}
-                        <div className="bg-stone-500 vscs-empty absolute -top-[105px] right-[440px] w-[335px] h-[80px] mt-2"></div>
+                        <div className="bg-stone-500 vscs-empty absolute -top-[105px] left-[0px] w-[335px] h-[80px] mt-2"></div>
                               </>
                     ) : (
                       // Normal UTIL function buttons
@@ -714,19 +787,19 @@ export default function VscsComponent(props: VscsProps) {
                         {/* R/T button positioned in overlay for UTIL mode */}
                         <div className="col-span-2 relative">
                           {/* R/T Indicator positioned above the static button */}
-                          <div className="absolute -top-[117px] right-[265px] text-black bg-zinc-50 text-center w-[165px] h-5">
+                          <div className="absolute text-black bg-zinc-50 text-center w-[165px] h-5" style={{ bottom: '280px', left: '345px', zIndex: 25 }}>
                             <div className="text-center text-lg leading-tight">
                               {rtEnabled ? 'R/T ON' : 'R/T OFF'}
                             </div>
                           </div>
                           <div 
-                            className="relative -top-[105px] right-[265px] vscs-static-button w-[80px] h-20 bg-cyan-400 cursor-pointer mt-2"
-                            onClick={() => setRtEnabled(!rtEnabled)}
+                            className="relative vscs-static-button w-[80px] h-20 bg-cyan-400 cursor-pointer mt-2"
+                            onClick={() => setRtEnabled(!rtEnabled)} style={{ bottom: '200px', left: '345px', zIndex: 25 }}
                           >
                           </div>
                         </div>
                         {/* Large grey area positioned next to R/T button in UTIL mode */}
-                        <div className="bg-stone-500 vscs-empty absolute -top-[105px] right-[440px] w-[335px] h-[80px] mt-2"></div>
+                        <div className="bg-stone-500 vscs-empty absolute -top-[105px] left-[0px] w-[335px] h-[80px] mt-2"></div>
                               </>
                     )
                   ) : null}
@@ -756,7 +829,7 @@ export default function VscsComponent(props: VscsProps) {
                     ? 'cursor-pointer'
                     : 'cursor-not-allowed'
                 }`}
-                multiLineData={generateGGMultiLineData(currentSlice[i])}
+                multiLineData={generateGGMultiLineData(currentSlice[i], i)}
               />
             ))
           ) : (
@@ -782,10 +855,11 @@ export default function VscsComponent(props: VscsProps) {
                     ? 'cursor-pointer'
                     : 'cursor-not-allowed'
                 }`}
-                multiLineData={generateGGMultiLineData(currentSlice[i])}
+                multiLineData={generateGGMultiLineData(currentSlice[i], i)}
               />
             ))
           )}
+          
           {/* Static buttons row - only show the 4 small buttons on G/G screens */}
           {!screenMode.startsWith('AG') && screenMode !== 'UTIL' && (
             <div className="vscs-empty col-start-1 col-end-7">
@@ -803,7 +877,11 @@ export default function VscsComponent(props: VscsProps) {
               CALL ANS
             </VscsStaticButton>
           )}
-
+          
+          {/* Large square button to the right of HOLD/CALL ANS - spans 2 rows - only show on G/G screens */}
+          {!screenMode.startsWith('AG') && screenMode !== 'UTIL' && (
+            <div className="bg-stone-500 vscs-empty row-span-2 w-40 mt-2 vscs-large-square-button"></div>
+          )}
           {/* Large grey area - hide when in UTIL mode since it's included in UTIL component */}
           {screenMode !== 'UTIL' && (
             <div className="bg-stone-500 vscs-empty col-start-1 col-end-5 w-[335px] h-[80px] mt-2"></div>
@@ -825,14 +903,116 @@ export default function VscsComponent(props: VscsProps) {
             </div>
           )}
 
+          {/* Emergency PTT buttons - positioned to the right of R/T button on A/G screens only */}
+          {screenMode.startsWith('AG') && screenMode !== 'UTIL' && (
+            <div className="col-span-3 flex gap-3 justify-start items-center" style={{ height: '80px', marginTop: '8px' }}>
+              <button 
+                className={`vscs-button border-cutoff ${hasGuardFrequencies ? 'state-emergency-ptt' : 'state-emergency-ptt state-unavailable'} ${emergencyPttPressed.uhf ? 'state-touched' : ''}`}
+                onMouseDown={() => {
+                  if (hasGuardFrequencies) {
+                    setEmergencyPttPressed(prev => ({ ...prev, uhf: true }));
+                    console.log('UHF Emergency PTT pressed - start transmission');
+                    sendMsg({ call: "UHF_EMERGENCY", da: false, freq: 243000000, h: true, r: true, status: "", t: true, talking: true });
+                  }
+                }}
+                onMouseUp={() => {
+                  if (hasGuardFrequencies) {
+                    setEmergencyPttPressed(prev => ({ ...prev, uhf: false }));
+                    console.log('UHF Emergency PTT released - stop transmission');
+                    sendMsg({ call: "UHF_EMERGENCY", da: false, freq: 243000000, h: true, r: true, status: "", t: false, talking: false });
+                  }
+                }}
+                onMouseLeave={() => {
+                  if (hasGuardFrequencies) {
+                    setEmergencyPttPressed(prev => ({ ...prev, uhf: false }));
+                    console.log('UHF Emergency PTT mouse leave - stop transmission');
+                    sendMsg({ call: "UHF_EMERGENCY", da: false, freq: 243000000, h: true, r: true, status: "", t: false, talking: false });
+                  }
+                }}
+                disabled={!hasGuardFrequencies}
+                style={{ width: '80px', height: '60px', fontSize: '10px' }}
+              >
+                <div>
+                  <div>PTT</div>
+                  <div>UHF</div>
+                </div>
+              </button>
+              <button 
+                className={`vscs-button border-cutoff ${hasGuardFrequencies ? 'state-emergency-ptt' : 'state-emergency-ptt state-unavailable'} ${emergencyPttPressed.both ? 'state-touched' : ''}`}
+                onMouseDown={() => {
+                  if (hasGuardFrequencies) {
+                    setEmergencyPttPressed(prev => ({ ...prev, both: true }));
+                    console.log('BOTH Emergency PTT pressed - start transmission');
+                    sendMsg({ call: "BOTH_EMERGENCY", da: false, freq: 121500000, h: true, r: true, status: "", t: true, talking: true });
+                  }
+                }}
+                onMouseUp={() => {
+                  if (hasGuardFrequencies) {
+                    setEmergencyPttPressed(prev => ({ ...prev, both: false }));
+                    console.log('BOTH Emergency PTT released - stop transmission');
+                    sendMsg({ call: "BOTH_EMERGENCY", da: false, freq: 121500000, h: true, r: true, status: "", t: false, talking: false });
+                  }
+                }}
+                onMouseLeave={() => {
+                  if (hasGuardFrequencies) {
+                    setEmergencyPttPressed(prev => ({ ...prev, both: false }));
+                    console.log('BOTH Emergency PTT mouse leave - stop transmission');
+                    sendMsg({ call: "BOTH_EMERGENCY", da: false, freq: 121500000, h: true, r: true, status: "", t: false, talking: false });
+                  }
+                }}
+                disabled={!hasGuardFrequencies}
+                style={{ width: '80px', height: '60px', fontSize: '10px' }}
+              >
+                <div>
+                  <div>PTT</div>
+                  <div>BOTH</div>
+                </div>
+              </button>
+              <button 
+                className={`vscs-button border-cutoff ${hasGuardFrequencies ? 'state-emergency-ptt' : 'state-emergency-ptt state-unavailable'} ${emergencyPttPressed.vhf ? 'state-touched' : ''}`}
+                onMouseDown={() => {
+                  if (hasGuardFrequencies) {
+                    setEmergencyPttPressed(prev => ({ ...prev, vhf: true }));
+                    console.log('VHF Emergency PTT pressed - start transmission');
+                    sendMsg({ call: "VHF_EMERGENCY", da: false, freq: 121500000, h: true, r: true, status: "", t: true, talking: true });
+                  }
+                }}
+                onMouseUp={() => {
+                  if (hasGuardFrequencies) {
+                    setEmergencyPttPressed(prev => ({ ...prev, vhf: false }));
+                    console.log('VHF Emergency PTT released - stop transmission');
+                    sendMsg({ call: "VHF_EMERGENCY", da: false, freq: 121500000, h: true, r: true, status: "", t: false, talking: false });
+                  }
+                }}
+                onMouseLeave={() => {
+                  if (hasGuardFrequencies) {
+                    setEmergencyPttPressed(prev => ({ ...prev, vhf: false }));
+                    console.log('VHF Emergency PTT mouse leave - stop transmission');
+                    sendMsg({ call: "VHF_EMERGENCY", da: false, freq: 121500000, h: true, r: true, status: "", t: false, talking: false });
+                  }
+                }}
+                disabled={!hasGuardFrequencies}
+                style={{ width: '80px', height: '60px', fontSize: '10px' }}
+              >
+                <div>
+                  <div>PTT</div>
+                  <div>VHF</div>
+                </div>
+              </button>
+            </div>
+          )}
+
           {/* HOLD button - only show on G/G screens */}
           {!screenMode.startsWith('AG') && screenMode !== 'UTIL' && (
-            <VscsStaticButton onClick={() => props.holdBtn()}>
-              HOLD
-            </VscsStaticButton>
+            <div className="mt-2">
+              <VscsStaticButton onClick={() => props.holdBtn()}>
+                HOLD
+              </VscsStaticButton>
+            </div>
           )}
+
           <div className="grid col-span-9 grid-cols-subgrid text-center -mt-3">
-            <div className={`text-black bg-zinc-50 text-center px-0.0 py-0.0 ml-0.0 mr-[13px] h-4 ${screenMode === 'UTIL' ? 'transform  -translate-y-[109px] translate-x-2' : ''}`}>
+            <div className={`text-black bg-zinc-50 text-center px-0.0 py-0.0 ml-0.0 mr-[13px] h-4 ${screenMode === 'UTIL' ? 'transform  -translate-y-[97px] translate-x-1.5' : ''}`}>
               <div className="text-center text-lg leading-tight">
                 {screenMode === 'AG1' ? 'A/G 1' :
                  screenMode === 'AG2' ? 'A/G 2' : 
@@ -842,7 +1022,7 @@ export default function VscsComponent(props: VscsProps) {
                  'G/G 1'}
               </div>
             </div>
-            <div className={`text-black bg-zinc-50 text-center px-0.0 py-0.0 ml-0.0 mr-[13px] h-4 ${screenMode === 'UTIL' ? 'transform -translate-y-[109px] translate-x-2' : ''}`}>
+            <div className={`text-black bg-zinc-50 text-center px-0.0 py-0.0 ml-0.0 mr-[13px] h-4 ${screenMode === 'UTIL' ? 'transform -translate-y-[97px] translate-x-1.5' : ''}`}>
               <div className="text-center text-lg leading-tight">{func}</div>
             </div>
             <div className="col-span-7 h-4"></div>
@@ -960,7 +1140,7 @@ export default function VscsComponent(props: VscsProps) {
                           {props.ggLoud ? (
                             <SpeakerSvgComponent />
                           ) : (
-                            <HeadphoneSvgComponent />
+                            <img src="/VSCSHeadsetIcon.bmp" alt="Headset" style={{ width: '40px', height: '30px' }} />
                           )}
                         </div>
                       </div>
@@ -972,7 +1152,7 @@ export default function VscsComponent(props: VscsProps) {
                           {props.overrideLoud ? (
                             <SpeakerSvgComponent />
                           ) : (
-                            <HeadphoneSvgComponent />
+                            <img src="/VSCSHeadsetIcon.bmp" alt="Headset" style={{ width: '40px', height: '30px' }} />
                           )}
                         </div>
                       </div>
@@ -995,5 +1175,23 @@ export default function VscsComponent(props: VscsProps) {
         </div>
       </div>
     </>
+  );
+}
+
+// Main Dual Screen VSCS Component
+export default function VscsComponent(props: VscsProps) {
+  return (
+    <div className="flex items-center justify-center gap-4 bg-black p-4">
+      {/* Left VSCS Panel - defaults to A/G1 */}
+      <VscsPanel {...props} panelId="left" defaultScreenMode="AG1" />
+      
+      {/* VIK SVG in the middle */}
+      <div className="flex-shrink-0">
+        <img src="/VIK.svg" alt="VIK" style={{ width: '300px', height: '800px' }} />
+      </div>
+      
+      {/* Right VSCS Panel - defaults to G/G1 */}
+      <VscsPanel {...props} panelId="right" defaultScreenMode="GG1" />
+    </div>
   );
 }

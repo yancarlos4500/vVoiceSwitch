@@ -59,12 +59,13 @@ export default function VscsButtonComponent(props: {
         // 5-line layout for G/G buttons
         <div className="gg-button-content">
           <div className="gg-line1">
-            {props.config.type === ButtonType.SHOUT && (
+            {props.config.type === ButtonType.SHOUT ? (
               <div className="gg-speaker-icon">
-                <SpeakerSvgComponent />
+                <img src="/VSCSSpeakerIcon.bmp" alt="Speaker" style={{ width: '20px', height: '16px' }} />
               </div>
+            ) : (
+              props.multiLineData.line1 || ''
             )}
-            {props.multiLineData.line1 || ''}
           </div>
           <div className="gg-line2">{props.multiLineData.line2 || ''}</div>
           <div className="gg-line3">{props.multiLineData.line3 || ''}</div>

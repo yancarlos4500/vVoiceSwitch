@@ -116,11 +116,12 @@ export default function VscsAG({ page, sendMsg }: VscsAGProps) {
     // Create a 4x3 grid (12 positions total) arranged column-wise
     const grid: any[] = new Array(ITEMS_PER_PAGE).fill(null);
     
-    // Fill column-wise starting from top-left (0,3,6,9 then 1,4,7,10 then 2,5,8,11)
-    const columnOrder = [0, 4, 8, 1, 5, 9, 2, 6, 10, 3, 7, 11];
+    // Fill column-wise starting from top-left, filling vertically per column
+    // Column 1: 0,3,6,9 | Column 2: 1,4,7,10 | Column 3: 2,5,8,11
+    const columnOrder = [0, 3, 6, 9, 1, 4, 7, 10, 2, 5, 8, 11];
     
-    // Place Guard frequencies in the last positions (bottom-right first)
-    const guardPositions = [11, 7, 3]; // Bottom-right, middle-right, top-right
+    // Place Guard frequencies in the last column (rightmost column, top to bottom)
+    const guardPositions = [2, 5, 8, 11]; // Top-right, second-right, third-right, bottom-right
     let guardIndex = 0;
     
     for (const guardFreq of guardFreqs) {
@@ -204,6 +205,30 @@ export default function VscsAG({ page, sendMsg }: VscsAGProps) {
     }
   };
 
+  // Handle clicking on unselected frequency button - activates only RCVR
+  const handleUnselectedFrequencyClick = (freq: string) => {
+    if (!freq) return;
+    
+    // Find the button data from currentSlice
+    const buttonData = currentSlice.find((data: any) => 
+      data && (data.freq === freq)
+    );
+    
+    if (!buttonData) return;
+    
+    // Don't allow interaction with busy frequencies
+    if (buttonData.busy || buttonData.status === 'busy') {
+      console.log('Cannot interact with busy frequency:', freq);
+      return;
+    }
+    
+    // Turn on only RCVR when clicking unselected frequency (XMTR stays off)
+    console.log('Activating frequency:', freq, 'turning on RCVR only');
+    
+    // Turn on RCVR only - user will manually turn on XMTR if needed
+    sendMsg({ type: 'rx', cmd1: '' + freq, dbl1: true });
+  };
+
   // Handle dynamic button states for A/G frequencies
   useEffect(() => {
     // For the new 3-button layout, we don't need to manipulate CSS classes
@@ -215,11 +240,11 @@ export default function VscsAG({ page, sendMsg }: VscsAGProps) {
   }, [currentSlice, ag_status, buttons]);
 
   return (
-    <div className="grid grid-cols-3 gap-y-2 gap-x-6" style={{gridTemplateColumns: 'repeat(3, minmax(240px, 1fr))'}}>
+    <div className="grid grid-cols-3 gap-y-2 gap-x-[17px]" style={{gridTemplateColumns: 'repeat(3, minmax(240px, 1fr))'}}>
       {buttons.map((btn: any, i: number) => (
         <div key={i} className="ag-frequency-container">
-          {btn.type !== ButtonType.NONE ? (
-            // Assigned A/G frequency - show frequency above buttons
+          {btn.type !== ButtonType.NONE && (btn.originalData?.r || btn.originalData?.t) ? (
+            // Assigned A/G frequency with active XMTR or RCVR - show frequency above buttons
             <>
               {/* Frequency header above the buttons */}
               <div className={`ag-freq-header ${
@@ -257,7 +282,7 @@ export default function VscsAG({ page, sendMsg }: VscsAGProps) {
                     <div className="ag-sub-content">
                       <span className="ag-sub-text">{btn.radioSite}</span>
                       <div className="ag-sub-icon">
-                        {btn.originalData?.h ? <HeadphoneSvgComponent /> : <SpeakerSvgComponent />}
+                        {btn.originalData?.h ? <img src="/VSCSHeadsetIcon.bmp" alt="Headset" style={{ width: '40px', height: '30px' }} /> : <img src="/VSCSSpeakerIcon.bmp" alt="Speaker" style={{ width: '40px', height: '30px' }} />}
                       </div>
                     </div>
                   </button>
@@ -281,13 +306,31 @@ export default function VscsAG({ page, sendMsg }: VscsAGProps) {
               </div>
             </>
           ) : (
-            // Unassigned button - show as empty with consistent container structure
+            // Unassigned button OR assigned frequency with both XMTR and RCVR off - show as unselected button without header
             <div className="ag-frequency-button" style={{ height: '78px' }}>
               <VscsButtonComponent
-                config={btn}
+                config={btn.type !== ButtonType.NONE ? {
+                  ...btn,
+                  shortName: btn.shortName || 'UNSEL', // Show frequency on top line
+                  longName: btn.radioSite || btn.longName || btn.shortName || 'UNSEL' // Show radio site on bottom line
+                } : btn}
                 typeString=""
-                callback={undefined}
-                className={`${btn.target} ${btn.type} vscs-button ag-button unassigned cursor-not-allowed`}
+                callback={btn.type !== ButtonType.NONE ? () => handleUnselectedFrequencyClick(btn.target) : undefined}
+                className={`${btn.target} ${btn.type} vscs-button ag-button ${
+                  btn.type !== ButtonType.NONE ? 'state-unselected cursor-pointer' : 'unassigned cursor-not-allowed'
+                }${
+                  // Add guard frequency styling for unselected guard frequencies (121.5 MHz, 243.0 MHz)
+                  btn.type !== ButtonType.NONE && 
+                  (parseInt(btn.target) === 121500000 || parseInt(btn.target) === 243000000) 
+                    ? ' guard-frequency-unselected' : ''
+                }${
+                  // Add transmitting styling for unselected buttons with talking/PTT data (exclude guard frequencies)
+                  btn.type !== ButtonType.NONE && btn.originalData && 
+                  !(parseInt(btn.target) === 121500000 || parseInt(btn.target) === 243000000) ? (
+                    btn.originalData.talking ? ' transmitting-flutter' : 
+                    (btn.originalData.t || ptt) ? ' transmitting' : ''
+                  ) : ''
+                }`}
               />
             </div>
           )}
