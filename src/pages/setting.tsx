@@ -27,18 +27,22 @@ const processSingleFacility = (fac: Facility, parentKey: string, mapd: any) => {
     return ret
 }
 
-function SettingModal({ open, setModal }) {
+interface SettingModalProps {
+    open: boolean;
+    setModal: (open: boolean) => void;
+}
+function SettingModal({ open, setModal }: SettingModalProps) {
     const positionsData = useCoreStore(s => s.positionData)
     const updateSelectedPosition = useCoreStore(s => s.updateSelectedPositions)
     const [treeSelection, setTreeSelection] = useState<Key[]>([])
     const [treeData, mapData] = useMemo(() => {
-        const mapData = {}
+        const mapData: { [key: string]: any } = {};
         return [[processSingleFacility(positionsData, '', mapData)], mapData]
     }, [positionsData])
 
     const onSubmit = async () => {
         const data = treeSelection.map(k => {
-            return mapData[k]
+            return mapData[String(k)];
         }).filter(k => k)
         updateSelectedPosition(data)
         setModal(false)

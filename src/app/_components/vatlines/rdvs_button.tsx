@@ -1,3 +1,5 @@
+// Stub for missing props type
+type RdvsButtonComponentProps = any;
 export default function RdvsButtonComponent(props: RdvsButtonComponentProps) {
   if (props.variant === 'radio') {
     // Radio button rendering

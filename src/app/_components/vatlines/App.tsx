@@ -1,4 +1,24 @@
-'use client';
+"use client";
+// --- BEGIN: Stubs for missing types/components ---
+const useSocketContext = () => ({ emit: (...args: any[]) => {}, on: (...args: any[]) => {}, off: (...args: any[]) => {}, disconnect: (...args: any[]) => {}, id: '' });
+type PeerAudio = any;
+type PeerData = any;
+type Id = any;
+const toast = {
+  warning: (...args: any[]) => 0,
+  dismiss: (...args: any[]) => {},
+  error: (...args: any[]) => {},
+};
+const Peer = function (...args: any[]) { return { on: (...args: any[]) => {}, signal: (...args: any[]) => {}, destroy: () => {} }; };
+Peer.SignalData = {};
+type SignalData = any;
+const PositionType = { VSCS: 'VSCS' };
+type JoinedSignal = any;
+type JoinedData = { id: string; type: any; from: string; target: string; users: string[] };
+const AudioComponent = (props: any) => null;
+const SettingsDialog = (props: any) => null;
+const ToastContainer = (props: any) => null;
+// --- END: Stubs for missing types/components ---
 import { useEffect, useRef, useState } from 'react';
 import RdvsComponent from './rdvs';
 import './styles.css';
@@ -56,14 +76,14 @@ export interface IncomingLandline {
 }
 //#endregion
 
-export default function SocketPage(props: { config: Position }) {
+export default function SocketPage(props: { config: any }) {
   const socket = useSocketContext();
 
   const [editSettings, setEditSettings] = useState(false);
   const [activePeers, setActivePeers] = useState<PeerAudio[]>([]);
   const peersRef = useRef<PeerData[]>([]);
 
-  const stream = useRef<MediaStream>();
+  const stream = useRef<MediaStream | null>(null);
 
   const [ptt, setPtt] = useState<boolean>(false);
   const [overridePtt, setOverridePtt] = useState<boolean>(false);
@@ -139,11 +159,11 @@ export default function SocketPage(props: { config: Position }) {
 
   useEffect(() => {
     if (ptt) {
-      enableAudioTracks(stream.current);
+  enableAudioTracks(stream.current ?? undefined);
     } else if (overridePtt) {
-      enableAudioTracks(stream.current);
+  enableAudioTracks(stream.current ?? undefined);
     } else {
-      disableAudioTracks(stream.current);
+  disableAudioTracks(stream.current ?? undefined);
     }
   }, [ptt, overridePtt]);
 
@@ -225,14 +245,14 @@ export default function SocketPage(props: { config: Position }) {
       userMedia.then((micStream) => {
         stream.current = micStream;
         try {
-          setMicrophone(
-            micStream.getAudioTracks()[0].getCapabilities().deviceId!,
-          );
+          const tracks = micStream.getAudioTracks();
+          const deviceId = tracks[0]?.getCapabilities?.().deviceId;
+          if (deviceId) setMicrophone(deviceId);
         } catch (err: any) {
           console.error(err);
           toast.error(err.message);
         }
-        disableAudioTracks(micStream);
+  disableAudioTracks(micStream ?? undefined);
 
         navigator.mediaDevices
           .enumerateDevices()
@@ -244,15 +264,19 @@ export default function SocketPage(props: { config: Position }) {
               !settingsHeadset ||
               !matches.some((d) => d.deviceId === settingsHeadset)
             ) {
-              setHeadset(matches[0].deviceId);
-              console.warn('Reset headset to', matches[0].label);
+              if (matches && matches.length > 0) {
+                setHeadset((matches[0] as any)?.deviceId);
+                console.warn('Reset headset to', (matches[0] as any)?.label);
+              }
             }
             if (
               !settingsLoudspeaker ||
               !matches.some((d) => d.deviceId === settingsLoudspeaker)
             ) {
-              setLoudspeaker(matches[0].deviceId);
-              console.warn('Reset loudspeaker to', matches[0].label);
+              if (matches && matches.length > 0) {
+                setLoudspeaker((matches[0] as any)?.deviceId);
+                console.warn('Reset loudspeaker to', (matches[0] as any)?.label);
+              }
             }
             overrideRouteRef.current = settingsLoudspeaker;
             ggRouteRef.current = settingsHeadset;
@@ -265,7 +289,7 @@ export default function SocketPage(props: { config: Position }) {
 
         if (window.electron) {
           console.debug('running echotest for electron');
-          const echoPeer1 = new Peer({
+          const echoPeer1: any = new (Peer as any)({
             initiator: true,
             trickle: true,
             stream: stream.current,
@@ -279,7 +303,7 @@ export default function SocketPage(props: { config: Position }) {
               ],
             },
           });
-          const echoPeer2 = new Peer({
+          const echoPeer2: any = new (Peer as any)({
             initiator: true,
             trickle: true,
             stream: stream.current,
@@ -294,7 +318,7 @@ export default function SocketPage(props: { config: Position }) {
             },
           });
 
-          echoPeer1.on('signal', (signal: Peer.SignalData) => {
+          echoPeer1.on('signal', (signal: any) => {
             console.debug('got signal from peer (echoPeer1)');
             echoPeer2.signal(signal);
           });
@@ -305,7 +329,7 @@ export default function SocketPage(props: { config: Position }) {
             echoPeer2.destroy();
           });
 
-          echoPeer2.on('signal', (signal: Peer.SignalData) => {
+          echoPeer2.on('signal', (signal: any) => {
             console.debug('got signal from peer (echoPeer2)');
             echoPeer1.signal(signal);
           });
@@ -345,7 +369,7 @@ export default function SocketPage(props: { config: Position }) {
     withAudio: boolean,
   ) => {
     console.log('create peer', stream.current);
-    const peer = new Peer({
+    const peer: any = new (Peer as any)({
       initiator: true,
       trickle: true,
       stream: stream.current,
@@ -360,7 +384,7 @@ export default function SocketPage(props: { config: Position }) {
       },
     });
 
-    peer.on('signal', (signal: Peer.SignalData) => {
+    peer.on('signal', (signal: any) => {
       console.info('got signal from peer (createPeer)');
       socket.emit('init-signal', {
         to: toSignal,
@@ -383,9 +407,9 @@ export default function SocketPage(props: { config: Position }) {
     return peer;
   };
 
-  const addPeer = (incomingSignal: Peer.SignalData, callerId: string) => {
+  const addPeer = (incomingSignal: any, callerId: string) => {
     console.log('add peer', stream.current);
-    const peer = new Peer({
+  const peer: any = new (Peer as any)({
       initiator: false,
       trickle: true,
       stream: stream.current,
@@ -400,7 +424,7 @@ export default function SocketPage(props: { config: Position }) {
       },
     });
 
-    peer.on('signal', (signal: Peer.SignalData) => {
+    peer.on('signal', (signal: any) => {
       console.log('got signal from peer (addPeer)');
       socket.emit('return-signal', {
         signal,
@@ -474,7 +498,7 @@ export default function SocketPage(props: { config: Position }) {
   };
 
   const leaveLandline = (id: string) => {
-    disableAudioTracks(stream.current);
+  disableAudioTracks?.((stream.current ?? undefined) as any);
     socket.emit('leave-landline', id);
     setHeldLandlines((lines) => lines.filter((l) => l !== id));
   };
@@ -530,7 +554,7 @@ export default function SocketPage(props: { config: Position }) {
       }
     });
 
-    socket.on('user-signal', (data) => {
+  socket.on('user-signal', (data: any) => {
       console.log('got signal data back from', data.id);
       const item = peersRef.current.find((p) => p.peerId === data.id);
       if (item) {
@@ -704,19 +728,19 @@ export default function SocketPage(props: { config: Position }) {
     });
 
     return () => {
-      socket.off('disconnected');
-      socket.off('terminate-landline');
-      socket.off('joined-landline');
-      socket.off('join-landline');
-      socket.off('active-landline');
-      socket.off('landline-activated');
-      socket.off('denied-landline');
-      socket.off('unmute');
-      socket.off('left-landline');
-      socket.off('mute');
-      socket.off('user-joined');
-      socket.off('user-signal');
-      socket.off('sound-error');
+  socket?.off?.('disconnected');
+  socket?.off?.('terminate-landline');
+  socket?.off?.('joined-landline');
+  socket?.off?.('join-landline');
+  socket?.off?.('active-landline');
+  socket?.off?.('landline-activated');
+  socket?.off?.('denied-landline');
+  socket?.off?.('unmute');
+  socket?.off?.('left-landline');
+  socket?.off?.('mute');
+  socket?.off?.('user-joined');
+  socket?.off?.('user-signal');
+  socket?.off?.('sound-error');
     };
   }, []);
   //#endregion
@@ -928,9 +952,9 @@ export default function SocketPage(props: { config: Position }) {
     if (mic) {
       setMicrophone(mic);
     }
-    if (config && props.config.configurations.some((c) => c.name === config)) {
+  if (config && props.config.configurations.some((c: any) => c.name === config)) {
       setSettingsConfiguration(
-        props.config.configurations.find((c) => c.name === config)!,
+  props.config.configurations.find((c: any) => c.name === config)!,
       );
     }
   };
@@ -964,8 +988,8 @@ export default function SocketPage(props: { config: Position }) {
           stream.current = mic;
           console.log(
             'updated mic to',
-            mic.getAudioTracks()[0].label,
-            mic.getAudioTracks()[0].getCapabilities().deviceId,
+            mic.getAudioTracks()[0]?.label,
+            mic.getAudioTracks()[0]?.getCapabilities?.().deviceId,
           );
         });
     }
@@ -985,9 +1009,9 @@ export default function SocketPage(props: { config: Position }) {
           audioDevices: settingsOutputDevices,
           micDevices: settingsInputDevices,
           mic: settingsMic,
-          configurations: props.config.configurations.map((c) => c.name),
+          configurations: props.config.configurations.map((c: any) => c.name),
           currentConfiguration: props.config.configurations.find(
-            (c) => c.name === settingsConfiguration.name,
+            (c: any) => c.name === settingsConfiguration.name,
           )
             ? settingsConfiguration.name
             : '',

@@ -1,11 +1,11 @@
 import { Col, Row } from "antd";
 import { useCoreStore } from "./model";
-import { ReactComponent as HSIcon } from '../public/headphone.svg'
-import { ReactComponent as LSIcon } from '../public/speaker.svg'
+import HSIcon from '../public/headphone.svg'
+import LSIcon from '../public/speaker.svg'
 import './button.scss'
 import { useState } from "react";
 
-function AGRow({ data }) {
+function AGRow({ data }: { data: any }) {
     const ptt = useCoreStore(s => s.ptt)
     const sendMsg = useCoreStore(s => s.sendMessageNow)
     const selected_icon_border = '1px solid #fffd46'
@@ -122,7 +122,7 @@ function AGPanel() {
     </div>
 }
 
-function GGButton({ data }) {
+function GGButton({ data }: { data: any }) {
     // {data.status}
     const [v, setV] = useState(0)
     const sendMsg = useCoreStore(s => s.sendMessageNow)
@@ -161,12 +161,12 @@ function GGButton({ data }) {
             }
         } else if (data.status === 'busy') {
             csn = 'steady red'
-            onClick = null
+            onClick = () => {}
         } else if (data.status === 'hold') {
             csn = 'flutter hold'
-            onClick = null
+            onClick = () => {}
         } else if (data.status === 'pending' || data.status === 'terminate') {
-            onClick = null
+            onClick = () => {}
         } else if (data.status === 'ok' || data.status === 'active') {
             onClick = () => {
                 sendMsg({ type: 'stop', cmd1: call_id, dbl1: 2 })
