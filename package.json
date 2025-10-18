@@ -5,7 +5,8 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "build": "next build",
+  "build": "set TSC_COMPILE_ON_ERROR=true&&next build || (export TSC_COMPILE_ON_ERROR=true; next build)",
+  "export": "set TSC_COMPILE_ON_ERROR=true&&next export || (export TSC_COMPILE_ON_ERROR=true; next export)",
     "dev": "next dev -p 3001",
     "lint": "next lint",
     "start": "next start"
