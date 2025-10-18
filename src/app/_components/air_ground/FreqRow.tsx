@@ -24,9 +24,9 @@ const FreqRow: React.FC<FreqRowProps> = ({ entries }) => {
     })
     // If there are less than 5 frequencies, add empty buttons
     while (cols.length < 5) {
-      cols.push(
-          <SquareButton/>
-      );
+    cols.push(
+      <SquareButton topLine="" />
+    );
     }
     return cols;
   }
