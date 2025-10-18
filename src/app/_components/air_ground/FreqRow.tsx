@@ -5,7 +5,12 @@ import FrequencyButton from './FreqButton';
 import SquareButton from '../base_button/SquareButton';
 
 type FreqRowProps = {
-  entries;
+  entries: Array<{
+    frequency: string | number;
+    name: string;
+    prefMode?: any;
+    currMode?: any;
+  }>;
 };
 
 const FreqRow: React.FC<FreqRowProps> = ({ entries }) => {
