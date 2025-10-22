@@ -9571,7 +9571,38 @@
                             "freq": 121100000,
                             "rn": "Capitol Clearance",
                             "ui": "ivsr",
-                            "lines": [],
+                            "lines": [
+                                [
+                                    "811203",
+                                    0,
+                                    "ELK"
+                                ],
+                                [
+                                    "811202",
+                                    0,
+                                    "EXPO"
+                                ],
+                                [
+                                    "811207",
+                                    0,
+                                    "DLTA"
+                                ],                                
+                                [
+                                    "811044",
+                                    2,
+                                    "SH NCT"
+                                ],
+                                [
+                                    "811120",
+                                    0,
+                                    "LC-W OVR"
+                                ],
+                                [
+                                    "811101",
+                                    0,
+                                    "GC OVR"
+                                ]                                
+                            ],
                             "lines_obj": {}
                         },
                         {
@@ -9580,7 +9611,38 @@
                             "freq": 121700000,
                             "rn": "Capitol Ground",
                             "ui": "ivsr",
-                            "lines": [],
+                            "lines": [
+                                [
+                                    "811203",
+                                    0,
+                                    "ELK"
+                                ],
+                                [
+                                    "811202",
+                                    0,
+                                    "EXPO"
+                                ],
+                                [
+                                    "811207",
+                                    0,
+                                    "DLTA"
+                                ],                                
+                                [
+                                    "811044",
+                                    2,
+                                    "SH NCT"
+                                ],
+                                [
+                                    "811101",
+                                    0,
+                                    "CDFD OVR"
+                                ],
+                                [
+                                    "811121",
+                                    0,
+                                    "LC-W OVR"
+                                ]                                
+                            ],
                             "lines_obj": {}
                         },
                         {
@@ -9591,24 +9653,34 @@
                             "ui": "ivsr",
                             "lines": [
                                 [
-                                    "811207",
-                                    0,
-                                    "H-DEL"
-                                ],
-                                [
                                     "811203",
                                     0,
-                                    "H-ELK"
+                                    "ELK"
                                 ],
                                 [
                                     "811202",
                                     0,
-                                    "H-EXP"
+                                    "EXPO"
                                 ],
+                                [
+                                    "811207",
+                                    0,
+                                    "DLTA"
+                                ],                                
                                 [
                                     "811044",
                                     2,
-                                    "NCT A/B"
+                                    "SH NCT"
+                                ],
+                                [
+                                    "811120",
+                                    0,
+                                    "CDFD OVR"
+                                ],
+                                [
+                                    "811121",
+                                    0,
+                                    "GC OVR"
                                 ]
                             ],
                             "lines_obj": {
@@ -9915,7 +9987,7 @@
                             "pos": "GC",
                             "freq": 125000000,
                             "rn": "Palo Alto Ground",
-                            "ui": "ivsr",
+                            "ui": "stvs",
                             "lines": [],
                             "lines_obj": {}
                         },
@@ -9924,7 +9996,7 @@
                             "pos": "LC",
                             "freq": 118600000,
                             "rn": "Palo Alto Tower",
-                            "ui": "ivsr",
+                            "ui": "stvs",
                             "lines": [],
                             "lines_obj": {}
                         }
@@ -9940,7 +10012,7 @@
                             "pos": "GC",
                             "freq": 121650000,
                             "rn": "Reid-Hillview Ground",
-                            "ui": "ivsr",
+                            "ui": "stvs",
                             "lines": [],
                             "lines_obj": {}
                         },
@@ -9949,7 +10021,7 @@
                             "pos": "LC",
                             "freq": 119800000,
                             "rn": "Reid-Hillview Tower",
-                            "ui": "ivsr",
+                            "ui": "stvs",
                             "lines": [
                                 [
                                     "811097",
@@ -10034,7 +10106,7 @@
                             "pos": "GC",
                             "freq": 121700000,
                             "rn": "Salinas Ground",
-                            "ui": "ivsr",
+                            "ui": "stvs",
                             "lines": [],
                             "lines_obj": {}
                         },
@@ -10043,7 +10115,7 @@
                             "pos": "LC",
                             "freq": 119525000,
                             "rn": "Salinas Tower",
-                            "ui": "ivsr",
+                            "ui": "stvs",
                             "lines": [],
                             "lines_obj": {}
                         }
@@ -10059,7 +10131,7 @@
                             "pos": "GC",
                             "freq": 121600000,
                             "rn": "San Carlos Ground",
-                            "ui": "ivsr",
+                            "ui": "stvs",
                             "lines": [],
                             "lines_obj": {}
                         },
@@ -10068,7 +10140,7 @@
                             "pos": "LC",
                             "freq": 119000000,
                             "rn": "San Carlos Tower",
-                            "ui": "ivsr",
+                            "ui": "stvs",
                             "lines": [
                                 [
                                     "811066",
@@ -10117,7 +10189,7 @@
                             "pos": "GC",
                             "freq": 121900000,
                             "rn": "Concord Ground",
-                            "ui": "ivsr",
+                            "ui": "etvs",
                             "lines": [],
                             "lines_obj": {}
                         },
@@ -10126,7 +10198,7 @@
                             "pos": "LC",
                             "freq": 119700000,
                             "rn": "Concord Tower",
-                            "ui": "ivsr",
+                            "ui": "etvs",
                             "lines": [],
                             "lines_obj": {}
                         }
@@ -10142,7 +10214,7 @@
                             "pos": "GC",
                             "freq": 121900000,
                             "rn": "Santa Rosa Ground",
-                            "ui": "ivsr",
+                            "ui": "etvs",
                             "lines": [],
                             "lines_obj": {}
                         },
@@ -10151,7 +10223,7 @@
                             "pos": "LC",
                             "freq": 118500000,
                             "rn": "Santa Rosa Tower",
-                            "ui": "ivsr",
+                            "ui": "etvs",
                             "lines": [],
                             "lines_obj": {}
                         }
@@ -10167,7 +10239,7 @@
                             "pos": "GC",
                             "freq": 121900000,
                             "rn": "Chico Ground",
-                            "ui": "ivsr",
+                            "ui": "stvs",
                             "lines": [],
                             "lines_obj": {}
                         },
@@ -10176,7 +10248,7 @@
                             "pos": "LC",
                             "freq": 121000000,
                             "rn": "Chico Tower",
-                            "ui": "ivsr",
+                            "ui": "stvs",
                             "lines": [],
                             "lines_obj": {}
                         }
@@ -10192,7 +10264,7 @@
                             "pos": "GC",
                             "freq": 121700000,
                             "rn": "Reddign Ground",
-                            "ui": "ivsr",
+                            "ui": "stvs",
                             "lines": [],
                             "lines_obj": {}
                         },
@@ -10201,7 +10273,7 @@
                             "pos": "LC",
                             "freq": 119800000,
                             "rn": "Redding Tower",
-                            "ui": "ivsr",
+                            "ui": "stvs",
                             "lines": [],
                             "lines_obj": {}
                         }
@@ -10695,7 +10767,7 @@
                     "pos": "PAO GC",
                     "freq": 125000000,
                     "rn": "Palo Alto Ground",
-                    "ui": "ivsr",
+                    "ui": "stvs",
                     "lines": []
                 },
                 {
@@ -10703,7 +10775,7 @@
                     "pos": "PAO LC",
                     "freq": 118600000,
                     "rn": "Palo Alto Tower",
-                    "ui": "ivsr",
+                    "ui": "stvs",
                     "lines": []
                 },
                 {
@@ -10711,7 +10783,7 @@
                     "pos": "RHV GC",
                     "freq": 121650000,
                     "rn": "Reid Hillview Ground",
-                    "ui": "ivsr",
+                    "ui": "stvs",
                     "lines": []
                 },
                 {
@@ -10719,7 +10791,7 @@
                     "pos": "RHV LC",
                     "freq": 119800000,
                     "rn": "Reid Hillview Tower",
-                    "ui": "ivsr",
+                    "ui": "stvs",
                     "lines": []
                 },
                 {
@@ -10904,7 +10976,7 @@
                     "pos": "SQL GC",
                     "freq": 121600000,
                     "rn": "San Carlos Ground",
-                    "ui": "ivsr",
+                    "ui": "stvs",
                     "lines": []
                 },
                 {
@@ -10912,7 +10984,7 @@
                     "pos": "SQL LC",
                     "freq": 119000000,
                     "rn": "San Carlos Tower",
-                    "ui": "ivsr",
+                    "ui": "stvs",
                     "lines": [
                         [
                             "811066",
