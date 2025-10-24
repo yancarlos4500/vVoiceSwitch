@@ -1,12 +1,12 @@
-import { ButtonType } from './App';
+import { ButtonType } from './types';
 import SpeakerSvgComponent from './speaker_svg';
 import { useState } from 'react';
 
 interface ButtonProps {
-  shortName: string;
-  longName: string;
-  target: string;
-  type: ButtonType;
+  shortName?: string;
+  longName?: string;
+  target?: string;
+  type?: ButtonType;
 }
 
 interface Callback {
@@ -36,7 +36,7 @@ export default function VscsButtonComponent(props: {
   const handleMouseUp = () => {
     if (!props.callback) return;
     setIsPressed(false);
-    props.callback(props.config.target, props.config.type);
+  props.callback(props.config.target ?? '', props.config.type ?? ButtonType.NONE);
   };
 
   const handleMouseLeave = () => {

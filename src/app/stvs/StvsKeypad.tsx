@@ -28,86 +28,49 @@ const StvsKeypad: React.FC<StvsKeypadProps> = ({ brightness = 1.0 }) => {
     // TODO: Add functionality for dialing/number entry
   };
 
+  // Keypad layout: 3 columns x 4 rows
+  // These positions are percent-based, matching the SVG/viewBox logic in StvsBase
+  // Adjust left/top/width/height as needed for visual alignment
+  const buttonPositions = [
+    // Row 1
+    { left: '32%', top: '3%', label: '1', topLine: '', bottomLine: '1' },
+    { left: '44%', top: '3%', label: '2', topLine: 'ABC', bottomLine: '2' },
+    { left: '55%', top: '3%', label: '3', topLine: 'DEF', bottomLine: '3' },
+    // Row 2
+    { left: '32%', top: '18%', label: '4', topLine: 'GHI', bottomLine: '4' },
+    { left: '44%', top: '18%', label: '5', topLine: 'JKL', bottomLine: '5' },
+    { left: '55%', top: '18%', label: '6', topLine: 'MNO', bottomLine: '6' },
+    // Row 3
+    { left: '32%', top: '33%', label: '7', topLine: 'PQRS', bottomLine: '7' },
+    { left: '44%', top: '33%', label: '8', topLine: 'TUV', bottomLine: '8' },
+    { left: '55%', top: '33%', label: '9', topLine: 'WXY', bottomLine: '9' },
+    // Row 4
+    { left: '32%', top: '48%', label: '*', topLine: '', bottomLine: '*' },
+    { left: '44%', top: '48%', label: '0', topLine: 'OPER', bottomLine: '0' },
+    { left: '55%', top: '48%', label: '#', topLine: '', bottomLine: '#' },
+  ];
+
+  // Keypad container: position absolute, scale/size set by parent (StvsBase)
   return (
-    <div className="flex flex-col items-center space-y-2 p-4">
-      {/* Keypad grid - 3x4 layout like a phone */}
-      <div className="grid grid-cols-3 gap-3">
-        <StvsKeypadButton 
-          topLine="" 
-          bottomLine="1" 
+    <div style={{ position: 'absolute', width: '103%', height: '103%' }}>
+      {buttonPositions.map((pos, idx) => (
+        <StvsKeypadButton
+          key={idx}
+          topLine={pos.topLine}
+          bottomLine={pos.bottomLine}
           brightness={brightness}
-          onClick={() => handleKeypadClick('1')}
+          onClick={() => handleKeypadClick(pos.label)}
+          style={{
+            position: 'absolute',
+            left: pos.left,
+            top: pos.top,
+            width: '10%',
+            height: '13%',
+            minWidth: 0,
+            minHeight: 0,
+          }}
         />
-        <StvsKeypadButton 
-          topLine="ABC" 
-          bottomLine="2" 
-          brightness={brightness}
-          onClick={() => handleKeypadClick('2')}
-        />
-        <StvsKeypadButton 
-          topLine="DEF" 
-          bottomLine="3" 
-          brightness={brightness}
-          onClick={() => handleKeypadClick('3')}
-        />
-        
-        <StvsKeypadButton 
-          topLine="GHI" 
-          bottomLine="4" 
-          brightness={brightness}
-          onClick={() => handleKeypadClick('4')}
-        />
-        <StvsKeypadButton 
-          topLine="JKL" 
-          bottomLine="5" 
-          brightness={brightness}
-          onClick={() => handleKeypadClick('5')}
-        />
-        <StvsKeypadButton 
-          topLine="MNO" 
-          bottomLine="6" 
-          brightness={brightness}
-          onClick={() => handleKeypadClick('6')}
-        />
-        
-        <StvsKeypadButton 
-          topLine="PQRS" 
-          bottomLine="7" 
-          brightness={brightness}
-          onClick={() => handleKeypadClick('7')}
-        />
-        <StvsKeypadButton 
-          topLine="TUV" 
-          bottomLine="8" 
-          brightness={brightness}
-          onClick={() => handleKeypadClick('8')}
-        />
-        <StvsKeypadButton 
-          topLine="WXY" 
-          bottomLine="9" 
-          brightness={brightness}
-          onClick={() => handleKeypadClick('9')}
-        />
-        
-        <StvsKeypadButton 
-          topLine="" 
-          bottomLine="*"
-          brightness={brightness}
-          onClick={() => handleKeypadClick('*')}
-        />
-        <StvsKeypadButton 
-          topLine="OPER" 
-          bottomLine="0" 
-          brightness={brightness}
-          onClick={() => handleKeypadClick('0')}
-        />
-        <StvsKeypadButton 
-          topLine="" 
-          bottomLine="#" 
-          brightness={brightness}
-          onClick={() => handleKeypadClick('#')}
-        />
-      </div>
+      ))}
     </div>
   );
 };

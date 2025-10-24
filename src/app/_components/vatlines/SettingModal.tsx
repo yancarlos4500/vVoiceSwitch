@@ -1,8 +1,9 @@
+
 import Modal from 'antd/es/modal';
 import Tree from 'antd/es/tree';
-import { Form, type TreeDataNode, type TreeProps } from 'antd';
 import { useCoreStore, type Facility } from '../../../model';
-import { useMemo, useState, useEffect, type Key } from 'react';
+import { useMemo, useState, type Key } from 'react';
+
 
 const processSingleFacility = (fac: Facility, parentKey: string, mapd: any) => {
     if (!fac) {
@@ -27,7 +28,8 @@ const processSingleFacility = (fac: Facility, parentKey: string, mapd: any) => {
     return ret;
 };
 
-function SettingModal({ open, setModal, position }: { open: boolean; setModal: (v: boolean) => void; position?: any }) {
+
+function SettingModal({ open, setModal }: { open: boolean; setModal: (v: boolean) => void }) {
     const positionsData = useCoreStore((s: any) => s.positionData);
     const updateSelectedPosition = useCoreStore((s: any) => s.updateSelectedPositions);
     const [treeSelection, setTreeSelection] = useState<Key[]>([]);
@@ -51,18 +53,12 @@ function SettingModal({ open, setModal, position }: { open: boolean; setModal: (
             width={600}
             className="vscs-settings-modal"
         >
-            {position ? (
-                <div style={{ marginBottom: 12, color: '#888' }}>
-                    <strong>Filtered Position:</strong> {position.pos}
-                </div>
-            ) : (
-                <Tree
-                    checkable
-                    selectable={false}
-                    onCheck={(ks, _) => setTreeSelection(ks as Key[])}
-                    treeData={treeData}
-                />
-            )}
+            <Tree
+                checkable
+                selectable={false}
+                onCheck={(ks, _) => setTreeSelection(ks as Key[])}
+                treeData={treeData}
+            />
         </Modal>
     );
 }

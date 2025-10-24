@@ -2,7 +2,7 @@
 import { useEffect } from 'react';
 import axios from 'axios';
 import VscsComponent from '../_components/vatlines/vscs';
-import { Configuration } from '../_components/vatlines/App';
+import { Configuration, ButtonType } from '../_components/vatlines/types';
 import { useCoreStore } from '~/model';
 
 // Mock configuration based on example-config.json structure
@@ -16,7 +16,7 @@ const mockConfiguration: Configuration = {
         shortName: 'LC1',
         longName: 'Local Control 1',
         target: 'LC1',
-        type: 'RING' as any,
+  type: ButtonType.RING,
         dialCode: '5001'
       }
     },
@@ -26,7 +26,7 @@ const mockConfiguration: Configuration = {
         shortName: 'LC2',
         longName: 'Local Control 2',
         target: 'LC2',
-        type: 'OVERRIDE' as any,
+  type: ButtonType.OVERRIDE,
         dialCode: '5002'
       }
     },

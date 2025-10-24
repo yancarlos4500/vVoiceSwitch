@@ -1,12 +1,7 @@
 import Image from 'next/image';
 import { useEffect, useState, useMemo } from 'react';
-import {
-  ActiveLandline,
-  ButtonType,
-  CALL_TYPE,
-  Configuration,
-  IncomingLandline,
-} from './App';
+// TODO: Import or define ActiveLandline, CALL_TYPE, Configuration, IncomingLandline as needed
+import { ButtonType, CALL_TYPE, Configuration, ActiveLandline, IncomingLandline } from './types';
 // Type-safe discriminated union for button config
 type StandardButton = {
   variant?: 'button';

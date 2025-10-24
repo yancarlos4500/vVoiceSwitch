@@ -37,7 +37,7 @@ const StvsKeypadButton: React.FC<StvsKeypadButtonProps> = ({
       style={{
         boxShadow: isActive ? 'inset 0 2px 4px rgba(0,0,0,0.3)' : '0 2px 4px rgba(0,0,0,0.1)',
         transform: isActive ? 'translateY(1px)' : 'none',
-        fontFamily: 'Arial, sans-serif',
+        fontFamily: 'ETVSButton, monospace',
         ...style
       }}
       onMouseDown={handleMouseDown}

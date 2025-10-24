@@ -1,3 +1,19 @@
+@font-face {
+    font-family: 'ETVSButton';
+    src: url('/TerminusTTF-Bold.ttf') format('truetype');
+    font-weight: bold;
+}
+@font-face {
+    font-family: 'ETVSButton';
+    src: url('/TerminusTTF-Bold.ttf') format('truetype');
+    font-weight: bold;
+}
+
+.etvs-button-label {
+    font-family: 'ETVSButton', monospace;
+    font-weight: bold;
+    letter-spacing: 0.5px;
+}
 /* Font Declaration */
 @font-face {
     font-family: 'TerminusTTF-Bold';

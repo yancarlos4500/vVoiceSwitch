@@ -1,12 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import {
-  ActiveLandline,
-  Button,
-  ButtonType,
-  CALL_TYPE,
-  Configuration,
-  IncomingLandline,
-} from './App';
+import { ButtonType, CALL_TYPE, Configuration, ActiveLandline, IncomingLandline, Button } from './types';
 import HeadphoneSvgComponent from './headphone_svg';
 import SpeakerSvgComponent from './speaker_svg';
 import VscsButtonComponent from './vscs_button';
@@ -386,7 +379,7 @@ function VscsPanel(props: VscsProps & { panelId?: string; defaultScreenMode?: st
   const callAnsBtn = () => {
     const toAnswer = props.incomingLandlines[0];
     if (toAnswer) {
-      testFunc(toAnswer.from, toAnswer.type as CALL_TYPE & ButtonType);
+  testFunc(toAnswer.from ?? '', toAnswer.type as CALL_TYPE & ButtonType);
     } else {
       props.playError();
     }
@@ -610,9 +603,8 @@ function VscsPanel(props: VscsProps & { panelId?: string; defaultScreenMode?: st
           });
       } else {
         const from =
-          line.type === CALL_TYPE.CONVERTED_SHOUT ||
           line.type === CALL_TYPE.SHOUT
-            ? line.from.split('-')[0]
+            ? (line.from ?? '').split('-')[0]
             : line.from;
         document
           .querySelectorAll(`.${line.target}.${line.type}`)
@@ -643,9 +635,8 @@ function VscsPanel(props: VscsProps & { panelId?: string; defaultScreenMode?: st
             });
         } else {
           const from =
-            line.type === CALL_TYPE.CONVERTED_SHOUT ||
             line.type === CALL_TYPE.SHOUT
-              ? line.from.split('-')[0]
+              ? (line.from ?? '').split('-')[0]
               : line.from;
           document
             .querySelectorAll(`.${line.target}.${line.type}`)
@@ -684,7 +675,7 @@ function VscsPanel(props: VscsProps & { panelId?: string; defaultScreenMode?: st
 
   return (
     <>
-      <div className="bg-zinc-700 p-0.5 vscs-panel tracking-tight leading-none select-none">
+      <div className="bg-zinc-800 p-0.5 vscs-panel tracking-tight leading-none select-none">
         <div className={`grid grid-cols-9 gap-y-3 mt-2 ${screenMode.startsWith('GG') ? 'mt-7' : ''}`}>
           {/* Always show the current screen content - no screen selection in main grid */}
           {screenMode === 'AG1' ? (
@@ -764,7 +755,7 @@ function VscsPanel(props: VscsProps & { panelId?: string; defaultScreenMode?: st
                             </div>
                           </div>
                           <div 
-                            className="relative vscs-static-button w-[80px] h-20 bg-cyan-400 cursor-pointer mt-2"
+                            className="relative vscs-static-button w-[165px] h-20 bg-[#40e0d0] cursor-pointer mt-2"
                             onClick={() => setRtEnabled(!rtEnabled)} style={{ bottom: '200px', left: '345px', zIndex: 25 }}
                           >
                           </div>
@@ -808,7 +799,7 @@ function VscsPanel(props: VscsProps & { panelId?: string; defaultScreenMode?: st
                             </div>
                           </div>
                           <div 
-                            className="relative vscs-static-button w-[80px] h-20 bg-cyan-400 cursor-pointer mt-2"
+                            className="relative vscs-static-button w-[165px] h-20 bg-[#40e0d0] cursor-pointer mt-2"
                             onClick={() => setRtEnabled(!rtEnabled)} style={{ bottom: '200px', left: '345px', zIndex: 25 }}
                           >
                           </div>
@@ -826,7 +817,7 @@ function VscsPanel(props: VscsProps & { panelId?: string; defaultScreenMode?: st
             buttons.map((btn, i) => (
               <VscsButtonComponent
                 key={i}
-                config={btn}
+                config={{ ...btn, type: typeof btn.type === 'string' && Object.values(ButtonType).includes(btn.type as ButtonType) ? btn.type as ButtonType : ButtonType.NONE }}
                 typeString={
                   btn.type === ButtonType.OVERRIDE
                     ? 'OVR'
@@ -852,7 +843,7 @@ function VscsPanel(props: VscsProps & { panelId?: string; defaultScreenMode?: st
             buttons.map((btn, i) => (
               <VscsButtonComponent
                 key={i}
-                config={btn}
+                config={{ ...btn, type: typeof btn.type === 'string' && Object.values(ButtonType).includes(btn.type as ButtonType) ? btn.type as ButtonType : ButtonType.NONE }}
                 typeString={
                   btn.type === ButtonType.OVERRIDE
                     ? 'OVR'
@@ -888,9 +879,9 @@ function VscsPanel(props: VscsProps & { panelId?: string; defaultScreenMode?: st
           )}
           {/* CALL ANS button - only show on G/G screens */}
           {!screenMode.startsWith('AG') && screenMode !== 'UTIL' && (
-            <VscsStaticButton onClick={() => callAnsBtn()}>
-              CALL ANS
-            </VscsStaticButton>
+                <VscsStaticButton onClick={() => callAnsBtn()}>
+                  <span className="etvs-button-label">CALL ANS</span>
+                </VscsStaticButton>
           )}
           
           {/* Large square button to the right of HOLD/CALL ANS - spans 2 rows - only show on G/G screens */}
@@ -911,7 +902,7 @@ function VscsPanel(props: VscsProps & { panelId?: string; defaultScreenMode?: st
                 </div>
               </div>
               <div 
-                className="vscs-static-button w-[80px] h-20 bg-cyan-400 cursor-pointer mt-2"
+                className="vscs-static-button w-[165px] h-20 bg-[#40e0d0] cursor-pointer mt-2"
                 onClick={() => setRtEnabled(!rtEnabled)}
               >
               </div>
@@ -1103,7 +1094,7 @@ function VscsPanel(props: VscsProps & { panelId?: string; defaultScreenMode?: st
                   // A/G page function buttons
                   <>
                     <VscsStaticButton onClick={() => funcAltBtn()}>
-                      FUNC ALT
+                      <span className="etvs-button-label">FUNC ALT</span>
                     </VscsStaticButton>
                     <VscsStaticButton 
                       onClick={() => (screenMode === 'AG1' || screenMode === 'AG2') ? swapPages() : undefined}
@@ -1143,14 +1134,14 @@ function VscsPanel(props: VscsProps & { panelId?: string; defaultScreenMode?: st
                       onClick={() => (screenMode === 'GG1' || screenMode === 'GG2') ? swapPages() : undefined}
                       disabled={!(screenMode === 'GG1' || screenMode === 'GG2')}
                     >
-                      G/G ALT
+                      <span className="etvs-button-label">G/G ALT</span>
                     </VscsStaticButton>
                     <VscsStaticButton disabled={true}>
-                      PSN REL
+                      <span className="etvs-button-label">PSN REL</span>
                     </VscsStaticButton>
                     <VscsStaticButton onClick={() => props.toggleGg()}>
                       <div>
-                        <div className="flex items-center justify-center">G/G</div>
+                        <div className="flex items-center justify-center etvs-button-label">G/G</div>
                         <div className="h-6">
                           {props.ggLoud ? (
                             <SpeakerSvgComponent />
@@ -1162,7 +1153,7 @@ function VscsPanel(props: VscsProps & { panelId?: string; defaultScreenMode?: st
                     </VscsStaticButton>
                     <VscsStaticButton onClick={() => props.toggleOver()}>
                       <div>
-                        <div className="flex items-center justify-center">OVR</div>
+                        <div className="flex items-center justify-center etvs-button-label">OVR</div>
                         <div className="h-6">
                           {props.overrideLoud ? (
                             <SpeakerSvgComponent />
@@ -1173,14 +1164,14 @@ function VscsPanel(props: VscsProps & { panelId?: string; defaultScreenMode?: st
                       </div>
                     </VscsStaticButton>
                     <VscsStaticButton disabled={true}>
-                      {func === 'PRI' ? 'CALL FWD' : 'HOLLER ON/OFF'}
+                      <span className="etvs-button-label">{func === 'PRI' ? 'CALL FWD' : 'HOLLER ON/OFF'}</span>
                     </VscsStaticButton>
                     <VscsStaticButton 
                       className="col-start-8 col-end-10"
                       width="165px"
                       onClick={() => props.releaseBtn()}
                     >
-                      RLS
+                      <span className="etvs-button-label">RLS</span>
                     </VscsStaticButton>
                   </>
                 )}
@@ -1195,16 +1186,29 @@ function VscsPanel(props: VscsProps & { panelId?: string; defaultScreenMode?: st
 
 // Main Dual Screen VSCS Component
 export default function VscsComponent(props: VscsProps) {
+  // Load zoa_position.json from public and set in Zustand store if not already loaded
+  const setPositionData = useCoreStore((s: any) => s.setPositionData);
+  const positionData = useCoreStore((s: any) => s.positionData);
+  useEffect(() => {
+    if (!positionData || !positionData.positions || positionData.positions.length === 0) {
+      fetch('/zoa_position.json')
+        .then(res => res.json())
+        .then(data => {
+          setPositionData(data);
+        })
+        .catch(err => {
+          console.error('Failed to load zoa_position.json:', err);
+        });
+    }
+  }, []);
   return (
     <div className="flex items-center justify-center gap-4 bg-black p-4">
       {/* Left VSCS Panel - defaults to A/G1 */}
       <VscsPanel {...props} panelId="left" defaultScreenMode="AG1" />
-      
       {/* VIK SVG in the middle */}
       <div className="flex-shrink-0">
         <img src="/VIK.svg" alt="VIK" style={{ width: '300px', height: '800px' }} />
       </div>
-      
       {/* Right VSCS Panel - defaults to G/G1 */}
       <VscsPanel {...props} panelId="right" defaultScreenMode="GG1" />
     </div>

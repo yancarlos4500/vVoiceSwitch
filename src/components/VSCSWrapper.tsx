@@ -1,8 +1,5 @@
-import React from 'react';
-
-// VSCS Panel wrapper - uses existing panel.tsx
-import VSCSPanel from '../panel';
-
-export default function VSCSWrapper() {
-  return <VSCSPanel />;
-}
+// LEGACY WRAPPER: UI switching is now centralized in src/app/page.tsx. This file is no longer used.
+// All code below is commented out for clarity.
+/*
+...existing code...
+*/

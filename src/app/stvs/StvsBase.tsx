@@ -111,7 +111,7 @@ const StvsBase: React.FC = () => {
   const ggButtons = Array.from({ length: 12 }, (_, i) => ggData[i]?.call_name || ggData[i]?.call);
   return (
     <div className="w-full h-full flex flex-col items-center justify-center bg-black">
-      <SettingModal open={settingModal} setModal={setSettingModal} />
+  <SettingModal open={settingModal} setModal={setSettingModal} />
       {/* Responsive SVG container with aspect ratio matching viewBox 899.16x164.4 */}
       <div
         className="relative w-full max-w-full"
@@ -119,6 +119,22 @@ const StvsBase: React.FC = () => {
       >
         {/* SVG base */}
         <img src="/stvs.svg" alt="STVS Panel" className="w-full h-full object-contain" />
+        {/* Transparent clickspot over DENRO logo (approximate position/size, adjust as needed) */}
+        <button
+          aria-label="Open Settings"
+          onClick={() => setSettingModal(true)}
+          style={{
+            position: 'absolute',
+            left: '2.5%', // Adjust as needed to match DENRO position
+            top: '2%',   // Adjust as needed to match DENRO position
+            width: '17%', // Adjust width to cover DENRO
+            height: '22%', // Adjust height to cover DENRO
+            background: 'transparent',
+            border: 'none',
+            cursor: 'pointer',
+            zIndex: 30,
+          }}
+        />
 
         {/* Knobs positioned and scaled relative to SVG viewBox (899.16x164.4) */}
         {/* Example: 170px left, 320px top in SVG -> left: 18.9%, top: 194.6% (but top must be within 0-100%)

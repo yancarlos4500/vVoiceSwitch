@@ -1,3 +1,4 @@
+// NOTE: This wrapper should only be used via the main UI switch in src/app/page.tsx
 import React from 'react';
 
 // RDVS Wrapper - placeholder for now due to complex prop requirements

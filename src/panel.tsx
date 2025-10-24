@@ -1,8 +1,8 @@
 import { Col, Row } from "antd";
+console.log('[VSCSPanel] Rendering VSCSPanel');
 import { useCoreStore } from "./model";
 import HSIcon from '../public/headphone.svg'
 import LSIcon from '../public/speaker.svg'
-import './button.scss'
 import { useState } from "react";
 
 function AGRow({ data }: { data: any }) {
@@ -234,13 +234,18 @@ function GGPanel() {
     </>
 }
 function Panel() {
-    return <div style={{ background: 'black', display: 'flex', justifyContent: 'center', alignItems: 'center', width: '100%' }}>
-        <div style={{ width: 800, display: 'flex', padding: '10px 10px' }}>
-            <AGPanel />
-            <GGPanel />
-        </div>
-
-    </div>
+    console.log('[VSCSPanel] Panel component called');
+    try {
+        return <div style={{ background: 'black', display: 'flex', justifyContent: 'center', alignItems: 'center', width: '100%' }}>
+            <div style={{ width: 800, display: 'flex', padding: '10px 10px' }}>
+                <AGPanel />
+                <GGPanel />
+            </div>
+        </div>;
+    } catch (e) {
+        console.error('[VSCSPanel] Error rendering Panel:', e);
+        return <div style={{ color: 'red' }}>[VSCSPanel] Error rendering VSCS UI: {String(e)}</div>;
+    }
 }
 
 export default Panel;

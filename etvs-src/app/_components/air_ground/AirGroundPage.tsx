@@ -179,7 +179,7 @@ const AirGroundPage: React.FC<AirGroundPageProps> = ({ isGG3Active = false, curr
       </div>
 
       {/* Selected page */}
-      <div className="text-yellow-300 text-center items-center justify-center font text-[14px]]">
+      <div className="text-yellow-300 text-center items-center justify-center text-[14px]" style={{ fontFamily: 'ETVSButton, monospace', fontWeight: 'bold' }}>
         {isGG3Active ? `G/G PAGE ${currentGGPage}` : isSummaryEnabled ? `RADIO SUMMARY PAGE ${selectedPage}` : `RADIO PAGE ${selectedPage}`}
       </div>
     </div>

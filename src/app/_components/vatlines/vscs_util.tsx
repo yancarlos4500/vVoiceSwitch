@@ -39,8 +39,8 @@ export default function VscsUtil({ sendMsg }: VscsUtilProps) {
         style={{ 
           left: '611px', 
           top: '91px', 
-          width: '80px', 
-          height: '50px',
+          width: '75px', 
+          height: '85px',
           zIndex: 15 
         }}
       >
@@ -58,8 +58,8 @@ export default function VscsUtil({ sendMsg }: VscsUtilProps) {
         style={{ 
           left: '695px', 
           top: '91px', 
-          width: '80px', 
-          height: '50px',
+          width: '75px', 
+          height: '85px',
           zIndex: 15 
         }}
       >
@@ -77,8 +77,8 @@ export default function VscsUtil({ sendMsg }: VscsUtilProps) {
         style={{ 
           left: '611px', 
           top: '194px', 
-          width: '80px', 
-          height: '50px',
+          width: '75px', 
+          height: '85px',
           zIndex: 15 
         }}
       >
@@ -96,8 +96,8 @@ export default function VscsUtil({ sendMsg }: VscsUtilProps) {
         style={{ 
           left: '695px', 
           top: '194px', 
-          width: '80px', 
-          height: '50px',
+          width: '75px', 
+          height: '85px',
           zIndex: 15 
         }}
       >
@@ -115,8 +115,8 @@ export default function VscsUtil({ sendMsg }: VscsUtilProps) {
         style={{ 
           left: '611px', 
           top: '297px', 
-          width: '80px', 
-          height: '50px',
+          width: '75px', 
+          height: '85px',
           zIndex: 15 
         }}
       >
@@ -134,8 +134,8 @@ export default function VscsUtil({ sendMsg }: VscsUtilProps) {
         style={{ 
           left: '695px', 
           top: '297px', 
-          width: '80px', 
-          height: '50px',
+          width: '75px', 
+          height: '85px',
           zIndex: 15 
         }}
       >
@@ -153,8 +153,8 @@ export default function VscsUtil({ sendMsg }: VscsUtilProps) {
         style={{ 
           left: '611px', 
           top: '401px', 
-          width: '80px', 
-          height: '50px',
+          width: '75px', 
+          height: '85px',
           zIndex: 15 
         }}
       >
@@ -171,8 +171,8 @@ export default function VscsUtil({ sendMsg }: VscsUtilProps) {
         style={{ 
           left: '695px', 
           top: '401px', 
-          width: '80px', 
-          height: '50px',
+          width: '75px', 
+          height: '85px',
           zIndex: 15 
         }}
       >

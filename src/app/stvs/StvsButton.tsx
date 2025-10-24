@@ -95,7 +95,7 @@ const StvsButton: React.FC<StvsButtonProps> = ({ label, active = false, hasFreq 
       style={{
         boxShadow: pressed ? '0 1px 2px #111' : '0 2px 8px #111',
         transform: pressed ? 'scale(0.96) translateY(2px)' : 'none',
-        fontFamily: 'impact',
+        fontFamily: 'ETVSButton, monospace',
         overflow: 'hidden',
         transition: 'box-shadow 0.1s, transform 0.1s',
         ...style,

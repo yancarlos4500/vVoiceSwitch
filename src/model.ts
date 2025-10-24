@@ -23,10 +23,28 @@ interface CoreState {
     callsign: string;
     selectedPositions: Position[],
     currentUI: string; // Current UI context (vscs, etvs, stvs, ivsr, rdvs)
+    currentConfig: any; // The current config for the selected position
 
     ag_status: any[],
     gg_status: any[],
     vscs_status: any[],
+
+    // VSCS-specific props
+    activeLandlines: any[];
+    incomingLandlines: any[];
+    outgoingLandlines: any[];
+    heldLandlines: string[];
+    buttonPress: (id: string, type: any) => void;
+    holdBtn: () => void;
+    releaseBtn: () => void;
+    toggleGg: () => void;
+    toggleOver: () => void;
+    ggLoud: boolean;
+    overrideLoud: boolean;
+    settingsEdit: (val: boolean) => void;
+    volume: { volume: number; setVolume: (val: number) => void };
+    playError: () => void;
+    metadata: { position: string; sector: string; facilityId: string };
 
     setPositionData: (data: any) => void;
     setConnected: (status: boolean) => void;
@@ -34,6 +52,7 @@ interface CoreState {
     setCallsign: (call_sign: string, cid: number) => void;
     sendMessageNow: (data: any) => void;
     setCurrentUI: (ui: string) => void;
+    setCurrentConfig: (config: any) => void;
 }
 
 let call_table: Record<string, [string, number]> = {}
@@ -217,17 +236,34 @@ export const useCoreStore = create<CoreState>((set: any, get: any) => {
     const ds: CoreState = {
         connected: false,
         afv_version: '',
-    cid: 0,
+        cid: 0,
         ptt: false,
         callsign: '',
         positionData: { childFacilities: [], id: '', name: '', positions: [] },
         selectedPositions: [],
         currentUI: 'vscs', // Default to VSCS
+        currentConfig: null,
 
-        ag_status: [],
-        gg_status: [],
-        vscs_status: [],
+    ag_status: [],
+    gg_status: [],
+    vscs_status: [],
     sendMessageNow: () => {},
+    // VSCS-specific props (default implementations)
+    activeLandlines: [],
+    incomingLandlines: [],
+    outgoingLandlines: [],
+    heldLandlines: [],
+    buttonPress: () => {},
+    holdBtn: () => {},
+    releaseBtn: () => {},
+    toggleGg: () => {},
+    toggleOver: () => {},
+    ggLoud: false,
+    overrideLoud: false,
+    settingsEdit: () => {},
+    volume: { volume: 50, setVolume: () => {} },
+    playError: () => {},
+    metadata: { position: '', sector: '', facilityId: '' },
         setConnected: (status: boolean) => {
             set({
                 connected: status
@@ -239,21 +275,23 @@ export const useCoreStore = create<CoreState>((set: any, get: any) => {
             })
         },
         updateSelectedPositions: (poss: Position[]) => {
+            console.log('[model] updateSelectedPositions called with:', poss);
             set({
                 selectedPositions: poss,
             })
-            
             // Set UI context based on first selected position for audio system
             if (poss && poss.length > 0) {
                 const detectedUI = setUIContextFromPosition(poss[0]);
+                console.log('[model] set currentUI from position:', detectedUI);
                 set({
                     currentUI: detectedUI
                 });
+                // Set currentConfig to null (no config on Position)
+                set({ currentConfig: null });
             }
-            
             resetWindow();
         },
-    setCallsign: (call_sign: string, cid: number) => {
+        setCallsign: (call_sign: string, cid: number) => {
             set({
                 callsign: call_sign,
                 cid
@@ -261,9 +299,13 @@ export const useCoreStore = create<CoreState>((set: any, get: any) => {
             resetWindow();
         },
         setCurrentUI: (ui: string) => {
+            console.log('[model] setCurrentUI called with:', ui);
             set({
                 currentUI: ui
             })
+        },
+        setCurrentConfig: (config: any) => {
+            set({ currentConfig: config });
         }
     }
 

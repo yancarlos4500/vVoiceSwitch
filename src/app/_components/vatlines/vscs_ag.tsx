@@ -3,7 +3,7 @@ import { useCoreStore } from '~/model';
 import VscsButtonComponent from './vscs_button';
 import HeadphoneSvgComponent from './headphone_svg';
 import SpeakerSvgComponent from './speaker_svg';
-import { ButtonType } from './App';
+import { ButtonType } from './types';
 
 interface VscsAGProps {
   page: number; // 1 for A/G 1, 2 for A/G 2
