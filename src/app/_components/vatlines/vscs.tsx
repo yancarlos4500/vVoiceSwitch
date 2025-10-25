@@ -880,7 +880,7 @@ function VscsPanel(props: VscsProps & { panelId?: string; defaultScreenMode?: st
           {/* CALL ANS button - only show on G/G screens */}
           {!screenMode.startsWith('AG') && screenMode !== 'UTIL' && (
                 <VscsStaticButton onClick={() => callAnsBtn()}>
-                  <span className="etvs-button-label">CALL ANS</span>
+                  <span className="vscs-button-label">CALL ANS</span>
                 </VscsStaticButton>
           )}
           
@@ -1094,7 +1094,7 @@ function VscsPanel(props: VscsProps & { panelId?: string; defaultScreenMode?: st
                   // A/G page function buttons
                   <>
                     <VscsStaticButton onClick={() => funcAltBtn()}>
-                      <span className="etvs-button-label">FUNC ALT</span>
+                      <span className="vscs-button-label">FUNC ALT</span>
                     </VscsStaticButton>
                     <VscsStaticButton 
                       onClick={() => (screenMode === 'AG1' || screenMode === 'AG2') ? swapPages() : undefined}
@@ -1134,14 +1134,14 @@ function VscsPanel(props: VscsProps & { panelId?: string; defaultScreenMode?: st
                       onClick={() => (screenMode === 'GG1' || screenMode === 'GG2') ? swapPages() : undefined}
                       disabled={!(screenMode === 'GG1' || screenMode === 'GG2')}
                     >
-                      <span className="etvs-button-label">G/G ALT</span>
+                      <span className="vscs-button-label">G/G ALT</span>
                     </VscsStaticButton>
                     <VscsStaticButton disabled={true}>
-                      <span className="etvs-button-label">PSN REL</span>
+                      <span className="vscs-button-label">PSN REL</span>
                     </VscsStaticButton>
                     <VscsStaticButton onClick={() => props.toggleGg()}>
                       <div>
-                        <div className="flex items-center justify-center etvs-button-label">G/G</div>
+                        <div className="flex items-center justify-center vscs-button-label">G/G</div>
                         <div className="h-6">
                           {props.ggLoud ? (
                             <SpeakerSvgComponent />
@@ -1153,7 +1153,7 @@ function VscsPanel(props: VscsProps & { panelId?: string; defaultScreenMode?: st
                     </VscsStaticButton>
                     <VscsStaticButton onClick={() => props.toggleOver()}>
                       <div>
-                        <div className="flex items-center justify-center etvs-button-label">OVR</div>
+                        <div className="flex items-center justify-center vscs-button-label">OVR</div>
                         <div className="h-6">
                           {props.overrideLoud ? (
                             <SpeakerSvgComponent />
@@ -1164,14 +1164,14 @@ function VscsPanel(props: VscsProps & { panelId?: string; defaultScreenMode?: st
                       </div>
                     </VscsStaticButton>
                     <VscsStaticButton disabled={true}>
-                      <span className="etvs-button-label">{func === 'PRI' ? 'CALL FWD' : 'HOLLER ON/OFF'}</span>
+                      <span className="vscs-button-label">{func === 'PRI' ? 'CALL FWD' : 'HOLLER ON/OFF'}</span>
                     </VscsStaticButton>
                     <VscsStaticButton 
                       className="col-start-8 col-end-10"
                       width="165px"
                       onClick={() => props.releaseBtn()}
                     >
-                      <span className="etvs-button-label">RLS</span>
+                      <span className="vscs-button-label">RLS</span>
                     </VscsStaticButton>
                   </>
                 )}

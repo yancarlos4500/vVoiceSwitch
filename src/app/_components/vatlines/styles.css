@@ -17,7 +17,7 @@
 /* Font Declaration */
 @font-face {
     font-family: 'TerminusTTF-Bold';
-    src: url('/TerminusTTF-Bold.ttf') format('truetype');
+    src: url('/FIXEDDEMIBOLD.OTF') format('opentype');
     font-weight: lighter;
     font-style: normal;
 }
