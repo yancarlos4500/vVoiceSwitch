@@ -1,26 +1,30 @@
 /* RDVS Cyan Box Indicator Animations */
+/* These animations control background fill while preserving the cyan border */
 .rdvs-flash {
+  background-color: rgb(103, 232, 249); /* Start with cyan fill */
   animation: rdvs-flash 1s steps(2, start) infinite;
 }
 @keyframes rdvs-flash {
-  0%, 50% { opacity: 1; }
-  51%, 100% { opacity: 0; }
+  0%, 50% { background-color: rgb(103, 232, 249); } /* cyan-300 filled */
+  51%, 100% { background-color: #000000; } /* black background, border remains */
 }
 
 .rdvs-wink {
+  background-color: rgb(103, 232, 249); /* Start with cyan fill */
   animation: rdvs-wink 1s steps(2, start) infinite;
 }
 @keyframes rdvs-wink {
-  0%, 95% { opacity: 1; }
-  96%, 100% { opacity: 0; }
+  0%, 95% { background-color: rgb(103, 232, 249); } /* cyan-300 filled */
+  96%, 100% { background-color: #000000; } /* black background, border remains */
 }
 
 .rdvs-flutter {
-  animation: rdvs-flutter 1s steps(12, start) infinite;
+  background-color: rgb(103, 232, 249); /* Start with cyan fill */
+  animation: rdvs-flutter 0.083s steps(2, start) infinite; /* 12 times per second = 83ms per cycle */
 }
 @keyframes rdvs-flutter {
-  0%, 80% { opacity: 1; }
-  81%, 100% { opacity: 0; }
+  0%, 80% { background-color: rgb(103, 232, 249); } /* cyan-300 filled */
+  81%, 100% { background-color: #000000; } /* black background, border remains */
 }
 
 /* RDVS Air-to-Ground Circle Flutter - 8Hz frequency like other UIs */
@@ -158,4 +162,56 @@ body {
   background-color: #ff0000 !important;
   box-shadow: 0 0 8px 2px #ff0000, 0 0 2px #ff0000 !important;
   filter: brightness(1.2) drop-shadow(0 0 6px #ff0000) !important;
+}
+
+/* Zoom-resistant utility classes for frequency buttons and UI elements */
+.zoom-resistant {
+  zoom: 1 !important;
+  transform: scale(1) !important;
+  transform-origin: top left !important;
+}
+
+.zoom-resistant-container {
+  zoom: 1 !important;
+  transform: scale(1) !important;
+  transform-origin: top left !important;
+  min-width: max-content !important;
+}
+
+.frequency-button-container {
+  zoom: 1 !important;
+  transform: scale(1) !important;
+  transform-origin: top left !important;
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 2px !important;
+}
+
+.frequency-button {
+  zoom: 1 !important;
+  transform: scale(1) !important;
+  transform-origin: top left !important;
+  min-width: 280px !important;
+  max-width: 280px !important;
+}
+
+.ag-page-container {
+  zoom: 1 !important;
+  transform: scale(1) !important;
+  transform-origin: top left !important;
+}
+
+/* Override browser zoom on frequency-related elements */
+@media screen and (min-resolution: 1.25dppx) {
+  .frequency-button, .zoom-resistant, .ag-page-container {
+    zoom: 1 !important;
+  }
+}
+
+/* AG Button - rounded top, square bottom */
+.ag-button-rounded-top {
+  border-top-left-radius: 1.0rem !important;
+  border-top-right-radius: 1.0rem !important;
+  border-bottom-left-radius: 0 !important;
+  border-bottom-right-radius: 0 !important;
 }

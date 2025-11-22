@@ -22,7 +22,7 @@ interface CoreState {
     positionData: Facility;
     callsign: string;
     selectedPositions: Position[],
-    currentUI: string; // Current UI context (vscs, etvs, stvs, ivsr, rdvs)
+    currentUI: string; // Current UI context (vscs, etvs, stvs, ivsr, rdvs, lstar)
     currentConfig: any; // The current config for the selected position
 
     ag_status: any[],

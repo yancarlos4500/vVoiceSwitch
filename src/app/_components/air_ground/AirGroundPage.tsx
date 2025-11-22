@@ -7,7 +7,6 @@ import FreqRow from "./FreqRow";
 import SquareSelectorButton from '../base_button/SquareSelectorButton';
 import SummaryButton from './SummaryButton';
 
-import FrequencyConfig from 'example-config.json';
 import { useCoreStore } from '~/model';
 
 const AirGroundPage: React.FC = () => {
@@ -58,21 +57,42 @@ const AirGroundPage: React.FC = () => {
     setShowFreqSummary(!showFreqSummary);
   }
 
+  const formatFreq = (freq: number) => {
+    if (!freq) return "";
+    const val = freq / 1_000_000;
+    if (val % 1 === 0) return val.toFixed(1);
+    return val.toString().replace(/0+$/, '').replace(/\.$/, '');
+  };
+
   const renderRows = () => {
     const rows: React.JSX.Element[] = [];
 
     if (showFreqSummary) {
-      const agLines = FrequencyConfig?.AGLines as any[] | undefined;
-      const base = agLines?.[0] as any[] | undefined;
-      const transposeFrequencyConfig = base?.map((_: any, colIndex: number) => agLines?.slice(0, 4).map((row: any) => row[colIndex]));
-      transposeFrequencyConfig?.map((freqPage: any, idx: number) => {
+      // Use live ag_status data instead of mock FrequencyConfig
+      // Display all frequencies in a summary grid format (6 rows of up to 5 frequencies each)
+      const allFrequencies = ag_status.filter((data: any) => data && data.freq);
+      
+      // Group frequencies into rows of 5
+      for (let i = 0; i < 6; i++) {
+        const rowStart = i * 5;
+        const rowEnd = rowStart + 5;
+        const rowFrequencies = allFrequencies.slice(rowStart, rowEnd);
+        
+        // Map to FreqRow format
+        const entries = rowFrequencies.map((data: any) => ({
+          frequency: formatFreq(data.freq),
+          name: data.name || formatFreq(data.freq),
+          prefMode: data.h, // headset mode
+          currMode: data.h  // current mode (same for now)
+        }));
+        
         rows.push(
-            <FreqRow
-                key={idx}
-                entries={freqPage}
-            />
+          <FreqRow
+            key={i}
+            entries={entries}
+          />
         );
-      });
+      }
     } else {
         currentSlice.map((data: any, index: number) => {
           rows.push(

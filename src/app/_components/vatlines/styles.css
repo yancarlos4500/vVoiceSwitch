@@ -14,6 +14,15 @@
     font-weight: bold;
     letter-spacing: 0.5px;
 }
+
+.rdvs-label {
+    font-family: 'EDSTv302', monospace;
+    font-weight: 100;
+    letter-spacing: 0px;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+}
+
 /* Font Declaration */
 @font-face {
     font-family: 'TerminusTTF-Bold';
@@ -26,6 +35,13 @@
     font-family: 'VSCS';
     src: url('/VSCS.ttf') format('truetype');
     font-weight: lighter;
+    font-style: normal;
+}
+
+@font-face {
+    font-family: 'EDSTv302';
+    src: url('/EDSTv302.ttf') format('truetype');
+    font-weight: normal;
     font-style: normal;
 }
 

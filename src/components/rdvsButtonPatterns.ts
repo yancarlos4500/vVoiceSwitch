@@ -31,10 +31,10 @@ export const rdvsButtonPatterns = {
     fill: 'striped',
   },
   DEFAULT: {
-    bg: '#333',
+    bg: '#264199',
     fg: '#fff',
-    border: '#555',
-    fill: 'solid',
+    border: '#264199',
+    fill: 'striped',
   },
 };
 

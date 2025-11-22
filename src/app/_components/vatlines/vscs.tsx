@@ -1201,6 +1201,7 @@ export default function VscsComponent(props: VscsProps) {
         });
     }
   }, []);
+
   return (
     <div className="flex items-center justify-center gap-4 bg-black p-4">
       {/* Left VSCS Panel - defaults to A/G1 */}

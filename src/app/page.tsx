@@ -8,11 +8,13 @@ import ETVSWrapper from '../components/ETVSWrapper';
 import STVSWrapper from '../components/STVSWrapper';
 import IVSRPage from './ivsr/page';
 import RDVSWrapper from '../components/RDVSWrapper';
+import LSTARWrapper from '../components/LSTARWrapper';
 import SettingModal from '../pages/setting';
 import { Alert } from 'antd';
 
 export default function Page() {
   const [settingModal, setSettingModal] = useState(false);
+  const [uiLoaded, setUiLoaded] = useState(false);
   const currentUI = useCoreStore(s => s.currentUI);
   const selectedPositions = useCoreStore(s => s.selectedPositions);
   const connected = useCoreStore(s => s.connected);
@@ -40,15 +42,21 @@ export default function Page() {
     // Load version info
     const loadVersionInfo = async () => {
       try {
+        console.log('Loading version info, current afv_version:', afv_version);
         const response = await fetch('/html_app/afv_poc/patch/version.json');
         const version_data = await response.json();
-        const latest_version = version_data.latest_version - 0;
-        const current_version = parseFloat(afv_version || '0');
-        const lowest_allowable_version = version_data.lowest_allowable_version - 0;
+        console.log('Loaded version data:', version_data);
+        const latest_version = parseFloat(version_data.latest_version);
+        const current_version = parseFloat(afv_version || '1.0.0'); // Default to 1.0.0 if no version
+        const lowest_allowable_version = parseFloat(version_data.lowest_allowable_version);
+        console.log('Version comparison:', { latest_version, current_version, lowest_allowable_version });
+        
         if (current_version < lowest_allowable_version) {
           version_data.must_upgrade = true;
         }
-        setVersionAlert(latest_version > current_version ? version_data : null);
+        const shouldShowAlert = latest_version > current_version;
+        console.log('Should show alert:', shouldShowAlert);
+        setVersionAlert(shouldShowAlert ? version_data : null);
       } catch (error) {
         console.error('Failed to load version info:', error);
       }
@@ -56,10 +64,22 @@ export default function Page() {
 
     // Always load the data to ensure it's available
     loadPositionData();
-    if (afv_version) {
-      loadVersionInfo();
-    }
+    loadVersionInfo(); // Always run version check
   }, [setPositionData, afv_version]);
+
+  // Track when UI should be considered "loaded"
+  useEffect(() => {
+    if (connected && selectedPositions && selectedPositions.length > 0 && currentUI) {
+      // Add a small delay to ensure UI components have time to mount
+      const timer = setTimeout(() => {
+        setUiLoaded(true);
+      }, 500); // Half second delay for UI to initialize
+      
+      return () => clearTimeout(timer);
+    } else {
+      setUiLoaded(false);
+    }
+  }, [connected, selectedPositions, currentUI]);
 
   // VSCS Zustand state mapping
   const activeLandlines = useCoreStore(s => s.activeLandlines || []);
@@ -89,6 +109,8 @@ export default function Page() {
         return <IVSRPage />;
       case 'rdvs':
         return <RDVSWrapper />;
+      case 'lstar':
+        return <LSTARWrapper />;
       case 'vscs':
       default:
         return (
@@ -143,17 +165,24 @@ export default function Page() {
             <p className="text-lg text-zinc-300">Not Connected</p>
           </div>
         </div>
-      ) : !selectedPositions || selectedPositions.length === 0 ? (
+      ) : !selectedPositions || selectedPositions.length === 0 || !uiLoaded ? (
         <div className="flex items-center justify-center min-h-screen">
           <div className="text-center text-white">
             <h2 className="text-2xl font-bold mb-4">Welcome to AFV Client</h2>
-            <p className="text-lg text-zinc-300 mb-6">Please select a position to continue</p>
-            <button 
-              onClick={() => setSettingModal(true)}
-              className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
-            >
-              Settings
-            </button>
+            <p className="text-lg text-zinc-300 mb-6">
+              {!selectedPositions || selectedPositions.length === 0 
+                ? "Please select a position to continue"
+                : "Loading interface..."
+              }
+            </p>
+            {(!selectedPositions || selectedPositions.length === 0) && (
+              <button 
+                onClick={() => setSettingModal(true)}
+                className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
+              >
+                Settings
+              </button>
+            )}
           </div>
         </div>
       ) : versionAlert?.must_upgrade ? (

@@ -9,6 +9,7 @@ import type { RdvsButtonComponentProps, StandardButtonProps } from '../app/_comp
 import { useCoreStore } from '../model';
 import RdvsButtonComponent from '../app/_components/vatlines/rdvs_button'; // Import the RdvsButtonComponent
 import { rdvsButtonPatterns } from './rdvsButtonPatterns';
+import '../app/_components/vatlines/styles.css'; // Import styles for RDVS font
 
 // RDVS Wrapper - placeholder for now due to complex prop requirements
 
@@ -46,6 +47,7 @@ export default function RDVSWrapper() {
   const gg_status = useCoreStore((s: any) => s.gg_status);
   const ag_status = useCoreStore((s: any) => s.ag_status);
   const ptt = useCoreStore((s: any) => s.ptt); // Get PTT status from WebSocket
+
   
   // Use the currently selected position for ground-to-ground rendering (like VSCS)
   const buttons: RdvsButtonComponentProps[] = [];
@@ -75,14 +77,31 @@ export default function RDVSWrapper() {
       else if (lineType === 1) typeLetter = 'C';  // Ring
       else if (lineType === 2) typeLetter = 'A';  // Shout
       
-      // Get status for line type indicator behavior from gg_status
-      let statusObj = (typeof gg_status?.[lineIdx] === 'object' && gg_status?.[lineIdx] !== null) ? gg_status[lineIdx] : {};
-      let indicatorState = 'off';
+      // Get call type and ID for proper messaging
+      const call_id = Array.isArray(line) ? line[0] : (line.id || line.call?.substring(3) || '');
+      const lineTypeValue = Array.isArray(line) ? line[1] : line.type;
+
+      // Get status for line type indicator behavior from gg_status - match by call_id instead of lineIdx
+      let statusObj: any = {};
+      if (gg_status && Array.isArray(gg_status)) {
+        // Find the status entry that matches this call_id
+        statusObj = gg_status.find((status: any) => {
+          if (!status) return false;
+          // Try different possible ID formats
+          return status.call === call_id || 
+                 status.call?.substring(3) === call_id ||
+                 status.call?.substring(6) === call_id ||
+                 status.id === call_id ||
+                 String(status.call).endsWith(call_id);
+        }) || {};
+      }
       
+      let indicatorState = 'off';
+
       // Map call status to indicator animations based on DA Pushbutton Status table
       const callStatus = statusObj.status || 'off';
-      console.log(`RDVS Line ${lineIdx}: status=${callStatus}, lineType=${lineType}`);
-      
+      console.log(`RDVS Line ${lineIdx}: call_id=${call_id}, status=${callStatus}, lineType=${lineType}, statusObj=`, statusObj);
+
       if (lineType === 0) {
         // Override line behavior
         if (callStatus === 'off' || callStatus === '' || callStatus === 'idle') {
@@ -114,6 +133,8 @@ export default function RDVSWrapper() {
         }
       }
       
+      console.log(`RDVS Line ${lineIdx}: Final indicatorState=${indicatorState}, typeLetter=${typeLetter}`);
+      
       // Standard ground-to-ground button for the line with integrated cyan box
       // Parse two lines separated by a comma in the JSON line data
       let line1 = '';
@@ -127,10 +148,6 @@ export default function RDVSWrapper() {
         line1 = parts[0] ? parts[0].trim() : '';
         line2 = parts[1] ? parts[1].trim() : '';
       }
-      
-      // Get call type and ID for proper messaging
-      const call_id = Array.isArray(line) ? line[0] : (line.id || line.call?.substring(3) || '');
-      const lineTypeValue = Array.isArray(line) ? line[1] : line.type;
       
       buttons.push({
         config: {
@@ -166,9 +183,17 @@ export default function RDVSWrapper() {
               sendMsg({ type: 'stop', cmd1: call_id, dbl1: 1 }); // Hangup
             }
           } else if (lineTypeValue === 2) {
-            // Shout line - send shout call
-            console.log('RDVS: Sending shout call');
-            sendMsg({ type: 'call', cmd1: call_id, dbl1: 2 }); // Shout call
+            // Shout line - handle shout call/hangup logic
+            if (currentStatus === 'off' || currentStatus === '' || currentStatus === 'idle') {
+              console.log('RDVS: Sending shout call');
+              sendMsg({ type: 'call', cmd1: call_id, dbl1: 2 }); // Shout call
+            } else if (currentStatus === 'ok' || currentStatus === 'active') {
+              console.log('RDVS: Hanging up shout call');
+              sendMsg({ type: 'stop', cmd1: call_id, dbl1: 2 }); // Hangup shout call
+            } else if (currentStatus === 'chime' || currentStatus === 'ringing' || currentStatus === 'online') {
+              console.log('RDVS: Joining shout call');
+              sendMsg({ type: 'call', cmd1: call_id, dbl1: 2 }); // Join shout call
+            }
           }
           
           // Log the action for debugging cyan box animations
@@ -362,7 +387,7 @@ export default function RDVSWrapper() {
             return (
               <div key={atgBtn.label + atgIdx} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
                 {labelText && (
-                  <div style={{ color: '#00FFFF', fontWeight: 'lighter', fontSize: '14px', marginBottom: '2px' }}>{labelText}</div>
+                  <div className="rdvs-label" style={{ color: '#00FFFF', fontSize: '14px', marginBottom: '2px' }}>{labelText}</div>
                 )}
                 <RdvsButtonComponent {...atgBtn} />
               </div>
@@ -382,14 +407,12 @@ export default function RDVSWrapper() {
         >
           {(() => {
             const q3Buttons = [];
-            let q3Idx = 0; // Start from button 0 like Q1, but will use different slots
-            let buttonCount = 0;
+            let q3Idx = 20; // Start after Q1's 20 slots (5×4 grid)
             
             for (let row = 0; row < 4; row++) {
               for (let col = 0; col < 5; col++) {
-                // Q1 uses first 16 buttons (fills 16 of its 20 slots)
-                // Q3 should get any remaining buttons (none currently since we only have 16 total)
-                const btn = groundToGroundButtons[16 + buttonCount]; // Start after Q1's 16 buttons
+                // Q3 should get buttons starting after Q1's 20 slots
+                const btn = groundToGroundButtons[q3Idx];
                 
                 if (btn && isStandardButton(btn)) {
                   q3Buttons.push(
@@ -400,7 +423,7 @@ export default function RDVSWrapper() {
                 } else {
                   q3Buttons.push(<div key={`q3-empty-${row}-${col}`}></div>);
                 }
-                buttonCount++;
+                q3Idx++;
               }
             }
             return q3Buttons;
@@ -413,20 +436,19 @@ export default function RDVSWrapper() {
           style={{ 
             top: 'calc(4 * 55px + 2 * 1px + 1px)', // Same vertical position as Q3
             left: 'calc(5 * 70px + 5 * 6px + 10px)', // Position after Q3
-            width: '400px', // Explicit width for proper grid layout
+            width: '383px', // Explicit width for proper grid layout
             columnGap: '0px', // Precise control over Q4 spacing
             rowGap: '7px'
           }}
         >
           {(() => {
             const q4Buttons = [];
-            let buttonCount = 0;
+            let q4Idx = 40; // Start after Q1 (20) + Q3 (20) = 40 slots
             
             for (let row = 0; row < 4; row++) {
               for (let col = 0; col < 5; col++) {
-                // Q4 gets buttons only after Q1 (16 buttons) and Q3 (20 buttons) are filled
-                // So Q4 starts at button index 36
-                const btn = groundToGroundButtons[36 + buttonCount];
+                // Q4 gets buttons only after Q1 (20 slots) and Q3 (20 slots) are filled
+                const btn = groundToGroundButtons[q4Idx];
                 
                 if (btn && isStandardButton(btn)) {
                   q4Buttons.push(
@@ -438,7 +460,7 @@ export default function RDVSWrapper() {
                   // Empty slot - maintains grid structure for spacing control
                   q4Buttons.push(<div key={`q4-empty-${row}-${col}`} style={{ width: '70px', minHeight: '50px' }}></div>);
                 }
-                buttonCount++;
+                q4Idx++;
               }
             }
             return q4Buttons;

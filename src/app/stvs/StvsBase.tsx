@@ -110,12 +110,22 @@ const StvsBase: React.FC = () => {
   // Always 12 G/G buttons (4x3 grid)
   const ggButtons = Array.from({ length: 12 }, (_, i) => ggData[i]?.call_name || ggData[i]?.call);
   return (
-    <div className="w-full h-full flex flex-col items-center justify-center bg-black">
-  <SettingModal open={settingModal} setModal={setSettingModal} />
+    <div className="w-full h-full flex flex-col items-center justify-center bg-black" style={{
+      zoom: 1,
+      transform: 'scale(1)',
+      transformOrigin: 'top left'
+    }}>
+      <SettingModal open={settingModal} setModal={setSettingModal} />
       {/* Responsive SVG container with aspect ratio matching viewBox 899.16x164.4 */}
       <div
         className="relative w-full max-w-full"
-        style={{ aspectRatio: '899.16/164.4', width: '100%' }}
+        style={{ 
+          aspectRatio: '899.16/164.4', 
+          width: '100%',
+          zoom: 1,
+          transform: 'scale(1)',
+          transformOrigin: 'top left'
+        }}
       >
         {/* SVG base */}
         <img src="/stvs.svg" alt="STVS Panel" className="w-full h-full object-contain" />

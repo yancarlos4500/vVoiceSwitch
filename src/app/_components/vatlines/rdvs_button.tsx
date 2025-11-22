@@ -106,7 +106,7 @@ function ShortRadioButton(props: RadioButtonProps) {
       onClick={props.onSelect} // Make clickable
     >
       {/* Hs Rx Tx row - top */}
-      <div className="flex flex-row justify-between items-center text-[12px] font-lighter px-0.5 mt-0 mb-0" style={{ color: labelColor }}>
+      <div className="flex flex-row justify-between items-center text-[14px] font-[100] px-0.5 mt-0 mb-0 rdvs-label" style={{ color: labelColor }}>
         <span 
           className="flex flex-col items-start"
           style={{ color: (props.rxHsSelected || props.rxLsSelected) ? '#93ca63' : labelColor }}
@@ -126,7 +126,7 @@ function ShortRadioButton(props: RadioButtonProps) {
       </div>
       {/* Frequency and indicator row */}
       <div className="flex flex-row justify-between items-end flex-1 mt-0">
-        <span className="leading-none overflow-visible whitespace-nowrap" style={{ color: textColor, fontSize: 16, minWidth: 0 }}>{freqDisplay}</span>
+        <span className="leading-none overflow-visible whitespace-nowrap rdvs-label" style={{ color: textColor, fontSize: 20, minWidth: 0 }}>{freqDisplay}</span>
         <span className="flex items-center justify-center flex-shrink-0">
           <span className={`inline-block w-[12px] h-[12px] rounded-full flex items-center justify-center border-2 ${
             // Circle states based on PTT and talking status
@@ -165,17 +165,16 @@ export default function RdvsButtonComponent(props: RdvsButtonComponentProps) {
     
     return (
       <div
-        className="pixel-radio-long w-[375px] h-[50px] flex flex-row items-start p-2 border-2 relative"
+        className="pixel-radio-long w-[375px] h-[50px] flex flex-row items-start p-2 border-2 relative rdvs-label"
         style={{ 
           backgroundColor: longBgColor, 
-          borderColor: longBorderColor,
-          fontFamily: "'VSCS', 'Courier New', Courier, monospace"
+          borderColor: longBorderColor
         }}
       >
         {/* HS/LS Section - Stacked vertically with indicators and click handlers */}
         <div className="flex flex-col mr-6 -mt-1">
           <span 
-            className="text-[18px] font-lighter -mt-1 cursor-pointer" 
+            className="text-[20px] font-[100] -mt-1 cursor-pointer" 
             style={{ color: longTextColor }}
             onClick={(e) => {
               e.stopPropagation();
@@ -185,7 +184,7 @@ export default function RdvsButtonComponent(props: RdvsButtonComponentProps) {
             HS
           </span>
           <span 
-            className="text-[18px] font-lighter -mt-1 cursor-pointer" 
+            className="text-[20px] font-[100] -mt-1 cursor-pointer" 
             style={{ color: longTextColor }}
             onClick={(e) => {
               e.stopPropagation();
@@ -240,7 +239,7 @@ export default function RdvsButtonComponent(props: RdvsButtonComponentProps) {
           {/* RX Section - Label next to box with indicator */}
           <div className="flex flex-row items-center -mb-1 -mt-2">
             <span 
-              className="text-[18px] font-lighter mr-2" 
+              className="text-[20px] font-[100] mr-2" 
               style={{ color: longTextColor }}
             >
               RX
@@ -259,7 +258,7 @@ export default function RdvsButtonComponent(props: RdvsButtonComponentProps) {
           </div>
           
           {/* Frequency Display */}
-          <div className="text-[18px] font-lighter overflow-visible whitespace-nowrap" style={{ color: longFrequencyColor, minWidth: 0 }}>
+          <div className="text-[20px] font-[100] overflow-visible whitespace-nowrap" style={{ color: longFrequencyColor, minWidth: 0 }}>
             {props.frequency}
           </div>
         </div>
@@ -272,7 +271,7 @@ export default function RdvsButtonComponent(props: RdvsButtonComponentProps) {
         {/* RX M/S Section - Label next to box with mode indicator */}
         <div className="flex flex-row items-start mr-2 -mt-1">
           <span 
-            className="text-[18px] font-lighter -mt-1" 
+            className="text-[18px] font-[100] -mt-1" 
             style={{ color: longTextColor }}
           >
             M/S
@@ -287,7 +286,7 @@ export default function RdvsButtonComponent(props: RdvsButtonComponentProps) {
                  props.onRxMsClick && props.onRxMsClick();
                }}>
             {/* Display M or S based on rxMsMode */}
-            <span className="text-[12px] font-bold" 
+            <span className="rdvs-label text-[14px]" 
                   style={{ color: props.rxSelected ? 'black' : 'white' }}>
               {props.rxMsMode || 'M'}
             </span>
@@ -303,7 +302,7 @@ export default function RdvsButtonComponent(props: RdvsButtonComponentProps) {
           {/* TX Section - Label next to box with indicator */}
           <div className="flex flex-row items-start -mt-1">
             <span 
-              className="text-[18px] font-lighter mr-2 -mt-1" 
+              className="rdvs-label text-[20px] mr-2 -mt-1" 
               style={{ color: longTextColor }}
             >
               TX
@@ -351,7 +350,7 @@ export default function RdvsButtonComponent(props: RdvsButtonComponentProps) {
         {/* TX M/S Section - Label next to box with mode indicator */}
         <div className="flex flex-row items-start mr-2 -mt-1">
           <span 
-            className="text-[18px] font-lighter -mt-1" 
+            className="text-[18px] font-[100] -mt-1" 
             style={{ color: longTextColor }}
           >
             M/S
@@ -387,13 +386,13 @@ export default function RdvsButtonComponent(props: RdvsButtonComponentProps) {
       <button
         type="button"
         onClick={() => props.callback(props.config.target || '', props.config.type || 'NONE')}
-        className={`text-small w-[70px] h-[50px] leading-none relative ${props.className}`}
+        className={`text-[20px] font-[100] tracking-widest w-[70px] h-[50px] leading-[0.8] relative rdvs-label ${props.className}`}
         style={{ 
           backgroundColor: bgColor,
           color: textColor,
           borderColor: borderColor, 
           borderWidth: 2, 
-          borderStyle: 'solid' 
+          borderStyle: 'solid'
         }}
       >
         {/* Fill design as background layer */}
@@ -423,13 +422,14 @@ export default function RdvsButtonComponent(props: RdvsButtonComponentProps) {
         </div>
         
         {/* Cyan indicator positioned absolutely at bottom center */}
-        <div className={`absolute bottom-0.5 left-1/2 transform -translate-x-1/2 outline outline-2 outline-cyan-300 flex items-center w-3 h-3 justify-center indicator font-lighter text-xs ${
+        <div className={`absolute bottom-0.5 left-1/2 transform -translate-x-1/2 outline outline-2 outline-cyan-300 flex items-center w-3 h-3 justify-center indicator font-[100] text-xs ${
           // Status-based styling: hollow by default, filled when active
           props.lineTypeInfo && props.lineTypeInfo.indicatorState !== 'off' ? 
-            `bg-cyan-300 text-black ${
+            `text-black ${
               props.lineTypeInfo.indicatorState === 'flashing' ? 'rdvs-flash' :
               props.lineTypeInfo.indicatorState === 'winking' ? 'rdvs-wink' :
-              props.lineTypeInfo.indicatorState === 'flutter' ? 'rdvs-flutter' : ''
+              props.lineTypeInfo.indicatorState === 'flutter' ? 'rdvs-flutter' : 
+              'bg-cyan-300' // Steady-on (no animation)
             }` : 'bg-black text-white'
         }`}>
           {props.lineTypeInfo ? props.lineTypeInfo.typeLetter : props.typeString}

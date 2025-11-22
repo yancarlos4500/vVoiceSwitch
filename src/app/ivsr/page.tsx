@@ -6,10 +6,12 @@ import AreaFour from "../_components/special_func/AreaFour";
 import AreaThree from "../_components/special_func/AreaThree";
 import AirGroundPage from "../_components/air_ground/AirGroundPage";
 import GroundGroundPage from "../_components/ground_ground/GroundGroundPage";
+import GroundGroundPage3 from "../_components/ground_ground/GroundGroundPage3";
 import StatusArea from "../_components/status/StatusArea";
 
 export default function IVSRPage() {
 	const [settingModal, setSettingModal] = useState(false);
+	const [currentGGPage, setCurrentGGPage] = useState(1);
 	// TODO: Replace with real filteredPosition logic
 	const filteredPosition = { pos: "FD/CD" };
 	return (
@@ -20,8 +22,13 @@ export default function IVSRPage() {
 					<div className="mt-2">
 						<AreaFour />
 						<div className="flex">
-							<AirGroundPage />
-							<GroundGroundPage />
+							{/* Left side - Always show AirGroundPage, with Page 3 grid below when G/G page 3 is selected */}
+							<div className="flex flex-col">
+								<AirGroundPage />
+								{currentGGPage === 3 && <GroundGroundPage3 />}
+							</div>
+							{/* Right side - Show G/G page 2 when page 3 is selected, otherwise show current page */}
+							<GroundGroundPage currentPage={currentGGPage === 3 ? 2 : currentGGPage} onPageChange={setCurrentGGPage} />
 							<AreaThree setSettingModal={setSettingModal} />
 						</div>
 					</div>

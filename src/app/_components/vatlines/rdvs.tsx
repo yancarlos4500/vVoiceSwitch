@@ -268,7 +268,19 @@ export default function RdvsComponent(props: RdvsProps) {
               } else {
                 // Fill with non-radio buttons in order
                 const stdBtn = nonRadioBtns.shift() as Button | undefined;
-                if (stdBtn && typeof stdBtn.type !== 'undefined') {
+                
+                // Check if this is a spacer (empty label, id, and type)
+                const isSpacer = stdBtn && 
+                  (!stdBtn.label || stdBtn.label.trim() === '') && 
+                  (!stdBtn.id || stdBtn.id.trim() === '') && 
+                  (stdBtn.type === '' || stdBtn.type === ButtonType.NONE || !stdBtn.type);
+                
+                if (isSpacer) {
+                  // Render a spacer div with the same dimensions as a button
+                  cells.push(
+                    <div key={`spacer-${i}`} className="w-[70px] h-[50px]"></div>
+                  );
+                } else if (stdBtn && typeof stdBtn.type !== 'undefined') {
                   cells.push(
                     <RdvsButtonComponent
                       key={`std-${i}`}
