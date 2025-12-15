@@ -42,9 +42,9 @@ const getLineTypeFromConfig = (description: string, positionData: any): number |
 };// Map numeric line types to ButtonType enum
 const mapLineTypeToButtonType = (lineType: number | null): ButtonType => {
   switch (lineType) {
-    case 0: return ButtonType.OVERRIDE; // Override line
+    case 0: return ButtonType.OVERRIDE; // Override line (shows OVR)
     case 1: return ButtonType.RING;     // Normal/Ring line  
-    case 2: return ButtonType.SHOUT;    // Shout line
+    case 2: return ButtonType.SHOUT;    // Shout line (Direct Access with speaker)
     default: return ButtonType.RING;    // Default to normal if unknown
   }
 };
@@ -92,6 +92,10 @@ function VscsPanel(props: VscsProps & { panelId?: string; defaultScreenMode?: st
   const ag_status = useCoreStore((s: any) => s.ag_status);
   const sendMsg = useCoreStore((s: any) => s.sendMessageNow);
   const positionData = useCoreStore((s: any) => s.positionData);
+  const selectedPositions = useCoreStore((s: any) => s.selectedPositions);
+  
+  // Get the currently selected position for line type lookups
+  const currentPosition = selectedPositions && selectedPositions.length > 0 ? selectedPositions[0] : null;
   
   // Check if guard frequencies (121.500, 243.000) are currently active in A/G status
   const hasGuardFrequencies = useMemo(() => {
@@ -147,6 +151,9 @@ function VscsPanel(props: VscsProps & { panelId?: string; defaultScreenMode?: st
     }, [gg_status, screenMode]);
 
   const btns: Button[] = useMemo(() => {
+    // Calculate offset based on screen mode for correct JSON line type lookup
+    const indexOffset = screenMode === 'GG2' ? ITEMS_PER_PAGE : 0;
+    
     return currentSlice.map((data: any, index: number) => {
       if (!data) {
         // Empty/unavailable button
@@ -158,18 +165,13 @@ function VscsPanel(props: VscsProps & { panelId?: string; defaultScreenMode?: st
         };
       }
       
-      // Get line type from JSON based on button index
+      // Get line type from JSON based on absolute button index (with offset for page 2)
+      const absoluteIndex = index + indexOffset;
       let lineType = null;
-      if (positionData?.positions && Array.isArray(positionData.positions)) {
-        // Find the current position and get the line type from the JSON array
-        for (const position of positionData.positions) {
-          if (position.lines && Array.isArray(position.lines) && position.lines[index]) {
-            const line = position.lines[index];
-            if (Array.isArray(line) && line.length >= 2) {
-              lineType = line[1]; // Get line type (0, 1, or 2)
-              break;
-            }
-          }
+      if (currentPosition && currentPosition.lines && Array.isArray(currentPosition.lines)) {
+        const line = currentPosition.lines[absoluteIndex];
+        if (Array.isArray(line) && line.length >= 2) {
+          lineType = line[1]; // Get line type (0, 1, or 2)
         }
       }
       
@@ -183,7 +185,7 @@ function VscsPanel(props: VscsProps & { panelId?: string; defaultScreenMode?: st
         type: buttonType,
       };
     });
-  }, [currentSlice, positionData]);
+  }, [currentSlice, currentPosition, screenMode]);
 
   // Generate multi-line data for G/G buttons based on Manual Page 27
   const generateGGMultiLineData = (data: any, buttonIndex: number) => {
@@ -201,17 +203,11 @@ function VscsPanel(props: VscsProps & { panelId?: string; defaultScreenMode?: st
     let lineType = null;
     console.log('Debug - Button index:', buttonIndex, 'Call name:', callName);
     
-    if (positionData?.positions && Array.isArray(positionData.positions)) {
-      // Find the current position and get the line type from the JSON array
-      for (const position of positionData.positions) {
-        if (position.lines && Array.isArray(position.lines) && position.lines[buttonIndex]) {
-          const line = position.lines[buttonIndex];
-          if (Array.isArray(line) && line.length >= 2) {
-            lineType = line[1]; // Get line type (0, 1, or 2)
-            console.log('Debug - Found line type:', lineType, 'for button', buttonIndex, 'line:', line);
-            break;
-          }
-        }
+    if (currentPosition && currentPosition.lines && Array.isArray(currentPosition.lines)) {
+      const line = currentPosition.lines[buttonIndex];
+      if (Array.isArray(line) && line.length >= 2) {
+        lineType = line[1]; // Get line type (0, 1, or 2)
+        console.log('Debug - Found line type:', lineType, 'for button', buttonIndex, 'line:', line);
       }
     }
     
@@ -835,7 +831,7 @@ function VscsPanel(props: VscsProps & { panelId?: string; defaultScreenMode?: st
                     ? 'cursor-pointer'
                     : 'cursor-not-allowed'
                 }`}
-                multiLineData={generateGGMultiLineData(currentSlice[i], i)}
+                multiLineData={generateGGMultiLineData(currentSlice[i], i + ITEMS_PER_PAGE)}
               />
             ))
           ) : (
