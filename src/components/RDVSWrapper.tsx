@@ -17,6 +17,13 @@ export default function RDVSWrapper() {
   // State for selected radio button (for showing long radio button overlay)
   const [selectedRadioIndex, setSelectedRadioIndex] = useState<number | null>(null);
   
+  // State for dialpad toggle
+  const [dialpadActive, setDialpadActive] = useState<boolean>(false);
+  const [dialToneAudio, setDialToneAudio] = useState<HTMLAudioElement | null>(null);
+  
+  // State for keypad toggle
+  const [keypadActive, setKeypadActive] = useState<boolean>(false);
+  
   // Get sendMsg from store for WebSocket messaging
   const sendMsg = useCoreStore((s: any) => s.sendMessageNow);
   
@@ -102,6 +109,7 @@ export default function RDVSWrapper() {
       const callStatus = statusObj.status || 'off';
       console.log(`RDVS Line ${lineIdx}: call_id=${call_id}, status=${callStatus}, lineType=${lineType}, statusObj=`, statusObj);
 
+      // Match IVSR/VSCS status handling exactly
       if (lineType === 0) {
         // Override line behavior
         if (callStatus === 'off' || callStatus === '' || callStatus === 'idle') {
@@ -110,12 +118,16 @@ export default function RDVSWrapper() {
           indicatorState = 'on'; // Connection made (steady-on)
         } else if (callStatus === 'busy' || callStatus === 'overridden') {
           indicatorState = 'flutter'; // Circuit busy/overridden
+        } else if (callStatus === 'chime' || callStatus === 'online') {
+          // Incoming override call - matches IVSR 'online' or 'chime' for SO lines
+          indicatorState = 'on'; // Incoming override call (steady-on)
         }
       } else if (lineType === 1) {
         // Ring line behavior  
         if (callStatus === 'off' || callStatus === '' || callStatus === 'idle') {
           indicatorState = 'off'; // Circuit idle
         } else if (callStatus === 'chime' || callStatus === 'ringing') {
+          // Incoming ring call - matches IVSR exactly
           indicatorState = 'flashing'; // Incoming call being received (1 per second, 50/50 on/off)
         } else if (callStatus === 'hold') {
           indicatorState = 'winking'; // Call in HOLD condition (1 per second, 95/5 on/off)
@@ -123,11 +135,14 @@ export default function RDVSWrapper() {
           indicatorState = 'flutter'; // Connection made (12 per second, 80/20 on/off)
         }
       } else if (lineType === 2) {
-        // Shout line behavior
+        // Shout line behavior (SO lines in IVSR)
         if (callStatus === 'off' || callStatus === '' || callStatus === 'idle') {
           indicatorState = 'off'; // Circuit idle
         } else if (callStatus === 'ok' || callStatus === 'active') {
           indicatorState = 'flutter'; // Connection made (12 per second, 80/20 on/off)
+        } else if (callStatus === 'online' || callStatus === 'chime') {
+          // Incoming shout call - matches IVSR 'online' or 'chime' for SO lines
+          indicatorState = 'flutter'; // Incoming shout call (12 per second, 80/20 on/off)
         } else if (callStatus === 'busy') {
           indicatorState = 'on'; // Circuit busy (steady-on)
         }
@@ -159,40 +174,49 @@ export default function RDVSWrapper() {
         },
         typeString: typeLetter, // Pass the line type letter to the existing cyan box
         callback: (target: string, type: any) => {
-          // Implement G/G calling logic similar to other UIs
+          // Implement G/G calling logic matching IVSR/VSCS behavior
           console.log('RDVS G/G Button clicked:', { target, type, lineType: lineTypeValue, call_id, currentStatus: statusObj.status });
           
           // Get current status for this line
           const currentStatus = statusObj.status || 'off';
           
-          // Determine action based on line type and current status
+          // Determine action based on line type and current status - matches IVSR exactly
           if (lineTypeValue === 0) {
-            // Override line - send override call
-            console.log('RDVS: Sending override call');
-            sendMsg({ type: 'call', cmd1: call_id, dbl1: 0 }); // Override call
+            // Override line - caller can initiate or hang up, receiver cannot
+            if (currentStatus === 'off' || currentStatus === '' || currentStatus === 'idle') {
+              console.log('RDVS: Sending override call');
+              sendMsg({ type: 'call', cmd1: call_id, dbl1: 0 }); // Override call
+            } else if (currentStatus === 'ok' || currentStatus === 'active') {
+              // Caller can hang up their override call
+              console.log('RDVS: Hanging up override call');
+              sendMsg({ type: 'stop', cmd1: call_id, dbl1: 0 }); // Hangup override
+            } else if (currentStatus === 'overridden' || currentStatus === 'terminate') {
+              // Receiver cannot hang up - do nothing
+              console.log('RDVS: Cannot hang up - receiving override or terminated');
+            }
           } else if (lineTypeValue === 1) {
             // Ring line - handle ring/pickup logic
             if (currentStatus === 'off' || currentStatus === '' || currentStatus === 'idle') {
               console.log('RDVS: Sending ring call');
-              sendMsg({ type: 'call', cmd1: call_id, dbl1: 1 }); // Ring call
+              sendMsg({ type: 'call', cmd1: call_id, dbl1: 2 }); // Ring call
             } else if (currentStatus === 'chime' || currentStatus === 'ringing') {
-              console.log('RDVS: Accepting incoming call');
-              sendMsg({ type: 'pick_up', cmd1: call_id, dbl1: 1 }); // Accept call
+              console.log('RDVS: Accepting incoming ring call');
+              sendMsg({ type: 'stop', cmd1: call_id, dbl1: 2 }); // Accept call (matches IVSR)
             } else if (currentStatus === 'ok' || currentStatus === 'active') {
-              console.log('RDVS: Hanging up active call');
-              sendMsg({ type: 'stop', cmd1: call_id, dbl1: 1 }); // Hangup
+              console.log('RDVS: Hanging up active ring call');
+              sendMsg({ type: 'stop', cmd1: call_id, dbl1: 2 }); // Hangup
             }
           } else if (lineTypeValue === 2) {
-            // Shout line - handle shout call/hangup logic
+            // Shout line (SO) - handle shout call/hangup logic
             if (currentStatus === 'off' || currentStatus === '' || currentStatus === 'idle') {
               console.log('RDVS: Sending shout call');
               sendMsg({ type: 'call', cmd1: call_id, dbl1: 2 }); // Shout call
+            } else if (currentStatus === 'online' || currentStatus === 'chime') {
+              console.log('RDVS: Joining incoming shout call');
+              sendMsg({ type: 'call', cmd1: call_id, dbl1: 2 }); // Join shout call (matches IVSR)
             } else if (currentStatus === 'ok' || currentStatus === 'active') {
               console.log('RDVS: Hanging up shout call');
-              sendMsg({ type: 'stop', cmd1: call_id, dbl1: 2 }); // Hangup shout call
-            } else if (currentStatus === 'chime' || currentStatus === 'ringing' || currentStatus === 'online') {
-              console.log('RDVS: Joining shout call');
-              sendMsg({ type: 'call', cmd1: call_id, dbl1: 2 }); // Join shout call
+              sendMsg({ type: 'stop', cmd1: call_id, dbl1: 1 }); // Hangup shout call (dbl1: 1 for SO lines)
             }
           }
           
@@ -208,6 +232,54 @@ export default function RDVSWrapper() {
       });
     });
   }
+  
+  // Initialize dial tone audio
+  useEffect(() => {
+    const audio = new Audio('/rdvs/DialTone.wav');
+    audio.loop = true;
+    setDialToneAudio(audio);
+    
+    return () => {
+      audio.pause();
+      audio.src = '';
+    };
+  }, []);
+  
+  // Handle dialpad toggle
+  const handleDialpadToggle = () => {
+    const newState = !dialpadActive;
+    setDialpadActive(newState);
+    
+    if (newState) {
+      // Turning dialpad ON - hang up all active calls and play dial tone
+      if (gg_status && Array.isArray(gg_status)) {
+        gg_status.forEach((status: any) => {
+          if (status && (status.status === 'ok' || status.status === 'active')) {
+            const call_id = status.call?.substring(3) || status.call;
+            const call_type = status.call?.substring(0, 2);
+            
+            // Determine correct dbl1 value based on call type
+            const dbl1 = call_type === 'SO' ? 1 : 2;
+            console.log('RDVS: Hanging up call for dialpad:', { call_id, call_type, dbl1 });
+            sendMsg({ type: 'stop', cmd1: call_id, dbl1 });
+          }
+        });
+      }
+      
+      // Play dial tone
+      if (dialToneAudio) {
+        dialToneAudio.currentTime = 0;
+        dialToneAudio.play().catch(err => console.error('Failed to play dial tone:', err));
+      }
+    } else {
+      // Turning dialpad OFF - stop dial tone
+      if (dialToneAudio) {
+        dialToneAudio.pause();
+        dialToneAudio.currentTime = 0;
+      }
+    }
+  };
+  
   const formatFreq = (freq: number) => {
     if (!freq) return '';
     const val = freq / 1_000_000;
@@ -337,37 +409,61 @@ export default function RDVSWrapper() {
       
       {/* TED Interior Matrix - Independent quadrant positioning for precise control */}
       <div className="relative">
-        {/* Quadrant 1: Top-left (5×4 grid) - Uses buttons 0-15 (all available buttons) */}
-        <div 
-          className="absolute grid grid-cols-5"
-          style={{ 
-            top: '-5px',
-            left: '5px',
-            columnGap: '7px',
-            rowGap: '7px'
-          }}
-        >
-          {(() => {
-            const q1Buttons = [];
-            let q1Idx = 0;
-            for (let row = 0; row < 4; row++) {
-              for (let col = 0; col < 5; col++) {
-                const btn = groundToGroundButtons[q1Idx];
-                if (btn && isStandardButton(btn)) {
-                  q1Buttons.push(
-                    <div key={btn.config.id} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
-                      <RdvsButtonComponent {...btn} />
-                    </div>
-                  );
-                  q1Idx++;
-                } else {
-                  q1Buttons.push(<div key={`q1-empty-${row}-${col}`}></div>);
+        {/* Quadrant 1: Top-left (5×4 grid) - Toggles between buttons and keypad */}
+        {!keypadActive ? (
+          <div 
+            className="absolute grid grid-cols-5"
+            style={{ 
+              top: '-5px',
+              left: '5px',
+              columnGap: '7px',
+              rowGap: '7px'
+            }}
+          >
+            {(() => {
+              const q1Buttons = [];
+              let q1Idx = 0;
+              for (let row = 0; row < 4; row++) {
+                for (let col = 0; col < 5; col++) {
+                  const btn = groundToGroundButtons[q1Idx];
+                  if (btn && isStandardButton(btn)) {
+                    q1Buttons.push(
+                      <div key={btn.config.id} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
+                        <RdvsButtonComponent {...btn} />
+                      </div>
+                    );
+                    q1Idx++;
+                  } else {
+                    q1Buttons.push(<div key={`q1-empty-${row}-${col}`}></div>);
+                  }
                 }
               }
-            }
-            return q1Buttons;
-          })()}
-        </div>
+              return q1Buttons;
+            })()}
+          </div>
+        ) : (
+          /* Keypad overlay - replaces Quadrant 1 when active */
+          <div 
+            className="absolute"
+            style={{ 
+              top: '-64px',
+              left: '-74px',
+              width: '383px',  // Match Q1 width (5 buttons × 70px + gaps)
+              height: '255px', // Match Q1 height (4 rows × 55px + gaps)
+              zIndex: 100
+            }}
+          >
+            <img 
+              src="/rdvs/SVG/Keypad.png" 
+              alt="Keypad"
+              style={{ 
+                width: '110%', 
+                height: '110%',
+                objectFit: 'contain'
+              }}
+            />
+          </div>
+        )}
 
         {/* Air-to-ground buttons: Top-center (columns 5-7, rows 0-3) */}
         <div 
@@ -500,6 +596,54 @@ export default function RDVSWrapper() {
             />
           </div>
         )}
+        
+        {/* IA Dialpad Toggle Button - Square beneath the IA text */}
+        <div 
+          className="absolute cursor-pointer"
+          style={{ 
+            top: '-39px',  // Position below IA text (adjust as needed)
+            left: '258px',  // Left side of panel
+            width: '25px',
+            height: '25px',
+            zIndex: 1000
+          }}
+          onClick={handleDialpadToggle}
+        >
+          {dialpadActive && (
+            <img 
+              src="/rdvs/SVG/IAIndicator.png" 
+              alt="IA Active"
+              style={{ 
+                width: '25px', 
+                height: '25px'
+              }}
+            />
+          )}
+        </div>
+        
+        {/* Keypad Indicator Toggle Button - Shows KeypadIndicator and toggles keypad overlay */}
+        <div 
+          className="absolute cursor-pointer"
+          style={{ 
+            top: '-54px',  // Position for keypad indicator (adjust as needed)
+            left: '393px',
+            width: '60px',
+            height: '40px',
+            zIndex: 1000,
+          }}
+          onClick={() => setKeypadActive(!keypadActive)}
+        >
+          {keypadActive && (
+            <img 
+              src="/rdvs/SVG/KeypadIndicator.png" 
+              alt="Keypad Active"
+              style={{ 
+                width: '59px', 
+                height: '40px'
+              }}
+            />
+          )}
+        </div>
       </div>
       {/* Footer spacing */}
       <div style={{ height: '48px', width: '100%' }}></div>
