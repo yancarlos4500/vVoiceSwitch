@@ -8,6 +8,7 @@ import { ButtonType } from '../app/_components/vatlines/types';
 import type { RdvsButtonComponentProps, StandardButtonProps } from '../app/_components/vatlines/rdvs_button';
 import { useCoreStore } from '../model';
 import RdvsButtonComponent from '../app/_components/vatlines/rdvs_button'; // Import the RdvsButtonComponent
+import RdvsDialpad from '../app/_components/vatlines/rdvs_dialpad'; // Import the RdvsDialpad component
 import { rdvsButtonPatterns } from './rdvsButtonPatterns';
 import '../app/_components/vatlines/styles.css'; // Import styles for RDVS font
 
@@ -17,12 +18,15 @@ export default function RDVSWrapper() {
   // State for selected radio button (for showing long radio button overlay)
   const [selectedRadioIndex, setSelectedRadioIndex] = useState<number | null>(null);
   
-  // State for dialpad toggle
+  // State for dialpad toggle (IA dialpad - different from dial line dialpad)
   const [dialpadActive, setDialpadActive] = useState<boolean>(false);
   const [dialToneAudio, setDialToneAudio] = useState<HTMLAudioElement | null>(null);
   
   // State for keypad toggle
   const [keypadActive, setKeypadActive] = useState<boolean>(false);
+  
+  // State for dial line dialpad (type 3 lines)
+  const [activeDialLine, setActiveDialLine] = useState<{ trunkName: string; lineType: number } | null>(null);
   
   // Get sendMsg from store for WebSocket messaging
   const sendMsg = useCoreStore((s: any) => s.sendMessageNow);
@@ -40,6 +44,9 @@ export default function RDVSWrapper() {
       case 2: 
         console.log('Using SHOUT pattern');
         return rdvsButtonPatterns.SHOUT;
+      case 3:
+        console.log('Using DIAL pattern');
+        return rdvsButtonPatterns.DIAL || rdvsButtonPatterns.DEFAULT; // Fallback to DEFAULT if DIAL not defined
       default: 
         console.log('Using DEFAULT pattern');
         return rdvsButtonPatterns.DEFAULT;
@@ -83,6 +90,7 @@ export default function RDVSWrapper() {
       if (lineType === 0) typeLetter = 'O';  // Override
       else if (lineType === 1) typeLetter = 'C';  // Ring
       else if (lineType === 2) typeLetter = 'A';  // Shout
+      else if (lineType === 3) typeLetter = 'D';  // Dial
       
       // Get call type and ID for proper messaging
       const call_id = Array.isArray(line) ? line[0] : (line.id || line.call?.substring(3) || '');
@@ -218,6 +226,11 @@ export default function RDVSWrapper() {
               console.log('RDVS: Hanging up shout call');
               sendMsg({ type: 'stop', cmd1: call_id, dbl1: 1 }); // Hangup shout call (dbl1: 1 for SO lines)
             }
+          } else if (lineTypeValue === 3) {
+            // Dial line - open the dialpad with the trunk name from the label
+            // The label (line1) contains the trunk name (e.g., "APCH", "S-BAY", "E/W/V")
+            console.log('RDVS: Opening dialpad for trunk:', line1);
+            setActiveDialLine({ trunkName: line1, lineType: lineTypeValue });
           }
           
           // Log the action for debugging cyan box animations
@@ -644,6 +657,55 @@ export default function RDVSWrapper() {
             />
           )}
         </div>
+        
+        {/* Green fluttering box for override calls - position it yourself */}
+        {(() => {
+          // Check if any override call is active
+          const hasActiveOverride = gg_status && Array.isArray(gg_status) && gg_status.some((status: any) => {
+            if (!status) return false;
+            // Find the corresponding line in currentPosition to check if it's an override (type 0)
+            if (currentPosition && currentPosition.lines) {
+              const lineIndex = currentPosition.lines.findIndex((line: any) => {
+                const lineId = Array.isArray(line) ? line[0] : line?.id;
+                return status.call === lineId || 
+                       status.call?.substring(3) === lineId ||
+                       status.call?.substring(6) === lineId ||
+                       String(status.call).endsWith(lineId);
+              });
+              if (lineIndex >= 0) {
+                const line = currentPosition.lines[lineIndex];
+                const lineType = Array.isArray(line) ? line[1] : line?.type;
+                // Type 0 = Override, and status is active
+                return lineType === 0 && (status.status === 'ok' || status.status === 'active');
+              }
+            }
+            return false;
+          });
+          
+          return hasActiveOverride ? (
+            <div 
+              className="absolute w-2.5 h-6 rdvs-flutter-green"
+              style={{ 
+                top: '-38px',
+                left: '303px',
+                zIndex: 1000
+              }}
+            ></div>
+          ) : null;
+        })()}
+        
+        {/* Dial Line Dialpad - Shows when a type 3 dial line is clicked */}
+        {activeDialLine && (
+          <RdvsDialpad
+            trunkName={activeDialLine.trunkName}
+            onClose={() => setActiveDialLine(null)}
+            onCallInitiated={(target) => {
+              console.log('RDVS: Dial call initiated to:', target);
+              // Optionally close dialpad after call is initiated
+              // setActiveDialLine(null);
+            }}
+          />
+        )}
       </div>
       {/* Footer spacing */}
       <div style={{ height: '48px', width: '100%' }}></div>

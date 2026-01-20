@@ -27,6 +27,15 @@
   81%, 100% { background-color: #000000; } /* black background, border remains */
 }
 
+/* Green flutter for override calls */
+.rdvs-flutter-green {
+  animation: rdvs-flutter-green 0.083s steps(2, start) infinite; /* 12 times per second = 83ms per cycle */
+}
+@keyframes rdvs-flutter-green {
+  0%, 80% { background-color: #93ca63; } /* green filled */
+  81%, 100% { background-color: #000000; } /* black background */
+}
+
 /* RDVS Air-to-Ground Circle Flutter - 8Hz frequency like other UIs */
 @keyframes flutter-8hz {
   0%, 50% { 

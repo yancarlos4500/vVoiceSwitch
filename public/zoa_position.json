@@ -12116,6 +12116,82 @@
                     "id": "MCC"
                 }
             ],
+            "dialCodeTable": {
+                "E/W/V": {
+                    "02": "ZOA_FLM_D", "03": "FAI_TWR", "04": "SCK_TWR", "06": "MRY_WSFO", "07": "MOD_TWR", "08": "CAS_TWR",
+                    "10": "ZOA_OM", "11": "OAK_40_CTR", "12": "SFO_U_APP", "13": "FD_E", "14": "SFO_G_APP", "15": "OAK_42_CTR",
+                    "16": "OAK_41_CTR", "17": "SFO_A_APP", "18": "SCK_TWR", "21": "OAK_29_CTR", "22": "NCT_CONF2", "23": "ZOA_CWSU36",
+                    "24": "NCT_CL", "25": "OAK_AFSS", "26": "SFO_V_APP", "27": "OAK_46_CTR", "28": "PRC_AFSS", "29": "OAK_22_CTR",
+                    "32": "ZOA_TMU_OCEAN", "33": "SFO_D_APP", "34": "ZOA_FD", "35": "SFO_S_APP", "36": "OAK_15_CTR", "37": "OAK_33_CTR",
+                    "42": "SFO_R_APP", "43": "ZOA_FD", "44": "OAK_15_CTR", "45": "OAK_33_CTR", "50": "SFO_SUP", "52": "OAK_30_CTR",
+                    "53": "OAK_14_CTR", "54": "FD_B", "56": "OAK_AFSS", "57": "LVK_TWR", "58": "CCR_TWR", "59": "OAK_D2",
+                    "60": "SFO_P_APP", "62": "SQL_TWR", "63": "HWD_TWR", "64": "FD_C", "65": "OAK_11_CTR", "66": "ZOA_MOS",
+                    "67": "SFO_M_APP", "69": "OAK_13_CTR", "70": "PRC_AFSS", "73": "SFO_Z_APP", "74": "ZOA_TMU_LAX", "75": "SFO_O_APP",
+                    "76": "SFO_T_APP", "77": "ZOA_STMC", "78": "OAK_D4", "79": "ZOA_TMU_SFO", "80": "NCT_STMC", "82": "FD_D",
+                    "83": "OS_A", "84": "OMIC", "85": "OAK_35_CTR", "86": "OS_B", "87": "OS_C", "88": "OS_D",
+                    "89": "ZOA_TMU_SJC", "90": "OAK_S", "91": "ZOA_MAINT", "93": "TMC_1", "94": "TMC_2", "95": "TMC_3",
+                    "96": "ZOA_NOM", "97": "OAK_16_CTR", "98": "OAK_44_CTR", "99": "SOC"
+                },
+                "S-BAY": {
+                    "03": "FAI_TWR", "06": "SFO_C_APP", "07": "FD_C", "08": "CAS_TWR", "10": "ZOA_OM", "11": "OAK_40_CTR",
+                    "12": "SFO_U_APP", "13": "FD_E", "14": "SFO_G_APP", "15": "OAK_42_CTR", "16": "SFO_W_APP", "17": "SFO_A_APP",
+                    "21": "OAK_29_CTR", "22": "NCT_CONF", "23": "ZOA_CWSU36", "24": "NCT_CL", "25": "SFO_Z_APP", "26": "SFO_E_APP",
+                    "28": "SFO_U_APP", "29": "OAK_22_CTR", "32": "ZOA_TMU_OCEAN", "33": "ZOA_FD", "34": "SFO_S_APP", "35": "SFO_N_APP",
+                    "36": "SFO_B_APP", "42": "SFO_R_APP", "43": "OAK_32_CTR", "44": "ZOA_FD", "45": "SFO_S_APP", "46": "OAK_15_CTR",
+                    "47": "OAK_33_CTR", "50": "SFO_SUP", "52": "RAI_AFSS", "53": "SFO_BUT", "54": "ZOA_TMU_NCT", "56": "SJC_M_APP",
+                    "57": "SJC_K_APP", "58": "SJC_DEP", "59": "NUQ_TWR", "62": "SQL_TWR", "63": "SFO_EXP", "64": "SJC_TWR",
+                    "65": "SJC_Q_APP", "66": "ZOA_MOS", "67": "SFO_M_APP", "68": "RNO_APP", "69": "OAK_13_CTR", "70": "FD_A",
+                    "73": "MRY_F_APP", "74": "ZOA_TMU_LAX", "75": "SFO_O_APP", "76": "ZOA_STMC", "78": "ZOA_TMU_SFO", "79": "ZOA_TMU_SFO",
+                    "80": "NCT_STMC", "82": "FD_D", "83": "OS_A", "84": "SNS_TWR", "85": "OAK_53_CTR", "86": "OS_B",
+                    "87": "OS_C", "88": "OS_D", "89": "ZOA_TMU_SJC", "90": "OAK_S", "91": "ZOA_MAINT", "93": "TMC_1",
+                    "94": "TMC_2", "95": "TMC_3", "96": "ZOA_NOM", "97": "OAK_16_CTR", "98": "OAK_44_CTR", "99": "SOC"
+                },
+                "AFSS": {
+                    "03": "OMIC", "05": "BRIR_SUP", "06": "SFO_C_APP", "07": "FD_C", "08": "CAS_TWR", "10": "ZOA_OM",
+                    "11": "OAK_40_CTR", "12": "SFO_U_APP", "13": "NLC_APP", "14": "ZOA_FLM_G", "15": "OAK_42_CTR", "16": "OAK_41_CTR",
+                    "17": "SFO_A_APP", "18": "OAK_10_CTR", "21": "OAK_29_CTR", "22": "TRA_APP", "23": "ZOA_CWSU36", "24": "OAK_D36",
+                    "25": "OAK_AFSS", "26": "SFO_V_APP", "27": "OAK_46_CTR", "28": "PRC_AFSS", "29": "OAK_22_CTR", "32": "RIC_APP",
+                    "33": "ZOA_FD", "34": "SFO_S_APP", "35": "SFO_N_APP", "36": "SFO_B_APP", "42": "SFO_TMC", "43": "OAK_43_CTR",
+                    "44": "OAK_43_CTR", "45": "LIC_APP", "50": "SFO_SUP", "52": "OS_D", "53": "SFO_BUT", "54": "FD_B",
+                    "56": "OAK_AFSS", "57": "SJC_K_APP", "58": "SJC_DEP", "59": "OAK_D2", "62": "EXP_APP", "63": "OAK_D34",
+                    "64": "FD_E", "65": "SJC_Q_APP", "66": "ZOA_MOS", "67": "SFO_M_APP", "68": "RNO_APP", "69": "OAK_13_CTR",
+                    "70": "ZOA_TMU_NCT", "73": "SFO_Z_APP", "74": "ZOA_TMU_LAX", "75": "SFO_O_APP", "76": "ZOA_STMC", "77": "OAK_D4",
+                    "78": "ZOA_TMU_SFO", "79": "ZOA_TMU_SFO", "80": "SMF_TWR", "82": "FD_D", "83": "OS_A", "84": "ZOA_D3",
+                    "85": "OAK_35_CTR", "86": "OS_B", "87": "OS_C", "88": "OS_D", "89": "ZOA_TMU_SJC", "90": "MOR_APP",
+                    "91": "ZOA_MAINT", "93": "TMC_1", "94": "TMC_2", "95": "TMC_3", "96": "ZOA_NOM", "97": "OAK_16_CTR",
+                    "98": "OAK_44_CTR", "99": "SOC"
+                },
+                "NTWRS": {
+                    "03": "FD_A", "04": "ZOA_FLM_E", "05": "FD_B", "06": "APC_TWR", "07": "FD_C", "08": "CAS_TWR",
+                    "10": "ZOA_OM", "11": "OAK_40_CTR", "12": "SFO_U_APP", "13": "FD_E", "14": "ZOA_FLM_G", "15": "OAK_42_CTR",
+                    "16": "OAK_41_CTR", "17": "SFO_A_APP", "18": "OAK_10_CTR", "21": "OAK_29_CTR", "22": "NCT_CONF", "23": "ZOA_CWSU36",
+                    "24": "OAK_AFSS", "25": "OAK_AFSS", "26": "SFO_DEL", "27": "OAK_46_CTR", "28": "PRC_AFSS", "29": "OAK_22_CTR",
+                    "32": "DIA_APP", "33": "ZOA_FD", "34": "SFO_S_APP", "35": "OAK_15_CTR", "36": "SFO_B_APP", "42": "OAK_D43",
+                    "43": "OAK_43_CTR", "44": "MHR_TWR", "45": "OAK_43_CTR", "50": "LIC_APP", "52": "BFL_APP", "53": "SFO_BUT",
+                    "54": "BAB_RFC", "56": "OAK_AFSS", "57": "SJC_K_APP", "58": "SFO_ELK", "59": "STS_TWR", "62": "EXP_APP",
+                    "63": "OAK_D34", "64": "FD_E", "65": "SJC_Q_APP", "66": "ZOA_MOS", "67": "SFO_M_APP", "68": "RNO_APP",
+                    "69": "PRC_AFSS", "70": "PRC_AFSS", "73": "SFO_Z_APP", "74": "ZOA_TMU_LAX", "75": "SFO_O_APP", "76": "SFO_T_APP",
+                    "77": "ZOA_STMC", "78": "SAC_TWR", "79": "ZOA_TMU_SFO", "80": "ZOA_D5", "82": "FD_D", "83": "OS_A",
+                    "84": "TMC_1", "85": "OAK_35_CTR", "86": "OS_B", "87": "PRC_AFSS", "88": "PRC_AFSS", "89": "ZOA_TMU_SJC",
+                    "90": "OAK_S", "91": "ZOA_MAINT", "92": "OAK_N", "93": "TMC_1", "94": "OAK_D31", "95": "TMC_3",
+                    "96": "ZOA_NOM", "97": "OS_E", "98": "OAK_44_CTR", "99": "SOC"
+                },
+                "APCH": {
+                    "03": "FD_A", "04": "FD_A", "06": "APC_TWR", "07": "FD_C", "08": "CAS_TWR", "10": "ZOA_OM",
+                    "11": "OAK_40_CTR", "12": "SFO_U_APP", "13": "FD_E", "14": "ZOA_FLM_G", "15": "OAK_42_CTR", "16": "OAK_41_CTR",
+                    "17": "SFO_A_APP", "18": "OAK_10_CTR", "21": "OAK_29_CTR", "22": "NCT_CONF", "23": "ZOA_CWSU36", "24": "OAK_AFSS",
+                    "25": "OAK_AFSS", "26": "SFO_V_APP", "27": "OAK_46_CTR", "28": "PRC_AFSS", "29": "OAK_22_CTR", "32": "ZOA_TMU_OCEAN",
+                    "33": "ZOA_FD", "34": "SFO_S_APP", "35": "OAK_15_CTR", "36": "SFO_B_APP", "42": "RIC_APP", "43": "OAK_D32",
+                    "44": "ZOA_FD", "45": "SFO_S_APP", "46": "OAK_15_CTR", "47": "OAK_33_CTR", "50": "SFO_SUP", "52": "OAK_30_CTR",
+                    "53": "OAK_14_CTR", "54": "FD_B", "56": "OAK_AFSS", "57": "LVK_TWR", "58": "CCR_TWR", "59": "OAK_D2",
+                    "60": "SFO_P_APP", "62": "SQL_TWR", "63": "HWD_TWR", "64": "FD_C", "65": "OAK_11_CTR", "66": "ZOA_MOS",
+                    "67": "SFO_M_APP", "69": "OAK_13_CTR", "70": "PRC_AFSS", "73": "SFO_Z_APP", "74": "ZOA_TMU_LAX", "75": "SFO_O_APP",
+                    "76": "SFO_T_APP", "77": "ZOA_STMC", "78": "OAK_D4", "79": "ZOA_TMU_SFO", "80": "NCT_STMC", "82": "FD_D",
+                    "83": "OS_A", "84": "OMIC", "85": "OAK_35_CTR", "86": "OS_B", "87": "OS_C", "88": "OS_D",
+                    "89": "ZOA_TMU_SJC", "90": "OAK_S", "91": "ZOA_MAINT", "93": "TMC_1", "94": "TMC_2", "95": "TMC_3",
+                    "96": "ZOA_NOM", "97": "OAK_16_CTR", "98": "OAK_44_CTR", "99": "SOC"
+                }               
+            },
             "name": "Northern California TRACON",
             "id": "NCT"
         },

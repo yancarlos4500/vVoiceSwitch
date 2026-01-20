@@ -7,11 +7,58 @@ interface Position {
     lines: any[];
 }
 
+// DialCodeTable maps trunk names to code->target mappings
+// e.g., { "APCH": { "11": "OAK_40_CTR", "12": "SFO_U_APP" }, ... }
+export type DialCodeTable = Record<string, Record<string, string>>;
+
 export interface Facility {
     childFacilities: Facility[];
     id: string;
     name: string;
     positions: Position[];
+    dialCodeTable?: DialCodeTable;
+}
+
+// Helper function to find a dialCodeTable for a given position
+// Searches up the facility tree from the position's parent facility
+export function findDialCodeTable(positionData: Facility, positionCallsign: string): DialCodeTable | null {
+    // Recursive search through facility tree
+    function searchFacility(facility: Facility): { dialCodeTable?: DialCodeTable; hasPosition: boolean } {
+        // Check if this facility has the position
+        const hasPosition = facility.positions?.some(p => p.cs === positionCallsign);
+        
+        // If this facility has the position and a dialCodeTable, return it
+        if (hasPosition && facility.dialCodeTable) {
+            return { dialCodeTable: facility.dialCodeTable, hasPosition: true };
+        }
+        
+        // Search child facilities
+        for (const child of facility.childFacilities || []) {
+            const result = searchFacility(child);
+            if (result.hasPosition) {
+                // Position found in child - return child's dialCodeTable if exists, otherwise this facility's
+                return {
+                    dialCodeTable: result.dialCodeTable || facility.dialCodeTable,
+                    hasPosition: true
+                };
+            }
+        }
+        
+        return { hasPosition: false };
+    }
+    
+    const result = searchFacility(positionData);
+    return result.dialCodeTable || null;
+}
+
+// Helper function to resolve a dial code to a target callsign
+// trunkName: The trunk name from the type 3 line label (e.g., "APCH", "S-BAY")
+// dialCode: The 2-digit code entered by the user (e.g., "11", "42")
+export function resolveDialCode(dialCodeTable: DialCodeTable | null, trunkName: string, dialCode: string): string | null {
+    if (!dialCodeTable) return null;
+    const trunkCodes = dialCodeTable[trunkName];
+    if (!trunkCodes) return null;
+    return trunkCodes[dialCode] || null;
 }
 
 interface CoreState {
@@ -28,6 +75,10 @@ interface CoreState {
     ag_status: any[],
     gg_status: any[],
     vscs_status: any[],
+    
+    // Dial call state for type 3 lines
+    activeDialLine: { trunkName: string; lineType: number } | null;
+    dialCallStatus: 'idle' | 'dialing' | 'ringback' | 'connected' | 'busy' | 'error';
 
     // VSCS-specific props
     activeLandlines: any[];
@@ -53,6 +104,10 @@ interface CoreState {
     sendMessageNow: (data: any) => void;
     setCurrentUI: (ui: string) => void;
     setCurrentConfig: (config: any) => void;
+    
+    // Dial call functions
+    setActiveDialLine: (dialLine: { trunkName: string; lineType: number } | null) => void;
+    sendDialCall: (trunkName: string, dialCode: string) => void;
 }
 
 let call_table: Record<string, [string, number]> = {}
@@ -284,6 +339,13 @@ export const useCoreStore = create<CoreState>((set: any, get: any) => {
     volume: { volume: 50, setVolume: () => {} },
     playError: () => {},
     metadata: { position: '', sector: '', facilityId: '' },
+    
+    // Dial call state defaults
+    activeDialLine: null,
+    dialCallStatus: 'idle' as const,
+    setActiveDialLine: () => {},
+    sendDialCall: () => {},
+    
         setConnected: (status: boolean) => {
             set({
                 connected: status
@@ -326,6 +388,51 @@ export const useCoreStore = create<CoreState>((set: any, get: any) => {
         },
         setCurrentConfig: (config: any) => {
             set({ currentConfig: config });
+        },
+        setActiveDialLine: (dialLine: { trunkName: string; lineType: number } | null) => {
+            set({ activeDialLine: dialLine, dialCallStatus: dialLine ? 'idle' : 'idle' });
+        },
+        sendDialCall: (trunkName: string, dialCode: string) => {
+            const { positionData, selectedPositions } = get();
+            
+            // Get the current position's callsign to find the dialCodeTable
+            const currentCallsign = selectedPositions?.[0]?.cs;
+            if (!currentCallsign) {
+                console.error('[dial_call] No current position selected');
+                set({ dialCallStatus: 'error' });
+                return;
+            }
+            
+            // Find the dialCodeTable for this position
+            const dialCodeTable = findDialCodeTable(positionData, currentCallsign);
+            if (!dialCodeTable) {
+                console.error('[dial_call] No dialCodeTable found for position:', currentCallsign);
+                set({ dialCallStatus: 'error' });
+                return;
+            }
+            
+            // Resolve the dial code to a target callsign
+            const target = resolveDialCode(dialCodeTable, trunkName, dialCode);
+            if (!target) {
+                console.error('[dial_call] Could not resolve dial code:', { trunkName, dialCode });
+                set({ dialCallStatus: 'error' });
+                return;
+            }
+            
+            console.log('[dial_call] Resolved:', { trunkName, dialCode, target });
+            
+            // Set status to dialing
+            set({ dialCallStatus: 'dialing' });
+            
+            // Send the dial_call command to the backend
+            // The dial_call type will initiate a call to the resolved target
+            sendMessageNow({ 
+                type: 'dial_call', 
+                cmd1: target,           // The resolved target callsign
+                cmd2: trunkName,        // The trunk name for reference
+                cmd3: dialCode,         // The dial code for reference
+                dbl1: 2                 // Call type (2 = ring/shout style call)
+            });
         }
     }
 
@@ -491,6 +598,25 @@ export const useCoreStore = create<CoreState>((set: any, get: any) => {
                         })
                     }
 
+                } else if (data.type === 'dial_call_status') {
+                    // Handle dial call status updates from backend
+                    const status = data.cmd1 as 'dialing' | 'ringback' | 'connected' | 'busy' | 'error' | 'idle';
+                    console.log('[dial_call] Status update:', status);
+                    set({ dialCallStatus: status });
+                    
+                    // Handle audio cues based on dial call status
+                    if (status === 'ringback') {
+                        chime(getAudioElement('ringback'));
+                    } else if (status === 'connected' || status === 'idle') {
+                        stopAudio();
+                        // Clear the active dial line when connected or idle
+                        if (status === 'connected') {
+                            set({ activeDialLine: null });
+                        }
+                    } else if (status === 'busy' || status === 'error') {
+                        stopAudio();
+                        // Play error tone if available
+                    }
                 }
                 return
             }
