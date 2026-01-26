@@ -3309,7 +3309,11 @@
               "freq": 121600000,
               "rn": "San Carlos Ground",
               "ui": "stvs",
-              "lines": [],
+              "lines": [
+                ["811066", 2, "NCT"],
+                ["650001", 0, "PAO"],
+                ["", 3, "E/W/V"]
+            ],
               "lines_obj": {}
             },
             {
@@ -3318,7 +3322,11 @@
               "freq": 119000000,
               "rn": "San Carlos Tower",
               "ui": "stvs",
-              "lines": [["811066", 2, "NCT A/B/D"]],
+              "lines": [
+                ["811066", 2, "NCT"],
+                ["650001", 0, "PAO"],
+                ["", 3, "E/W/V"]
+            ],
               "lines_obj": {
                 "811066": 1
               }

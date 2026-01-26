@@ -14,6 +14,7 @@ export const SUPPORTED_FACILITIES = [
   'zse',
   'zla',
   'zdv',
+  'zme',
   // Add more facilities here as you create their JSON files
 ] as const;
 
@@ -182,6 +183,10 @@ export function getFacilityFromCallsign(callsign: string): string | null {
     'SNA': 'ZLA', 'VNY': 'ZLA', 'PSP': 'ZLA', 'LAS': 'ZLA',
     // ZDV
     'DEN': 'ZDV', 'COS': 'ZDV', 'ABQ': 'ZDV', 'APA': 'ZDV',
+    // ZME
+    'MEM': 'ZME', 'BNA': 'ZME', 'LIT': 'ZME', 'HSV': 'ZME', 'JAN': 'ZME',
+    'NQA': 'ZME', 'OLV': 'ZME', 'XNA': 'ZME', 'FSM': 'ZME', 'CBM': 'ZME',
+    'GTR': 'ZME', 'TUP': 'ZME', 'HOP': 'ZME', 'PAH': 'ZME', 'CGI': 'ZME',
   };
   
   return prefixMap[prefix] || null;
