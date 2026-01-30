@@ -16,6 +16,13 @@ export const SUPPORTED_FACILITIES = [
   'zdv',
   'zme',
   'zsu',
+  'ztl',
+  'zab',
+  'zjx',
+  'zma',
+  'zmp',
+  'zob',
+  'zny',
   // Add more facilities here as you create their JSON files
 ] as const;
 
@@ -191,6 +198,34 @@ export function getFacilityFromCallsign(callsign: string): string | null {
     // ZSU
     'SJU': 'ZSU', 'BQN': 'ZSU', 'PSE': 'ZSU', 'STT': 'ZSU', 'STX': 'ZSU',
     'SIG': 'ZSU', 'NRR': 'ZSU', 'VQS': 'ZSU',
+    // ZTL - Atlanta
+    'ATL': 'ZTL', 'CLT': 'ZTL', 'BHM': 'ZTL', 'GSP': 'ZTL', 'TYS': 'ZTL',
+    'CHA': 'ZTL', 'AGS': 'ZTL', 'SAV': 'ZTL', 'CAE': 'ZTL', 'MCN': 'ZTL',
+    'CSG': 'ZTL', 'MGM': 'ZTL', 'MOB': 'ZTL', 'GPT': 'ZTL', 'DHN': 'ZTL',
+    // ZAB - Albuquerque
+    'ABQ': 'ZAB', 'TUS': 'ZAB', 'PHX': 'ZAB', 'ELP': 'ZAB', 'ROW': 'ZAB',
+    'AMA': 'ZAB', 'LBB': 'ZAB', 'MAF': 'ZAB', 'SAF': 'ZAB', 'FLG': 'ZAB',
+    'PRC': 'ZAB', 'DVT': 'ZAB', 'GUP': 'ZAB', 'FMN': 'ZAB',
+    // ZJX - Jacksonville
+    'JAX': 'ZJX', 'TPA': 'ZJX', 'MCO': 'ZJX', 'DAB': 'ZJX', 'GNV': 'ZJX',
+    'TLH': 'ZJX', 'PNS': 'ZJX', 'VPS': 'ZJX', 'ECP': 'ZJX', 'MLB': 'ZJX',
+    'SFB': 'ZJX', 'ORL': 'ZJX', 'PIE': 'ZJX', 'SRQ': 'ZJX', 'RSW': 'ZJX',
+    // ZMA - Miami
+    'MIA': 'ZMA', 'FLL': 'ZMA', 'PBI': 'ZMA', 'EYW': 'ZMA', 'FXE': 'ZMA',
+    'TMB': 'ZMA', 'OPF': 'ZMA', 'BCT': 'ZMA', 'APF': 'ZMA', 'MKY': 'ZMA',
+    // ZMP - Minneapolis
+    'MSP': 'ZMP', 'FAR': 'ZMP', 'FSD': 'ZMP', 'DLH': 'ZMP', 'RST': 'ZMP',
+    'ICT': 'ZMP', 'MCI': 'ZMP', 'OMA': 'ZMP', 'DSM': 'ZMP', 'SUX': 'ZMP',
+    'BIS': 'ZMP', 'RAP': 'ZMP', 'GFK': 'ZMP', 'MOT': 'ZMP',
+    // ZOB - Cleveland
+    'CLE': 'ZOB', 'PIT': 'ZOB', 'CMH': 'ZOB', 'CVG': 'ZOB', 'DAY': 'ZOB',
+    'CAK': 'ZOB', 'YNG': 'ZOB', 'TOL': 'ZOB', 'ERI': 'ZOB', 'FWA': 'ZOB',
+    'SBN': 'ZOB', 'LAN': 'ZOB', 'GRR': 'ZOB', 'AZO': 'ZOB', 'BTL': 'ZOB',
+    // ZNY - New York
+    'JFK': 'ZNY', 'LGA': 'ZNY', 'EWR': 'ZNY', 'ISP': 'ZNY', 'HPN': 'ZNY',
+    'SWF': 'ZNY', 'TTN': 'ZNY', 'PHL': 'ZNY', 'ACY': 'ZNY', 'ABE': 'ZNY',
+    'AVP': 'ZNY', 'BGM': 'ZNY', 'ELM': 'ZNY', 'ITH': 'ZNY', 'SYR': 'ZNY',
+    'ROC': 'ZNY', 'BUF': 'ZNY', 'FRG': 'ZNY', 'TEB': 'ZNY', 'MMU': 'ZNY',
   };
   
   return prefixMap[prefix] || null;

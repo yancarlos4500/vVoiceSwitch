@@ -91,7 +91,7 @@ export default function RdvsKeypad({
   }, []);
   
   // Play DTMF tone for a key
-  const playDTMF = useCallback((key: string, duration: number = 150) => {
+  const playDTMF = useCallback((key: string, duration: number = 250) => {
     const frequencies = DTMF_FREQUENCIES[key];
     if (!frequencies) return;
     

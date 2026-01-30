@@ -330,7 +330,7 @@ export const useCoreStore = create<CoreState>((set: any, get: any) => {
     holdBtn: () => {},
     releaseBtn: () => {
         // Release all active G/G calls
-        const { gg_status } = get();
+        const { gg_status, sendMessageNow } = get();
         const activeCalls = (gg_status || []).filter((call: any) => 
             call && (call.status === 'ok' || call.status === 'active')
         );
@@ -353,7 +353,7 @@ export const useCoreStore = create<CoreState>((set: any, get: any) => {
                 call_id = fullCall?.substring(5) || '';
             }
             
-            if (call_id) {
+            if (call_id && sendMessageNow) {
                 const isShoutOverride = fullCall?.startsWith('SO_');
                 console.log('[releaseBtn] Stopping call:', call_id, 'isShoutOverride:', isShoutOverride);
                 sendMessageNow({ type: 'stop', cmd1: call_id, dbl1: isShoutOverride ? 1 : 2 });

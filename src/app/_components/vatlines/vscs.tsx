@@ -75,6 +75,1119 @@ interface VscsProps {
   };
 }
 
+// Dot Matrix Character Map (5x7 grid for each character)
+const DOT_MATRIX_CHARS: { [key: string]: number[][] } = {
+  '0': [[0,1,1,1,0],[1,0,0,0,1],[1,0,0,1,1],[1,0,1,0,1],[1,1,0,0,1],[1,0,0,0,1],[0,1,1,1,0]],
+  '1': [[0,0,1,0,0],[0,1,1,0,0],[0,0,1,0,0],[0,0,1,0,0],[0,0,1,0,0],[0,0,1,0,0],[0,1,1,1,0]],
+  '2': [[0,1,1,1,0],[1,0,0,0,1],[0,0,0,0,1],[0,0,1,1,0],[0,1,0,0,0],[1,0,0,0,0],[1,1,1,1,1]],
+  '3': [[0,1,1,1,0],[1,0,0,0,1],[0,0,0,0,1],[0,0,1,1,0],[0,0,0,0,1],[1,0,0,0,1],[0,1,1,1,0]],
+  '4': [[0,0,0,1,0],[0,0,1,1,0],[0,1,0,1,0],[1,0,0,1,0],[1,1,1,1,1],[0,0,0,1,0],[0,0,0,1,0]],
+  '5': [[1,1,1,1,1],[1,0,0,0,0],[1,1,1,1,0],[0,0,0,0,1],[0,0,0,0,1],[1,0,0,0,1],[0,1,1,1,0]],
+  '6': [[0,1,1,1,0],[1,0,0,0,0],[1,0,0,0,0],[1,1,1,1,0],[1,0,0,0,1],[1,0,0,0,1],[0,1,1,1,0]],
+  '7': [[1,1,1,1,1],[0,0,0,0,1],[0,0,0,1,0],[0,0,1,0,0],[0,1,0,0,0],[0,1,0,0,0],[0,1,0,0,0]],
+  '8': [[0,1,1,1,0],[1,0,0,0,1],[1,0,0,0,1],[0,1,1,1,0],[1,0,0,0,1],[1,0,0,0,1],[0,1,1,1,0]],
+  '9': [[0,1,1,1,0],[1,0,0,0,1],[1,0,0,0,1],[0,1,1,1,1],[0,0,0,0,1],[0,0,0,0,1],[0,1,1,1,0]],
+  'A': [[0,1,1,1,0],[1,0,0,0,1],[1,0,0,0,1],[1,1,1,1,1],[1,0,0,0,1],[1,0,0,0,1],[1,0,0,0,1]],
+  'B': [[1,1,1,1,0],[1,0,0,0,1],[1,0,0,0,1],[1,1,1,1,0],[1,0,0,0,1],[1,0,0,0,1],[1,1,1,1,0]],
+  'C': [[0,1,1,1,0],[1,0,0,0,1],[1,0,0,0,0],[1,0,0,0,0],[1,0,0,0,0],[1,0,0,0,1],[0,1,1,1,0]],
+  'D': [[1,1,1,1,0],[1,0,0,0,1],[1,0,0,0,1],[1,0,0,0,1],[1,0,0,0,1],[1,0,0,0,1],[1,1,1,1,0]],
+  'E': [[1,1,1,1,1],[1,0,0,0,0],[1,0,0,0,0],[1,1,1,1,0],[1,0,0,0,0],[1,0,0,0,0],[1,1,1,1,1]],
+  'F': [[1,1,1,1,1],[1,0,0,0,0],[1,0,0,0,0],[1,1,1,1,0],[1,0,0,0,0],[1,0,0,0,0],[1,0,0,0,0]],
+  'G': [[0,1,1,1,0],[1,0,0,0,1],[1,0,0,0,0],[1,0,1,1,1],[1,0,0,0,1],[1,0,0,0,1],[0,1,1,1,0]],
+  'H': [[1,0,0,0,1],[1,0,0,0,1],[1,0,0,0,1],[1,1,1,1,1],[1,0,0,0,1],[1,0,0,0,1],[1,0,0,0,1]],
+  'I': [[0,1,1,1,0],[0,0,1,0,0],[0,0,1,0,0],[0,0,1,0,0],[0,0,1,0,0],[0,0,1,0,0],[0,1,1,1,0]],
+  'J': [[0,0,1,1,1],[0,0,0,1,0],[0,0,0,1,0],[0,0,0,1,0],[0,0,0,1,0],[1,0,0,1,0],[0,1,1,0,0]],
+  'K': [[1,0,0,0,1],[1,0,0,1,0],[1,0,1,0,0],[1,1,0,0,0],[1,0,1,0,0],[1,0,0,1,0],[1,0,0,0,1]],
+  'L': [[1,0,0,0,0],[1,0,0,0,0],[1,0,0,0,0],[1,0,0,0,0],[1,0,0,0,0],[1,0,0,0,0],[1,1,1,1,1]],
+  'M': [[1,0,0,0,1],[1,1,0,1,1],[1,0,1,0,1],[1,0,0,0,1],[1,0,0,0,1],[1,0,0,0,1],[1,0,0,0,1]],
+  'N': [[1,0,0,0,1],[1,1,0,0,1],[1,0,1,0,1],[1,0,0,1,1],[1,0,0,0,1],[1,0,0,0,1],[1,0,0,0,1]],
+  'O': [[0,1,1,1,0],[1,0,0,0,1],[1,0,0,0,1],[1,0,0,0,1],[1,0,0,0,1],[1,0,0,0,1],[0,1,1,1,0]],
+  'P': [[1,1,1,1,0],[1,0,0,0,1],[1,0,0,0,1],[1,1,1,1,0],[1,0,0,0,0],[1,0,0,0,0],[1,0,0,0,0]],
+  'Q': [[0,1,1,1,0],[1,0,0,0,1],[1,0,0,0,1],[1,0,0,0,1],[1,0,1,0,1],[1,0,0,1,0],[0,1,1,0,1]],
+  'R': [[1,1,1,1,0],[1,0,0,0,1],[1,0,0,0,1],[1,1,1,1,0],[1,0,1,0,0],[1,0,0,1,0],[1,0,0,0,1]],
+  'S': [[0,1,1,1,0],[1,0,0,0,1],[1,0,0,0,0],[0,1,1,1,0],[0,0,0,0,1],[1,0,0,0,1],[0,1,1,1,0]],
+  'T': [[1,1,1,1,1],[0,0,1,0,0],[0,0,1,0,0],[0,0,1,0,0],[0,0,1,0,0],[0,0,1,0,0],[0,0,1,0,0]],
+  'U': [[1,0,0,0,1],[1,0,0,0,1],[1,0,0,0,1],[1,0,0,0,1],[1,0,0,0,1],[1,0,0,0,1],[0,1,1,1,0]],
+  'V': [[1,0,0,0,1],[1,0,0,0,1],[1,0,0,0,1],[1,0,0,0,1],[0,1,0,1,0],[0,1,0,1,0],[0,0,1,0,0]],
+  'W': [[1,0,0,0,1],[1,0,0,0,1],[1,0,0,0,1],[1,0,1,0,1],[1,0,1,0,1],[1,1,0,1,1],[1,0,0,0,1]],
+  'X': [[1,0,0,0,1],[1,0,0,0,1],[0,1,0,1,0],[0,0,1,0,0],[0,1,0,1,0],[1,0,0,0,1],[1,0,0,0,1]],
+  'Y': [[1,0,0,0,1],[1,0,0,0,1],[0,1,0,1,0],[0,0,1,0,0],[0,0,1,0,0],[0,0,1,0,0],[0,0,1,0,0]],
+  'Z': [[1,1,1,1,1],[0,0,0,0,1],[0,0,0,1,0],[0,0,1,0,0],[0,1,0,0,0],[1,0,0,0,0],[1,1,1,1,1]],
+  '-': [[0,0,0,0,0],[0,0,0,0,0],[0,0,0,0,0],[1,1,1,1,1],[0,0,0,0,0],[0,0,0,0,0],[0,0,0,0,0]],
+  ' ': [[0,0,0,0,0],[0,0,0,0,0],[0,0,0,0,0],[0,0,0,0,0],[0,0,0,0,0],[0,0,0,0,0],[0,0,0,0,0]],
+  '.': [[0,0,0,0,0],[0,0,0,0,0],[0,0,0,0,0],[0,0,0,0,0],[0,0,0,0,0],[0,1,1,0,0],[0,1,1,0,0]],
+  ':': [[0,0,0,0,0],[0,1,1,0,0],[0,1,1,0,0],[0,0,0,0,0],[0,1,1,0,0],[0,1,1,0,0],[0,0,0,0,0]],
+  '*': [[0,0,0,0,0],[0,0,1,0,0],[1,0,1,0,1],[0,1,1,1,0],[1,0,1,0,1],[0,0,1,0,0],[0,0,0,0,0]],
+  '#': [[0,1,0,1,0],[0,1,0,1,0],[1,1,1,1,1],[0,1,0,1,0],[1,1,1,1,1],[0,1,0,1,0],[0,1,0,1,0]],
+};
+
+// Dot Matrix Character Component
+function DotMatrixChar({ char, color = '#FFD700', brightness = 100 }: { char: string; color?: string; brightness?: number }) {
+  const matrix = DOT_MATRIX_CHARS[char.toUpperCase()] ?? DOT_MATRIX_CHARS[' '] ?? [];
+  const dotSize = 3;
+  const gap = 1;
+  
+  if (!matrix || matrix.length === 0) {
+    return <div style={{ width: '19px', height: '31px' }} />;
+  }
+  
+  return (
+    <div style={{ 
+      display: 'grid', 
+      gridTemplateRows: `repeat(7, ${dotSize}px)`,
+      gridTemplateColumns: `repeat(5, ${dotSize}px)`,
+      gap: `${gap}px`,
+      padding: '1px',
+    }}>
+      {matrix.map((row, rowIdx) => 
+        row.map((dot, colIdx) => (
+          <div
+            key={`${rowIdx}-${colIdx}`}
+            style={{
+              width: `${dotSize}px`,
+              height: `${dotSize}px`,
+              borderRadius: '50%',
+              backgroundColor: dot ? color : 'transparent',
+              opacity: dot ? brightness / 100 : 0,
+              boxShadow: dot && brightness > 50 ? `0 0 ${dotSize}px ${color}` : 'none',
+            }}
+          />
+        ))
+      )}
+    </div>
+  );
+}
+
+// Translucent button with underglow effect
+function GlowButton({ 
+  onClick, 
+  children, 
+  glowColor, 
+  width = '45px', 
+  height = '45px',
+  brightness = 100,
+  textColor = '#000',
+  fontSize = '18px',
+}: { 
+  onClick: () => void; 
+  children?: React.ReactNode; 
+  glowColor: string;
+  width?: string;
+  height?: string;
+  brightness?: number;
+  textColor?: string;
+  fontSize?: string;
+}) {
+  const [isPressed, setIsPressed] = useState(false);
+  const glowIntensity = brightness / 100;
+  
+  return (
+    <button
+      onClick={onClick}
+      onMouseDown={() => setIsPressed(true)}
+      onMouseUp={() => setIsPressed(false)}
+      onMouseLeave={() => setIsPressed(false)}
+      style={{
+        width,
+        height,
+        position: 'relative',
+        border: 'none',
+        borderRadius: '4px',
+        cursor: 'pointer',
+        overflow: 'hidden',
+        // Translucent plastic layer
+        background: `linear-gradient(
+          180deg, 
+          rgba(255,255,255,${0.15 * glowIntensity}) 0%, 
+          rgba(255,255,255,${0.05 * glowIntensity}) 50%,
+          rgba(0,0,0,0.1) 100%
+        )`,
+        // Glow effect underneath
+        boxShadow: `
+          inset 0 1px 0 rgba(255,255,255,${0.3 * glowIntensity}),
+          inset 0 -1px 0 rgba(0,0,0,0.2),
+          0 0 ${isPressed ? 15 : 10}px ${isPressed ? 8 : 5}px ${glowColor}${Math.round(glowIntensity * (isPressed ? 200 : 150)).toString(16).padStart(2, '0')},
+          0 ${isPressed ? 2 : 4}px ${isPressed ? 8 : 12}px ${glowColor}${Math.round(glowIntensity * 100).toString(16).padStart(2, '0')}
+        `,
+        transform: isPressed ? 'translateY(1px)' : 'none',
+        transition: 'all 0.1s ease',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        color: textColor,
+        fontSize,
+        fontWeight: 'bold',
+        textShadow: glowIntensity > 0.5 ? `0 0 4px ${glowColor}` : 'none',
+      }}
+    >
+      {/* Inner glow layer */}
+      <div style={{
+        position: 'absolute',
+        inset: '2px',
+        borderRadius: '3px',
+        background: `radial-gradient(ellipse at center bottom, ${glowColor}${Math.round(glowIntensity * 60).toString(16).padStart(2, '0')} 0%, transparent 70%)`,
+        pointerEvents: 'none',
+      }} />
+      {/* Content */}
+      <span style={{ position: 'relative', zIndex: 1 }}>{children}</span>
+    </button>
+  );
+}
+
+// DTMF Tone Generator using Web Audio API
+const DTMF_FREQUENCIES: { [key: string]: [number, number] } = {
+  '1': [697, 1209], '2': [697, 1336], '3': [697, 1477],
+  '4': [770, 1209], '5': [770, 1336], '6': [770, 1477],
+  '7': [852, 1209], '8': [852, 1336], '9': [852, 1477],
+  '*': [941, 1209], '0': [941, 1336], '#': [941, 1477],
+};
+
+let audioContext: AudioContext | null = null;
+
+function playDTMFTone(key: string, duration: number = 100) {
+  const frequencies = DTMF_FREQUENCIES[key];
+  if (!frequencies) return;
+
+  // Create or reuse AudioContext
+  if (!audioContext) {
+    audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
+  }
+
+  const [lowFreq, highFreq] = frequencies;
+  const now = audioContext.currentTime;
+  const endTime = now + duration / 1000;
+
+  // Create oscillators for the two frequencies
+  const osc1 = audioContext.createOscillator();
+  const osc2 = audioContext.createOscillator();
+  const gainNode = audioContext.createGain();
+
+  osc1.type = 'sine';
+  osc2.type = 'sine';
+  osc1.frequency.value = lowFreq;
+  osc2.frequency.value = highFreq;
+
+  // Set volume (DTMF is typically mixed at equal levels)
+  gainNode.gain.setValueAtTime(0.15, now);
+  gainNode.gain.exponentialRampToValueAtTime(0.01, endTime);
+
+  // Connect the oscillators through the gain node to output
+  osc1.connect(gainNode);
+  osc2.connect(gainNode);
+  gainNode.connect(audioContext.destination);
+
+  // Start and stop the tones
+  osc1.start(now);
+  osc2.start(now);
+  osc1.stop(endTime);
+  osc2.stop(endTime);
+}
+
+// VIK Call States (expanded per TI 6690.17A)
+type VikCallState = 'idle' | 'ready' | 'dialing' | 'ringing' | 'active' | 'busy' | 'released' | 'timeout' | 'denied' | 'held';
+
+// VIK Messages per TI 6690.17A Table A-2
+const VIK_MESSAGES = {
+  // Status messages
+  READY: 'READY',
+  CALL_ACTIVE: 'CALL ACTIVE',
+  CALL_RINGING: 'CALL RINGING',
+  CALL_RELEASED: 'CALL RELEASED',
+  DIALING_COMPLETE: 'DIALING COMPLETE',
+  
+  // Call type prompts
+  IC_CALL: 'IC CALL #',
+  IP_CALL: 'IP CALL #',
+  OVR_CALL: 'OVR CALL #',
+  MEET_ME_CALL: 'MEET-ME CALL #',
+  DIAL_CODE: 'DIAL CODE #',
+  SPEED_DIAL: 'SPEED DIAL #',
+  
+  // Conference messages
+  MEET_ME_CONF: 'MEET-ME CONF',
+  PROG_CONF_MEM: 'PROG CONF MEM#',
+  MEMBER_ADDED: 'MEMBER ADDED',
+  CONF_LIMIT: 'CONF LIMIT',
+  CONF_ON_HOLD: 'CONF ON HOLD',
+  CONF_MEM_RLSD: 'CONF MEM RLSD',
+  RLS_CONF_MEM: 'RLS CONF MEM#',
+  
+  // Error/Warning messages
+  INVALID_CODE: 'INVALID CODE',
+  INVALID_NUMBER: 'INVALID NUMBER',
+  INVALID_INDEX: 'INVALID INDEX #',
+  BUSY: 'BUSY',
+  RING_TIME_OUT: 'RING TIME OUT',
+  CALL_DENIED: 'CALL DENIED',
+  NOT_ALLOWED: 'NOT ALLOWED',
+  NOT_CLASSMARKED: 'NOT CLASSMARKED',
+  FUNCTION_DENIED: 'FUNCTION DENIED',
+  OUT_OF_SERVICE: 'OUT OF SERVICE',
+  KEY_UNDEFINED: 'KEY UNDEFINED',
+  LOOP_CLOSURE: 'LOOP CLOSURE',
+  RELEASE_DENIED: 'RELEASE DENIED',
+  
+  // Already status messages
+  ALREADY_ACTIVE: 'ALREADY ACTIVE',
+  ALREADY_DSBLD: 'ALREADY DSBLD',
+  ALREADY_ENABLED: 'ALREADY ENABLED',
+  
+  // Override messages
+  OVR_LIMIT: 'OVR LIMIT',
+  
+  // Call Forward messages
+  CALL_FWD_PSN: 'CALL FWD PSN #',
+  CALL_FWD_DENIED: 'CALL FWD DENIED',
+  CALL_FWD_DSBLD: 'CALL FWD DSBLD',
+  CALLS_FWD_TO: 'CALLS FWD TO',
+  PSN_CFWD_DSBLD: 'PSN CFWD DSBLD',
+  DISABLE_PSN: 'DISABLE PSN #',
+  DISABLE_DENIED: 'DISABLE DENIED',
+  
+  // Call movement messages
+  CALL_MOVD_TO_CA: 'CALL MOVD TO CA',
+  CALL_MOVED_GG1: 'CALL MOVED GG1',
+  CALL_MOVED_GG2: 'CALL MOVED GG2',
+  
+  // Voice Monitor messages
+  VOICE_MON_PSN: 'VOICE MON PSN #',
+  VOICE_MON_INDX: 'VOICE MON INDX #',
+  VOICE_MON_LIMIT: 'VOICE MON LIMIT',
+  VMON_MEM_RLSD: 'VMON MEM RLSD',
+  MOVED_TO_INDEX: 'MOVED TO INDEX',
+  
+  // Observation messages
+  OBSERVE_PSN: 'OBSERVE PSN #',
+  OBSERVING_PSN: 'OBSERVING PSN #',
+  OBS_SUSPENDED: 'OBS SUSPENDED',
+  OBS_TERMINATED: 'OBS TERMINATED',
+  
+  // Key click messages
+  KEY_CLICK_ON: 'KEY CLICK ON',
+  KEY_CLICK_OFF: 'KEY CLICK OFF',
+  
+  // Display messages
+  DISPLAY_EXCHNG: 'DISPLAY EXCHNG',
+  
+  // Split mode
+  SPLIT_DENIED: 'SPLIT DENIED',
+  
+  // Pending/Processing
+  PENDING_SWITCH: 'PENDING SWITCH',
+  RLS_IS_PENDING: 'RLS IS PENDING',
+  
+  // Test messages
+  PRESS_A_KEY: 'PRESS A KEY',
+} as const;
+
+// Line type constants matching position.json format
+const LINE_TYPE_OVERRIDE = 0;
+const LINE_TYPE_RING = 1;
+const LINE_TYPE_SHOUT = 2;
+
+// Helper function to find a line ID from position data by dial code
+// For override calls: dialCode like "14" matches description "D-14" with lineType 0
+// Returns the line ID (first element of the line array) or null if not found
+function findLineIdByDialCode(
+  positionData: any,
+  selectedPosition: any,
+  dialCode: string,
+  lineType: number
+): string | null {
+  if (!positionData || !selectedPosition) {
+    console.log('VIK: No position data available');
+    return null;
+  }
+  
+  // Get the current position's callsign to find its lines
+  const posCallsign = selectedPosition.cs;
+  
+  // Search through all positions in the facility to find the matching one
+  const searchPositions = (positions: any[]): any => {
+    for (const pos of positions) {
+      if (pos.cs === posCallsign) {
+        return pos;
+      }
+    }
+    return null;
+  };
+  
+  // Search in root positions array
+  let currentPos = null;
+  if (positionData.positions && Array.isArray(positionData.positions)) {
+    currentPos = searchPositions(positionData.positions);
+  }
+  
+  // If not found in root, search in child facilities
+  if (!currentPos && positionData.childFacilities) {
+    for (const child of positionData.childFacilities) {
+      if (child.positions && Array.isArray(child.positions)) {
+        currentPos = searchPositions(child.positions);
+        if (currentPos) break;
+      }
+    }
+  }
+  
+  if (!currentPos || !currentPos.lines) {
+    console.log('VIK: Position not found or has no lines:', posCallsign);
+    return null;
+  }
+  
+  // Search for matching line by type and dial code
+  // Line format: [id, lineType, description]
+  // For override, description is like "D-14", "D-16", "R-10", etc.
+  for (const line of currentPos.lines) {
+    if (!Array.isArray(line) || line.length < 3) continue;
+    
+    const [lineId, type, description] = line;
+    
+    // Check if line type matches
+    if (type !== lineType) continue;
+    
+    // Extract the sector number from description
+    // Handle formats like "D-14", "R-10", "D-62", or just numbers
+    const descStr = String(description);
+    
+    // Try to extract just the number from descriptions like "D-14", "R-10", etc.
+    // Match pattern: optional prefix (letters/symbols), optional separator (dash/space), then digits
+    const match = descStr.match(/^[A-Za-z]*[-\s]?(\d+)$/);
+    if (match && match[1] === dialCode) {
+      console.log(`VIK: Found line match - ID: ${lineId}, Desc: ${description}, dialCode: ${dialCode}`);
+      return String(lineId);
+    }
+    
+    // Also check if description directly matches the dial code
+    if (descStr === dialCode) {
+      console.log(`VIK: Found direct match - ID: ${lineId}, Desc: ${description}`);
+      return String(lineId);
+    }
+    
+    // Also try extracting any number from the description for more flexibility
+    const numMatch = descStr.match(/(\d+)/);
+    if (numMatch && numMatch[1] === dialCode) {
+      console.log(`VIK: Found number match - ID: ${lineId}, Desc: ${description}, dialCode: ${dialCode}`);
+      return String(lineId);
+    }
+  }
+  
+  console.log(`VIK: No matching line found for dialCode: ${dialCode}, lineType: ${lineType}`);
+  return null;
+}
+
+// Helper to get available override positions for the current position
+function getAvailableOverridePositions(positionData: any, selectedPosition: any): Array<{ id: string; description: string; sectorNum: string }> {
+  const overrides: Array<{ id: string; description: string; sectorNum: string }> = [];
+  
+  if (!positionData || !selectedPosition) return overrides;
+  
+  const posCallsign = selectedPosition.cs;
+  
+  // Find current position
+  const searchPositions = (positions: any[]): any => {
+    for (const pos of positions) {
+      if (pos.cs === posCallsign) return pos;
+    }
+    return null;
+  };
+  
+  let currentPos = null;
+  if (positionData.positions && Array.isArray(positionData.positions)) {
+    currentPos = searchPositions(positionData.positions);
+  }
+  
+  if (!currentPos && positionData.childFacilities) {
+    for (const child of positionData.childFacilities) {
+      if (child.positions && Array.isArray(child.positions)) {
+        currentPos = searchPositions(child.positions);
+        if (currentPos) break;
+      }
+    }
+  }
+  
+  if (!currentPos || !currentPos.lines) return overrides;
+  
+  // Extract all override lines (lineType 0)
+  for (const line of currentPos.lines) {
+    if (!Array.isArray(line) || line.length < 3) continue;
+    
+    const [lineId, type, description] = line;
+    if (type !== LINE_TYPE_OVERRIDE) continue;
+    
+    const descStr = String(description);
+    const match = descStr.match(/^[A-Z]?-?(\d+)$/i);
+    const sectorNum = match?.[1] ?? descStr;
+    
+    overrides.push({
+      id: String(lineId),
+      description: descStr,
+      sectorNum
+    });
+  }
+  
+  return overrides;
+}
+
+// VIK Keypad Component - overlays on VIK.svg
+function VikKeypad() {
+  const [displayLine1, setDisplayLine1] = useState('');
+  const [displayLine2, setDisplayLine2] = useState('');
+  const [dialBuffer, setDialBuffer] = useState('');
+  const [callState, setCallState] = useState<VikCallState>('idle');
+  const [dispBrightness, setDispBrightness] = useState(100);
+  const [keyBrightness, setKeyBrightness] = useState(100);
+  const [keysIlluminated, setKeysIlluminated] = useState(false);
+  const [activeLineId, setActiveLineId] = useState<string | null>(null); // Track the active line ID for release
+  const [showBrightnessScale, setShowBrightnessScale] = useState<'disp' | 'key' | null>(null); // Show brightness scale in display
+  
+  const sendMsg = useCoreStore((s: any) => s.sendMessageNow);
+  const positionData = useCoreStore((s: any) => s.positionData);
+  const selectedPositions = useCoreStore((s: any) => s.selectedPositions);
+  const gg_status = useCoreStore((s: any) => s.gg_status);
+  
+  // Get current selected position
+  const currentPosition = selectedPositions && selectedPositions.length > 0 ? selectedPositions[0] : null;
+
+  // Determine call type prompt based on first digit (per TI 6690.17A Table A-2)
+  const getCallTypePrompt = (firstDigit: string): string => {
+    switch (firstDigit) {
+      case '0': return VIK_MESSAGES.IC_CALL;       // Intercom call within facility
+      case '1': return VIK_MESSAGES.DIAL_CODE;    // PABX - external phone network
+      case '3': return VIK_MESSAGES.MEET_ME_CALL; // Meet-Me conference
+      case '4': return VIK_MESSAGES.IP_CALL;      // Interphone call to other facility
+      case '5': return VIK_MESSAGES.OVR_CALL;     // Override - Tracker position
+      case '6': return VIK_MESSAGES.OVR_CALL;     // Override - Assistant position
+      case '7': return VIK_MESSAGES.OVR_CALL;     // Override - Data position
+      case '8': return VIK_MESSAGES.OVR_CALL;     // Override - Radar position
+      case '9': return VIK_MESSAGES.OVR_CALL;     // Override - Coordinator position
+      case '2': return VIK_MESSAGES.OVR_CALL;     // Override - Non-ATC position
+      case '*': return VIK_MESSAGES.SPEED_DIAL;   // Speed dial function
+      default: return VIK_MESSAGES.DIAL_CODE;
+    }
+  };
+
+  // Check if the dial buffer is complete and should auto-initiate the call
+  // Returns true if call should be auto-initiated based on dial code format (Table 6-2)
+  const shouldAutoInitiate = (buffer: string): boolean => {
+    if (buffer.length < 2) return false;
+    
+    const firstDigit = buffer[0];
+    const targetCode = buffer.substring(1);
+    
+    // Override calls (5,6,7,8,9,2): ss(s) format - 2-3 digits for sector
+    // Auto-initiate when we have a valid line match
+    if (['5', '6', '7', '8', '9', '2'].includes(firstDigit || '')) {
+      // Try to find matching line - if found, auto-initiate
+      const lineId = findLineIdByDialCode(positionData, currentPosition, targetCode, LINE_TYPE_OVERRIDE);
+      if (lineId) return true;
+      // If 3 digits entered and no match, also trigger (will show INVALID CODE)
+      if (targetCode.length >= 3) return true;
+    }
+    
+    // IC calls (0): Check for line match
+    if (firstDigit === '0' && targetCode.length >= 2) {
+      const lineId = findLineIdByDialCode(positionData, currentPosition, targetCode, LINE_TYPE_RING);
+      if (lineId) return true;
+      if (targetCode.length >= 3) return true;
+    }
+    
+    // IP calls (4): ddd format - 3 digits
+    if (firstDigit === '4' && targetCode.length >= 3) {
+      return true;
+    }
+    
+    // Meet-Me (3): ddd format - 3 digits
+    if (firstDigit === '3' && targetCode.length >= 3) {
+      return true;
+    }
+    
+    // PABX (1): Variable length - need # to confirm, don't auto-initiate
+    
+    return false;
+  };
+
+  // Initiate call with current dial buffer (extracted for reuse)
+  const initiateCall = () => {
+    if (dialBuffer.length < 2) return;
+    
+    console.log('VIK: Initiating call to:', dialBuffer);
+    
+    const firstDigit = dialBuffer[0] || '';
+    const targetCode = dialBuffer.substring(1);
+    
+    // Ring timeout timer ID for cleanup
+    let ringTimeoutId: ReturnType<typeof setTimeout> | null = null;
+    
+    // Helper to set up call with ring timeout handling
+    const initiateCallWithTimeout = (lineId: string, displayText: string, dbl1: number) => {
+      setDisplayLine1(VIK_MESSAGES.CALL_RINGING);
+      setDisplayLine2(displayText);
+      setActiveLineId(lineId);
+      sendMsg({ type: 'call', cmd1: lineId, dbl1 });
+      setCallState('ringing');
+      setKeysIlluminated(false); // Keys no longer illuminated during call
+      
+      // Set up ring timeout (30 seconds per typical VSCS behavior)
+      ringTimeoutId = setTimeout(() => {
+        setCallState(currentState => {
+          if (currentState === 'ringing') {
+            setDisplayLine1(VIK_MESSAGES.RING_TIME_OUT);
+            setDisplayLine2('');
+            setTimeout(() => {
+              setDisplayLine1('');
+              setDisplayLine2('');
+              setDialBuffer('');
+              setActiveLineId(null);
+              setCallState('idle');
+            }, 3000);
+            return 'timeout';
+          }
+          return currentState;
+        });
+      }, 30000);
+      
+      // Simulate call connecting (2 seconds for demo)
+      setTimeout(() => {
+        setCallState(currentState => {
+          if (currentState === 'ringing') {
+            if (ringTimeoutId) clearTimeout(ringTimeoutId);
+            setDisplayLine1(VIK_MESSAGES.CALL_ACTIVE);
+            return 'active';
+          }
+          return currentState;
+        });
+      }, 2000);
+    };
+    
+    if (['5', '6', '7', '8', '9', '2'].includes(firstDigit)) {
+      // Override call
+      const lineId = findLineIdByDialCode(positionData, currentPosition, targetCode, LINE_TYPE_OVERRIDE);
+      
+      if (lineId) {
+        initiateCallWithTimeout(lineId, `D-${targetCode}`, 0);
+      } else {
+        console.log('VIK: Override line not found for code:', targetCode);
+        setDisplayLine1(VIK_MESSAGES.INVALID_CODE);
+        setDisplayLine2(dialBuffer);
+        setTimeout(() => {
+          setDisplayLine1('');
+          setDisplayLine2('');
+          setDialBuffer('');
+          setCallState('idle');
+          setKeysIlluminated(false);
+        }, 2000);
+      }
+    } else if (firstDigit === '0') {
+      // IC call
+      const lineId = findLineIdByDialCode(positionData, currentPosition, targetCode, LINE_TYPE_RING);
+      
+      if (lineId) {
+        initiateCallWithTimeout(lineId, dialBuffer, 1);
+      } else {
+        setDisplayLine1(VIK_MESSAGES.INVALID_CODE);
+        setDisplayLine2(dialBuffer);
+        setTimeout(() => {
+          setDisplayLine1('');
+          setDisplayLine2('');
+          setDialBuffer('');
+          setCallState('idle');
+          setKeysIlluminated(false);
+        }, 2000);
+      }
+    } else if (firstDigit === '4') {
+      // IP call
+      const lineId = findLineIdByDialCode(positionData, currentPosition, targetCode, LINE_TYPE_RING);
+      
+      if (lineId) {
+        initiateCallWithTimeout(lineId, dialBuffer, 1);
+      } else {
+        setDisplayLine1(VIK_MESSAGES.INVALID_CODE);
+        setDisplayLine2(dialBuffer);
+        setTimeout(() => {
+          setDisplayLine1('');
+          setDisplayLine2('');
+          setDialBuffer('');
+          setCallState('idle');
+          setKeysIlluminated(false);
+        }, 2000);
+      }
+    } else if (firstDigit === '1') {
+      // PABX call
+      setDisplayLine1(VIK_MESSAGES.DIALING_COMPLETE);
+      setDisplayLine2(dialBuffer);
+      setActiveLineId(targetCode);
+      sendMsg({ type: 'call', cmd1: targetCode, dbl1: 2 });
+      setCallState('ringing');
+      setKeysIlluminated(false);
+      
+      setTimeout(() => {
+        setCallState(currentState => {
+          if (currentState === 'ringing') {
+            setDisplayLine1(VIK_MESSAGES.CALL_ACTIVE);
+            return 'active';
+          }
+          return currentState;
+        });
+      }, 2000);
+    } else if (firstDigit === '3') {
+      // Meet-Me conference
+      setDisplayLine1(VIK_MESSAGES.CALL_RINGING);
+      setDisplayLine2(dialBuffer);
+      setActiveLineId(targetCode);
+      sendMsg({ type: 'call', cmd1: targetCode, dbl1: 3 });
+      setCallState('ringing');
+      setKeysIlluminated(false);
+      
+      setTimeout(() => {
+        setCallState(currentState => {
+          if (currentState === 'ringing') {
+            setDisplayLine1(VIK_MESSAGES.MEET_ME_CONF);
+            return 'active';
+          }
+          return currentState;
+        });
+      }, 2000);
+    } else {
+      // Generic call fallback
+      setDisplayLine1(VIK_MESSAGES.CALL_RINGING);
+      setDisplayLine2(dialBuffer);
+      setActiveLineId(dialBuffer);
+      sendMsg({ type: 'call', cmd1: dialBuffer, dbl1: 2 });
+      setCallState('ringing');
+      setKeysIlluminated(false);
+      
+      setTimeout(() => {
+        setCallState(currentState => {
+          if (currentState === 'ringing') {
+            setDisplayLine1(VIK_MESSAGES.CALL_ACTIVE);
+            return 'active';
+          }
+          return currentState;
+        });
+      }, 2000);
+    }
+  };
+
+  const handleNumberPress = (num: string) => {
+    if (callState === 'idle') {
+      // Must press INIT first
+      return;
+    }
+    
+    if (callState === 'ready' || callState === 'dialing') {
+      // Play DTMF tone for the pressed key
+      playDTMFTone(num);
+      
+      const newBuffer = dialBuffer + num;
+      setDialBuffer(newBuffer);
+      
+      if (dialBuffer.length === 0) {
+        // First digit entered - show call type prompt
+        const prompt = getCallTypePrompt(num);
+        setDisplayLine1(prompt);
+        setDisplayLine2(num);
+        setCallState('dialing');
+      } else {
+        // Subsequent digits
+        setDisplayLine2(newBuffer);
+      }
+      
+      // Check if we should auto-initiate the call
+      // Use setTimeout to allow state to update first
+      setTimeout(() => {
+        if (shouldAutoInitiate(newBuffer)) {
+          initiateCall();
+        }
+      }, 100);
+    }
+  };
+
+  const handleBackspace = () => {
+    if (!keysIlluminated) return;
+    
+    if (dialBuffer.length > 0) {
+      const newBuffer = dialBuffer.slice(0, -1);
+      setDialBuffer(newBuffer);
+      
+      if (newBuffer.length === 0) {
+        setDisplayLine1(VIK_MESSAGES.READY);
+        setDisplayLine2('');
+        setCallState('ready');
+      } else if (newBuffer.length === 1 && newBuffer[0]) {
+        const prompt = getCallTypePrompt(newBuffer[0]);
+        setDisplayLine1(prompt);
+        setDisplayLine2(newBuffer);
+      } else {
+        setDisplayLine2(newBuffer);
+      }
+    }
+  };
+
+  const handleInit = () => {
+    console.log('VIK handleInit called - callState:', callState, 'dialBuffer:', dialBuffer);
+    
+    if (callState === 'idle') {
+      // Enter ready state - per manual: "READY is displayed on VIK. Numeric matrix and backspace key illuminate."
+      setDisplayLine1(VIK_MESSAGES.READY);
+      setDisplayLine2('');
+      setDialBuffer('');
+      setCallState('ready');
+      setKeysIlluminated(true);
+    } else if (callState === 'active') {
+      // Per Table 3-4: "If call active, displays READY but does not release call."
+      setDisplayLine1(VIK_MESSAGES.READY);
+      // Keep the call active, don't release
+    } else if (callState === 'dialing' && dialBuffer.length >= 2) {
+      // Manual initiation for PABX calls that need # or explicit INIT
+      // Most calls auto-initiate, but PABX (1xxx) requires explicit confirmation
+      const firstDigit = dialBuffer[0] || '';
+      if (firstDigit === '1') {
+        // PABX call - initiate on INIT press
+        initiateCall();
+      }
+      // Other call types auto-initiate when digits complete, INIT does nothing extra
+    } else if (callState === 'ready') {
+      // Already in ready state, INIT does nothing
+    }
+  };
+
+  const handleRelease = () => {
+    if (callState === 'active' || callState === 'ringing') {
+      // Release active call using the stored line ID
+      console.log('VIK: Releasing call, lineId:', activeLineId);
+      
+      if (activeLineId) {
+        // Determine the correct dbl1 based on the call type (first digit of dialBuffer)
+        const firstDigit = dialBuffer[0] || '';
+        let dbl1 = 2; // Default
+        let isShoutOverride = false;
+        if (['5', '6', '7', '8', '9', '2'].includes(firstDigit)) {
+          dbl1 = 1; // Override (SO lines use dbl1: 1)
+          isShoutOverride = true;
+        } else if (firstDigit === '0' || firstDigit === '4') {
+          dbl1 = 2; // IC/IP ring
+        }
+        
+        // Search gg_status to find the actual call_id to use for release
+        // The VIK stores the line ID (e.g., "1010007") but we need to find 
+        // the corresponding call_id format that WebSocket expects
+        let call_id = activeLineId;
+        
+        // Find active call in gg_status that matches our line ID
+        const activeCall = (gg_status || []).find((call: any) => {
+          if (!call || !call.call) return false;
+          const fullCall = call.call;
+          // Check if this call's ID matches our activeLineId
+          // SO_ format: "SO_1010007" -> "1010007"
+          // gg_ format: "gg_05_1010007" -> "1010007"
+          if (fullCall.startsWith('SO_')) {
+            return fullCall.substring(3) === activeLineId;
+          } else if (fullCall.startsWith('gg_')) {
+            return fullCall.substring(6) === activeLineId;
+          }
+          // Also check direct substring match
+          return fullCall.includes(activeLineId);
+        });
+        
+        if (activeCall) {
+          const fullCall = activeCall.call;
+          // Extract call_id the same way testFunc does
+          if (fullCall?.startsWith('SO_')) {
+            call_id = fullCall.substring(3);
+            isShoutOverride = true;
+          } else if (fullCall?.startsWith('gg_')) {
+            call_id = fullCall.substring(6);
+          } else {
+            call_id = fullCall?.substring(5) || activeLineId;
+          }
+          console.log('VIK: Found active call in gg_status:', fullCall, '-> call_id:', call_id);
+        } else {
+          console.log('VIK: No matching call found in gg_status, using activeLineId:', activeLineId);
+        }
+        
+        console.log('VIK: Sending stop command, call_id:', call_id, 'dbl1:', isShoutOverride ? 1 : dbl1);
+        sendMsg({ type: 'stop', cmd1: call_id, dbl1: isShoutOverride ? 1 : dbl1 });
+      }
+      
+      setDisplayLine1(VIK_MESSAGES.CALL_RELEASED);
+      setDisplayLine2('');
+      setCallState('released');
+      
+      // Clear after 3 seconds per manual
+      setTimeout(() => {
+        setDisplayLine1('');
+        setDisplayLine2('');
+        setDialBuffer('');
+        setActiveLineId(null);
+        setCallState('idle');
+        setKeysIlluminated(false);
+      }, 3000);
+    } else if (callState === 'ready' || callState === 'dialing') {
+      // Cancel dial mode
+      setDisplayLine1('');
+      setDisplayLine2('');
+      setDialBuffer('');
+      setActiveLineId(null);
+      setCallState('idle');
+      setKeysIlluminated(false);
+    } else if (callState === 'timeout' || callState === 'busy' || callState === 'denied') {
+      // Clear error states
+      setDisplayLine1('');
+      setDisplayLine2('');
+      setDialBuffer('');
+      setActiveLineId(null);
+      setCallState('idle');
+      setKeysIlluminated(false);
+    }
+  };
+
+  // Handle BUSY response from WebSocket (can be called externally when position is busy)
+  const handleBusy = () => {
+    if (callState === 'ringing') {
+      setDisplayLine1(VIK_MESSAGES.BUSY);
+      setDisplayLine2('');
+      setCallState('busy');
+      
+      // Return to ready after 3 seconds
+      setTimeout(() => {
+        setDisplayLine1(VIK_MESSAGES.READY);
+        setDisplayLine2('');
+        setActiveLineId(null);
+        setCallState('ready');
+      }, 3000);
+    }
+  };
+
+  // Handle ALREADY ACTIVE error
+  const handleAlreadyActive = () => {
+    setDisplayLine1(VIK_MESSAGES.ALREADY_ACTIVE);
+    setDisplayLine2('');
+    
+    setTimeout(() => {
+      setDisplayLine1(VIK_MESSAGES.READY);
+      setDisplayLine2('');
+      setCallState('ready');
+    }, 2000);
+  };
+
+  const handleStarUp = () => {
+    // *↑ typically used for volume or special functions
+    if (keysIlluminated) {
+      handleNumberPress('*');
+    }
+  };
+
+  const handleHashDown = () => {
+    // #↓ often used to confirm/send dial string (like PABX calls)
+    if (keysIlluminated && callState === 'dialing' && dialBuffer.length >= 2) {
+      // For PABX calls, # confirms the number
+      if (dialBuffer[0] === '1') {
+        handleInit(); // Same as pressing INIT to confirm
+      } else {
+        handleNumberPress('#');
+      }
+    }
+  };
+
+  // Pad display lines for rendering - show brightness scale in lower right corner when adjusting
+  let line1Padded = displayLine1.padEnd(14, ' ');
+  let line2Padded = displayLine2.padEnd(14, ' ');
+  
+  if (showBrightnessScale === 'disp') {
+    // Show DISP brightness scale (01-100) in lower right corner of line 2
+    const brightnessStr = String(dispBrightness).padStart(3, '0');
+    line2Padded = line2Padded.slice(0, 8.7) + brightnessStr;
+  } else if (showBrightnessScale === 'key') {
+    // Show KEY brightness scale (01-100) in lower right corner of line 2
+    const brightnessStr = String(keyBrightness).padStart(3, '0');
+    line2Padded = line2Padded.slice(0, 11) + brightnessStr;
+  }
+  
+  // Determine button brightness based on illumination state
+  // Per Table 3-4: Numeric matrix illuminated from behind when VIK is active
+  // Backspace illuminated when keypad is enabled for operator input
+  const numpadBrightness = keysIlluminated ? keyBrightness : 20;
+  const backspaceBrightness = keysIlluminated ? keyBrightness : 20;
+  // INIT and RLS are continuously illuminated per Table 3-4
+  const initRlsBrightness = 100;
+
+  return (
+    <div style={{ position: 'relative', width: '300px', height: '800px' }}>
+      {/* VIK.svg as background */}
+      <img 
+        src="/VIK.svg" 
+        alt="VIK" 
+        style={{ 
+          width: '300px', 
+          height: '800px',
+          position: 'absolute',
+          top: 0,
+          left: 0,
+        }} 
+      />
+      
+      {/* LCD Display overlay - no background, just the dot matrix characters */}
+      <div style={{
+        position: 'absolute',
+        top: '160px',
+        left: '30px',
+        width: '270px',
+        height: '85px',
+        padding: '8px 6px',
+        display: 'flex',
+        flexDirection: 'column',
+        justifyContent: 'center',
+        gap: '6px',
+        pointerEvents: 'none',
+      }}>
+        {/* Line 1 */}
+        <div style={{ display: 'flex', gap: '2px', justifyContent: 'center' }}>
+          {line1Padded.split('').map((char, i) => (
+            <DotMatrixChar key={i} char={char} color="#FFD700" brightness={dispBrightness} />
+          ))}
+        </div>
+        {/* Line 2 */}
+        <div style={{ display: 'flex', gap: '2px', justifyContent: 'center' }}>
+          {line2Padded.split('').map((char, i) => (
+            <DotMatrixChar key={i} char={char} color="#FFD700" brightness={dispBrightness} />
+          ))}
+        </div>
+      </div>
+
+      {/* Function buttons overlay: Back, INIT, RLS */}
+      <div style={{
+        position: 'absolute',
+        top: '255px',
+        left: '17px',
+        width: '259px',
+        display: 'flex',
+        gap: '27px',
+        justifyContent: 'center',
+      }}>
+        <GlowButton 
+          onClick={handleBackspace} 
+          glowColor="#C4A000" 
+          width="80px" 
+          height="70px"
+          brightness={backspaceBrightness}
+        >
+        </GlowButton>
+        <GlowButton 
+          onClick={handleInit} 
+          glowColor="#4CAF50" 
+          width="80px" 
+          height="70px"
+          brightness={initRlsBrightness}
+        >
+        </GlowButton>
+        <GlowButton 
+          onClick={handleRelease} 
+          glowColor="#F44336" 
+          width="80px" 
+          height="70px"
+          brightness={initRlsBrightness}
+        >
+        </GlowButton>
+      </div>
+
+      {/* Number pad */}
+      <div style={{
+        position: 'absolute',
+        top: '362px',
+        left: '20px',
+        display: 'grid',
+        gridTemplateColumns: 'repeat(3, 60px)',
+        gridTemplateRows: 'repeat(4, 60px)',
+        gap: '11px',
+      }}>
+        {['1', '2', '3', '4', '5', '6', '7', '8', '9', '*', '0', '#'].map((num, idx) => (
+          <GlowButton
+            key={`numpad-${idx}`}
+            onClick={() => {
+              if (num === '*') handleStarUp();
+              else if (num === '#') handleHashDown();
+              else handleNumberPress(num);
+            }}
+            glowColor="#888888"
+            brightness={numpadBrightness}
+          >
+          </GlowButton>
+        ))}
+      </div>
+
+      {/* DISP brightness control - spans rows 1-2 */}
+      <div style={{
+        position: 'absolute',
+        top: '362px',
+        left: '240px',
+        display: 'flex',
+        flexDirection: 'column',
+        gap: '0px',
+      }}>
+        <GlowButton
+          onClick={() => {
+            setDispBrightness(prev => Math.min(100, prev + 10));
+            setShowBrightnessScale('disp');
+            // Hide scale after 2 seconds
+            setTimeout(() => setShowBrightnessScale(null), 2000);
+          }}
+          glowColor="#FFB300"
+          width="40px"
+          height="58px"
+          brightness={100}
+        >
+        </GlowButton>
+        <GlowButton
+          onClick={() => {
+            setDispBrightness(prev => Math.max(1, prev - 10));
+            setShowBrightnessScale('disp');
+            setTimeout(() => setShowBrightnessScale(null), 2000);
+          }}
+          glowColor="#FFB300"
+          width="40px"
+          height="58px"
+          brightness={100}
+        >
+        </GlowButton>
+      </div>
+
+      {/* KEY brightness control - spans rows 3-4 */}
+      <div style={{
+        position: 'absolute',
+        top: '505px',
+        left: '240px',
+        display: 'flex',
+        flexDirection: 'column',
+        gap: '0px',
+      }}>
+        <GlowButton
+          onClick={() => {
+            setKeyBrightness(prev => Math.min(100, prev + 10));
+            setShowBrightnessScale('key');
+            setTimeout(() => setShowBrightnessScale(null), 2000);
+          }}
+          glowColor="#FFB300"
+          width="40px"
+          height="59px"
+          brightness={100}
+        >
+        </GlowButton>
+        <GlowButton
+          onClick={() => {
+            setKeyBrightness(prev => Math.max(1, prev - 10));
+            setShowBrightnessScale('key');
+            setTimeout(() => setShowBrightnessScale(null), 2000);
+          }}
+          glowColor="#FFB300"
+          width="40px"
+          height="59px"
+          brightness={100}
+        >
+        </GlowButton>
+      </div>
+    </div>
+  );
+}
+
 // Individual VSCS Panel Component
 function VscsPanel(props: VscsProps & { panelId?: string; defaultScreenMode?: string }) {
   const [page, setPage] = useState(1);
@@ -1202,9 +2315,9 @@ export default function VscsComponent(props: VscsProps) {
     <div className="flex items-center justify-center gap-4 bg-black p-4">
       {/* Left VSCS Panel - defaults to A/G1 */}
       <VscsPanel {...props} panelId="left" defaultScreenMode="AG1" />
-      {/* VIK SVG in the middle */}
+      {/* VIK Keypad in the middle */}
       <div className="flex-shrink-0">
-        <img src="/VIK.svg" alt="VIK" style={{ width: '300px', height: '800px' }} />
+        <VikKeypad />
       </div>
       {/* Right VSCS Panel - defaults to G/G1 */}
       <VscsPanel {...props} panelId="right" defaultScreenMode="GG1" />
