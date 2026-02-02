@@ -4966,26 +4966,26 @@
           "positions": [
             {
               "cs": "LAX_DEL",
-              "pos": "Clearance Delivery",
+              "pos": "CD",
               "freq": 120350000,
               "rn": "LAX",
-              "ui": "stvs",
+              "ui": "rdvs",
               "lines": [
-                ["8111006", 0, "Angeles"],
-                ["8111007", 0, "Angeles"]
+                ["8111006", 0, "LC"],
+                ["8111007", 0, "GC"]
               ]
             },
             {
               "cs": "LAX_H_TWR",
-              "pos": "Helicopters",
+              "pos": "HC",
               "freq": 119800000,
               "rn": "LAX",
-              "ui": "stvs",
+              "ui": "rdvs",
               "lines": [
-                ["3101236", 0, "South Lo"],
-                ["3101238", 0, "SDNR Lo"],
+                ["3101236", 0, "LC1"],
+                ["3101238", 0, "LC2"],
                 ["8111005", 0, "Angeles"],
-                ["8111006", 0, "Clearance"],
+                ["8111006", 0, "CD"],
                 ["3235000", 2, "SCT"],
                 ["9999", 3, "MULTI,DIAL"]
               ]
@@ -4995,85 +4995,85 @@
               "pos": "Metering",
               "freq": 132900000,
               "rn": "LAX",
-              "ui": "stvs",
+              "ui": "rdvs",
               "lines": [
-                ["3101239", 0, "South Gr"],
-                ["3101242", 0, "SDNR Gr"],
-                ["3101243", 0, "SDWR Gro"],
+                ["3101239", 0, "GC2"],
+                ["3101242", 0, "GC1"],
+                ["3101243", 0, "GC3"],
                 ["8111005", 0, "Angeles"],
-                ["8111007", 0, "Clearance"]
+                ["8111007", 0, "CD"]
               ]
             },
             {
               "cs": "LAX_N_GND",
-              "pos": "SDNR Ground",
+              "pos": "North Ground",
               "freq": 121650000,
               "rn": "LAX",
-              "ui": "stvs",
+              "ui": "rdvs",
               "lines": [
-                ["3101240", 0, "South Gr"],
+                ["3101240", 0, "GC2"],
                 ["3101242", 0, "Metering"],
-                ["3101244", 0, "SDWR Gro"],
+                ["3101244", 0, "GC3"],
                 ["8111005", 0, "Angeles"],
-                ["8111007", 0, "Clearance"]
+                ["8111007", 0, "CD"]
               ]
             },
             {
               "cs": "LAX_N_TWR",
-              "pos": "SDNR Local",
+              "pos": "LC2",
               "freq": 133900000,
               "rn": "LAX",
-              "ui": "stvs",
+              "ui": "rdvs",
               "lines": [
-                ["3101237", 0, "South Lo"],
-                ["3101238", 0, "Helicopt"],
+                ["3101237", 0, "LC1"],
+                ["3101238", 0, "HC"],
                 ["8111005", 0, "Angeles"],
-                ["8111006", 0, "Clearance"],
+                ["8111006", 0, "CD"],
                 ["3235000", 2, "SCT"],
                 ["9999", 3, "MULTI,DIAL"]
               ]
             },
             {
               "cs": "LAX_S_GND",
-              "pos": "South Ground",
+              "pos": "GC2",
               "freq": 121750000,
               "rn": "LAX",
-              "ui": "stvs",
+              "ui": "rdvs",
               "lines": [
                 ["3101239", 0, "Metering"],
-                ["3101240", 0, "SDNR Gr"],
-                ["3101241", 0, "SDWR Gro"],
+                ["3101240", 0, "GC1"],
+                ["3101241", 0, "GC3"],
                 ["8111005", 0, "Angeles"],
-                ["8111007", 0, "Clearance"]
+                ["8111007", 0, "CD"]
               ]
             },
             {
               "cs": "LAX_S_TWR",
-              "pos": "South Local",
+              "pos": "LC1",
               "freq": 120950000,
               "rn": "LAX",
-              "ui": "stvs",
+              "ui": "rdvs",
               "lines": [
-                ["3101236", 0, "Helicopt"],
-                ["3101237", 0, "SDNR Lo"],
+                ["3101236", 0, "HC"],
+                ["3101237", 0, "LC2"],
                 ["8111005", 0, "Angeles"],
-                ["8111006", 0, "Clearance"],
+                ["8111006", 0, "CD"],
                 ["3235000", 2, "SCT"],
                 ["9999", 3, "MULTI,DIAL"]
               ]
             },
             {
               "cs": "LAX_W_GND",
-              "pos": "SDWR Ground",
+              "pos": "GC3",
               "freq": 121400000,
               "rn": "LAX",
-              "ui": "stvs",
+              "ui": "rdvs",
               "lines": [
-                ["3101241", 0, "South Gr"],
+                ["3101241", 0, "GC2"],
                 ["3101243", 0, "Metering"],
-                ["3101244", 0, "SDNR Gr"],
+                ["3101244", 0, "GC1"],
                 ["8111005", 0, "Angeles"],
-                ["8111007", 0, "Clearance"]
+                ["8111007", 0, "CD"]
               ]
             }
           ],
@@ -5477,7 +5477,7 @@
             },
             {
               "cs": "POC_N_TWR",
-              "pos": "SDNR Local",
+              "pos": "North Local",
               "freq": 133300000,
               "rn": "POC",
               "ui": "stvs",
@@ -5496,7 +5496,7 @@
               "rn": "POC",
               "ui": "stvs",
               "lines": [
-                ["3101237", 0, "SDNR Lo"],
+                ["3101237", 0, "North Local"],
                 ["8111026", 0, "Brackett"],
                 ["8111027", 0, "Brackett"],
                 ["3235009", 2, "SCT"],
@@ -5796,7 +5796,7 @@
               "rn": "MYF",
               "ui": "stvs",
               "lines": [
-                ["8001250", 0, "SDNR Lo"],
+                ["8001250", 0, "North Local"],
                 ["8111043", 0, "Montgomery"],
                 ["8111044", 0, "Montgomery"],
                 ["3235018", 2, "SCT"],
@@ -5805,7 +5805,7 @@
             },
             {
               "cs": "MYF_N_TWR",
-              "pos": "SDNR Local",
+              "pos": "North Local",
               "freq": 125700000,
               "rn": "MYF",
               "ui": "stvs",
