@@ -475,7 +475,7 @@ export default function RDVSWrapper() {
                   const btn = groundToGroundButtons[q1Idx];
                   if (btn && isStandardButton(btn)) {
                     q1Buttons.push(
-                      <div key={btn.config.id} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
+                      <div key={`q1-btn-${row}-${col}`} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
                         <RdvsButtonComponent {...btn} />
                       </div>
                     );
@@ -532,7 +532,7 @@ export default function RDVSWrapper() {
               labelText = ag_status[atgIdx].call_name || ag_status[atgIdx].name || '';
             }
             return (
-              <div key={atgBtn.label + atgIdx} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
+              <div key={`atg-${atgIdx}`} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
                 {labelText && (
                   <div className="rdvs-label" style={{ color: '#00FFFF', fontSize: '14px', marginBottom: '2px' }}>{labelText}</div>
                 )}
@@ -563,7 +563,7 @@ export default function RDVSWrapper() {
                 
                 if (btn && isStandardButton(btn)) {
                   q3Buttons.push(
-                    <div key={btn.config.id} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
+                    <div key={`q3-btn-${row}-${col}`} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
                       <RdvsButtonComponent {...btn} />
                     </div>
                   );
@@ -599,7 +599,7 @@ export default function RDVSWrapper() {
                 
                 if (btn && isStandardButton(btn)) {
                   q4Buttons.push(
-                    <div key={btn.config.id} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', width: '70px' }}>
+                    <div key={`q4-btn-${row}-${col}`} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', width: '70px' }}>
                       <RdvsButtonComponent {...btn} />
                     </div>
                   );
