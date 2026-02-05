@@ -134,40 +134,37 @@ function parseLayoutString(variant: string): LayoutConfig | null {
   return { header, quadrants, footer, funcKeys };
 }
 
-// Layout: 10x8 grid total = 80 squares, divided into 4 quadrants (2x2 arrangement)
-// Each quadrant: 5 cols x 4 rows = 20 squares
-// Q1 = top-left (cols 0-4, rows 0-3), Q2 = top-right (cols 5-9, rows 0-3)
-// Q3 = bottom-left (cols 0-4, rows 4-7), Q4 = bottom-right (cols 5-9, rows 4-7)
+// Layout: 10x10 unified grid
+// Row 0: Header modules
+// Rows 1-8: Communication matrix (4 quadrants in 2x2 arrangement)
+// Row 9: Footer (empty for now)
+// Q1 = cols 0-4, rows 1-4 | Q2 = cols 5-9, rows 1-4
+// Q3 = cols 0-4, rows 5-8 | Q4 = cols 5-9, rows 5-8
 const GRID_COLS = 10;
-const GRID_ROWS = 8;
-const BUTTONS_PER_PAGE = 80; // 10 cols x 8 rows
+const GRID_ROWS = 10;
+const BUTTONS_PER_PAGE = 80; // Communication matrix: 10 cols x 8 rows
 
 // Container dimensions - 800x600 is the screen size
 const CONTAINER_WIDTH = 800;
 const CONTAINER_HEIGHT = 600;
 const PADDING = 10; // 10px padding on all sides
-const HEADER_HEIGHT = 60;
-const FOOTER_HEIGHT = 46;
 const GAP = 6;
 
-// Calculate available space after padding and header/footer
-// Available width: 800 - 2*10 = 780px for 2 quadrants + 1 gap
-// Available height: 600 - 2*10 (top/bottom padding) - header - footer = 600 - 20 - 60 - 46 = 474px for 2 quadrants + 1 gap
+// Calculate available space after padding (full 10x10 grid)
 const AVAILABLE_WIDTH = CONTAINER_WIDTH - (PADDING * 2); // 780px
-const AVAILABLE_HEIGHT = CONTAINER_HEIGHT - (PADDING * 2) - HEADER_HEIGHT - FOOTER_HEIGHT; // 474px
+const AVAILABLE_HEIGHT = CONTAINER_HEIGHT - (PADDING * 2); // 580px
 
-// Quadrant dimensions - each quadrant gets exactly half the available space minus gap
-const QUADRANT_WIDTH = (AVAILABLE_WIDTH - GAP) / 2; // 377px each
-const QUADRANT_HEIGHT = Math.floor((AVAILABLE_HEIGHT - GAP) / 2); // 230px each
+// Cell dimensions for unified 10x10 grid (10 cols with 9 gaps, 10 rows with 9 gaps)
+const CELL_WIDTH = Math.floor((AVAILABLE_WIDTH - 9 * GAP) / 10); // ~72px
+const CELL_HEIGHT = Math.floor((AVAILABLE_HEIGHT - 9 * GAP) / 10); // ~52px
 
-// Button dimensions calculated from quadrant size
-// 5 buttons + 4 gaps per quadrant width: (QUADRANT_WIDTH - 4*GAP) / 5
-// 4 buttons + 3 gaps per quadrant height: (QUADRANT_HEIGHT - 3*GAP) / 4
-const BTN_WIDTH = Math.floor((QUADRANT_WIDTH - 4 * GAP) / 5); // ~70px
-const BTN_HEIGHT = Math.floor((QUADRANT_HEIGHT - 3 * GAP) / 4); // ~53px
+// Handedness: 'left' (default) or 'right' - will be configurable via position JSON later
+const HANDEDNESS: 'left' | 'right' = 'left';
 
-// Line panel dimensions (same as button dimensions)
-const LINE_PANEL_HEIGHT = BTN_HEIGHT;
+// Legacy compatibility aliases
+const BTN_WIDTH = CELL_WIDTH;
+const BTN_HEIGHT = CELL_HEIGHT;
+const LINE_PANEL_HEIGHT = CELL_HEIGHT;
 
 // Color Palette per specification
 const COLORS = {
@@ -363,15 +360,23 @@ export default function RDVSWrapper({ variant = 'default' }: RDVSWrapperProps) {
           <rect x="0" y="0" width={w} height={h} fill={COLORS.BLACK} stroke={COLORS.BLACK} strokeWidth="1" />
           {/* HS row */}
           <rect x="4" y="4" width="30" height="18" fill="none" stroke={COLORS.GREEN} strokeWidth="1" />
-          <text x="19" y="17" textAnchor="middle" fill={COLORS.WHITE} fontSize="11" fontFamily="Consolas, monospace" fontWeight="100">HS</text>
+          <text x="19" y="17" textAnchor="middle" fill={COLORS.WHITE} fontSize="11" fontFamily="RDVSimulated, monospace" fontWeight="100">HS</text>
           <circle cx={circleX} cy="13" r="6" fill={COLORS.BLACK} stroke={COLORS.RED} strokeWidth="1" />
           {/* LS row */}
           <rect x="4" y={h - 22} width="30" height="18" fill="none" stroke={COLORS.GREEN} strokeWidth="1" />
-          <text x="19" y={h - 9} textAnchor="middle" fill={COLORS.WHITE} fontSize="11" fontFamily="Consolas, monospace" fontWeight="100">LS</text>
+          <text x="19" y={h - 9} textAnchor="middle" fill={COLORS.WHITE} fontSize="11" fontFamily="RDVSimulated, monospace" fontWeight="100">LS</text>
           <circle cx={circleX} cy={h - 13} r="6" fill={COLORS.BLACK} stroke={COLORS.RED} strokeWidth="1" />
         </svg>
       );
     }
+
+    // Same indicator positioning as DA buttons
+    const indicatorSize = 16;
+    const indicatorMargin = 2;
+    const indicatorY = h - indicatorSize - indicatorMargin;
+
+    // Single line text at Y=20 (same as single-line DA buttons)
+    const textY = 20;
 
     return (
       <svg
@@ -385,16 +390,17 @@ export default function RDVSWrapper({ variant = 'default' }: RDVSWrapperProps) {
         <rect x="0" y="0" width={w} height={h} fill={COLORS.GREY} stroke={COLORS.BLACK} strokeWidth="1" />
         <text
           x={w / 2}
-          y={h / 2 - 4}
+          y={textY}
           textAnchor="middle"
+          dominantBaseline="middle"
           fill={COLORS.WHITE}
-          fontSize="14"
-          fontFamily="Consolas, monospace"
+          fontSize="18"
+          fontFamily="RDVSimulated, monospace"
           fontWeight="100"
         >
           {label}
         </text>
-        <rect x={(w - 14) / 2} y={h - 18} width="14" height="14" fill={COLORS.BLACK} stroke={COLORS.CYAN} strokeWidth="1" />
+        <rect x={(w - indicatorSize) / 2} y={indicatorY} width={indicatorSize} height={indicatorSize} fill={COLORS.BLACK} stroke={COLORS.CYAN} strokeWidth="1" />
       </svg>
     );
   };
@@ -449,8 +455,28 @@ export default function RDVSWrapper({ variant = 'default' }: RDVSWrapperProps) {
     }
 
     const { typeLetter, line1, line2, indicatorState, lineType } = btn;
-    const bgColor = getButtonColor(lineType, typeLetter);
     const indicatorFill = indicatorState !== 'off' ? COLORS.GREEN : COLORS.BLACK;
+
+    // Override buttons: black background, red outline, cyan text
+    // Other buttons: colored background, black outline, white text
+    const isOverride = typeLetter === 'O' || lineType === 0;
+    const bgColor = isOverride ? COLORS.BLACK : getButtonColor(lineType, typeLetter);
+    const strokeColor = isOverride ? COLORS.RED : COLORS.BLACK;
+    const textColor = isOverride ? COLORS.CYAN : COLORS.WHITE;
+
+    // Format labels: line1 max 5 chars, line2 max 2 chars (centered)
+    const displayLine1 = (line1 || '').substring(0, 5);
+    const displayLine2 = (line2 || '').substring(0, 2);
+
+    // Indicator rect at bottom of button (with small margin)
+    const indicatorSize = 16;
+    const indicatorMargin = 2;
+    const indicatorY = h - indicatorSize - indicatorMargin;
+
+    // Fixed Y positions for text
+    const hasLine2 = !!displayLine2;
+    const line1Y = hasLine2 ? 13 : 20; // Single line: Y=20, Double line 1: Y=13
+    const line2Y = 28; // Double line 2: Y=28
 
     return (
       <svg
@@ -461,40 +487,42 @@ export default function RDVSWrapper({ variant = 'default' }: RDVSWrapperProps) {
         style={{ cursor: 'pointer' }}
         onClick={() => handleLineClick(btn)}
       >
-        <rect x="0" y="0" width={w} height={h} fill={bgColor} stroke={COLORS.BLACK} strokeWidth="1" />
+        <rect x="0" y="0" width={w} height={h} fill={bgColor} stroke={strokeColor} strokeWidth="1" />
         <text
           x={w / 2}
-          y={16}
-          textAnchor="middle"
-          fill={COLORS.WHITE}
-          fontSize="14"
-          fontFamily="Consolas, monospace"
-          fontWeight="bold"
-        >
-          {line1}
-        </text>
-        {line2 && (
-          <text
-            x={w / 2}
-            y={30}
-            textAnchor="middle"
-            fill={COLORS.WHITE}
-            fontSize="14"
-            fontFamily="Consolas, monospace"
-            fontWeight="bold"
-          >
-            {line2}
-          </text>
-        )}
-        <rect x={(w - 16) / 2} y={h - 21} width="16" height="16" fill={indicatorFill} stroke={COLORS.WHITE} strokeWidth="1" />
-        <text
-          x={w / 2}
-          y={h - 21 + 8}
+          y={line1Y}
           textAnchor="middle"
           dominantBaseline="middle"
+          fill={textColor}
+          fontSize="18"
+          fontFamily="RDVSimulated, monospace"
+          fontWeight="100"
+        >
+          {displayLine1}
+        </text>
+        {displayLine2 && (
+          <text
+            x={w / 2}
+            y={line2Y}
+            textAnchor="middle"
+            dominantBaseline="middle"
+            fill={textColor}
+            fontSize="18"
+            fontFamily="RDVSimulated, monospace"
+            fontWeight="100"
+          >
+            {displayLine2}
+          </text>
+        )}
+        <rect x={(w - indicatorSize) / 2} y={indicatorY} width={indicatorSize} height={indicatorSize} fill={indicatorFill} stroke={textColor} strokeWidth="1" />
+        <text
+          x={w / 2}
+          y={indicatorY + indicatorSize - 2}
+          textAnchor="middle"
+          dominantBaseline="auto"
           fill={COLORS.WHITE}
-          fontSize="10"
-          fontFamily="Consolas, monospace"
+          fontSize="12"
+          fontFamily="RDVSimulated, monospace"
           fontWeight="100"
         >
           {typeLetter}
@@ -530,8 +558,8 @@ export default function RDVSWrapper({ variant = 'default' }: RDVSWrapperProps) {
         {/* Cell 1: HS/LS Section */}
         <svg width={cellW} height={cellH} viewBox={`0 0 ${cellW} ${cellH}`} style={{ display: 'block', flexShrink: 0 }}>
           <rect x="0" y="0" width={cellW} height={cellH} fill={COLORS.BLACK} stroke={COLORS.RED} strokeWidth="1" />
-          <text x="6" y="20" fill={isHs ? COLORS.GREEN : COLORS.CYAN} fontSize="16" fontFamily="Consolas, monospace" fontWeight="100">HS</text>
-          <text x="6" y="40" fill={isLs ? COLORS.GREEN : COLORS.CYAN} fontSize="16" fontFamily="Consolas, monospace" fontWeight="100">LS</text>
+          <text x="6" y="20" fill={isHs ? COLORS.GREEN : COLORS.CYAN} fontSize="16" fontFamily="RDVSimulated, monospace" fontWeight="100">HS</text>
+          <text x="6" y="40" fill={isLs ? COLORS.GREEN : COLORS.CYAN} fontSize="16" fontFamily="RDVSimulated, monospace" fontWeight="100">LS</text>
           {/* HS indicator box - top half */}
           <line x1="38" y1="8" x2="54" y2="8" stroke={COLORS.GREEN} strokeWidth="1" />
           <line x1="38" y1="8" x2="38" y2="27" stroke={COLORS.GREEN} strokeWidth="1" />
@@ -547,23 +575,23 @@ export default function RDVSWrapper({ variant = 'default' }: RDVSWrapperProps) {
         {/* Cell 2: RX Section */}
         <svg width={cellW} height={cellH} viewBox={`0 0 ${cellW} ${cellH}`} style={{ display: 'block', flexShrink: 0 }}>
           <rect x="0" y="0" width={cellW} height={cellH} fill={COLORS.BLACK} stroke={COLORS.RED} strokeWidth="1" />
-          <text x="6" y="18" fill={COLORS.CYAN} fontSize="16" fontFamily="Consolas, monospace" fontWeight="100">RX</text>
+          <text x="6" y="18" fill={COLORS.CYAN} fontSize="16" fontFamily="RDVSimulated, monospace" fontWeight="100">RX</text>
           <rect x="30" y="6" width="30" height="15" fill={isRx ? COLORS.GREEN : 'none'} stroke={COLORS.GREEN} strokeWidth="1" />
-          <text x="6" y="42" fill={COLORS.CYAN} fontSize="16" fontFamily="Consolas, monospace" fontWeight="100">{formatFreq(freq)}</text>
+          <text x="6" y="42" fill={COLORS.CYAN} fontSize="16" fontFamily="RDVSimulated, monospace" fontWeight="100">{formatFreq(freq)}</text>
         </svg>
 
         {/* Cell 3: M/S Section */}
         <svg width={cellW} height={cellH} viewBox={`0 0 ${cellW} ${cellH}`} style={{ display: 'block', flexShrink: 0 }}>
           <rect x="0" y="0" width={cellW} height={cellH} fill={COLORS.BLACK} stroke={COLORS.RED} strokeWidth="1" />
-          <text x="6" y="18" fill={COLORS.CYAN} fontSize="16" fontFamily="Consolas, monospace" fontWeight="100">M/S</text>
+          <text x="6" y="18" fill={COLORS.CYAN} fontSize="16" fontFamily="RDVSimulated, monospace" fontWeight="100">M/S</text>
           <rect x="44" y="6" width="15" height="15" fill={COLORS.GREEN} stroke={COLORS.GREEN} strokeWidth="1" />
-          <text x="51" y="18" textAnchor="middle" fill={COLORS.BLACK} fontSize="15" fontFamily="Consolas, monospace" fontWeight="100">M</text>
+          <text x="51" y="18" textAnchor="middle" fill={COLORS.BLACK} fontSize="15" fontFamily="RDVSimulated, monospace" fontWeight="100">M</text>
         </svg>
 
         {/* Cell 4: TX Section */}
         <svg width={cellW} height={cellH} viewBox={`0 0 ${cellW} ${cellH}`} style={{ display: 'block', flexShrink: 0 }}>
           <rect x="0" y="0" width={cellW} height={cellH} fill={COLORS.BLACK} stroke={COLORS.RED} strokeWidth="1" />
-          <text x="6" y="18" fill={COLORS.CYAN} fontSize="16" fontFamily="Consolas, monospace" fontWeight="100">TX</text>
+          <text x="6" y="18" fill={COLORS.CYAN} fontSize="16" fontFamily="RDVSimulated, monospace" fontWeight="100">TX</text>
           <rect x="30" y="6" width="30" height="15" fill={isTx ? COLORS.GREEN : 'none'} stroke={COLORS.GREEN} strokeWidth="1" />
           {/* TX radial selector */}
           <circle cx="45" cy="34" r="6" fill={COLORS.BLACK} stroke={COLORS.RED} strokeWidth="1" />
@@ -572,9 +600,9 @@ export default function RDVSWrapper({ variant = 'default' }: RDVSWrapperProps) {
         {/* Cell 5: Secondary M/S Section */}
         <svg width={cellW} height={cellH} viewBox={`0 0 ${cellW} ${cellH}`} style={{ display: 'block', flexShrink: 0 }}>
           <rect x="0" y="0" width={cellW} height={cellH} fill={COLORS.BLACK} stroke={COLORS.RED} strokeWidth="1" />
-          <text x="6" y="18" fill={COLORS.CYAN} fontSize="16" fontFamily="Consolas, monospace" fontWeight="100">M/S</text>
+          <text x="6" y="18" fill={COLORS.CYAN} fontSize="16" fontFamily="RDVSimulated, monospace" fontWeight="100">M/S</text>
           <rect x="44" y="6" width="15" height="15" fill={COLORS.GREEN} stroke={COLORS.GREEN} strokeWidth="1" />
-          <text x="51" y="18" textAnchor="middle" fill={COLORS.BLACK} fontSize="15" fontFamily="Consolas, monospace" fontWeight="100">M</text>
+          <text x="51" y="18" textAnchor="middle" fill={COLORS.BLACK} fontSize="15" fontFamily="RDVSimulated, monospace" fontWeight="100">M</text>
         </svg>
       </div>
     );
@@ -616,7 +644,7 @@ export default function RDVSWrapper({ variant = 'default' }: RDVSWrapperProps) {
           textAnchor="middle"
           fill={tabColor}
           fontSize="13"
-          fontFamily="Consolas, monospace"
+          fontFamily="RDVSimulated, monospace"
           fontWeight="100"
         >
           PAGE {pageNum}
@@ -675,13 +703,269 @@ export default function RDVSWrapper({ variant = 'default' }: RDVSWrapperProps) {
           textAnchor="middle"
           fill={COLORS.WHITE}
           fontSize="13"
-          fontFamily="Consolas, monospace"
-          fontWeight="100"
+          fontFamily="RDVSimulated, monospace"
+          fontWeight="bold"
         >
-          {isPrev ? 'PREV' : 'NEXT'}
+          {isPrev ? 'Prev' : 'Next'}
         </text>
       </svg>
     );
+  };
+
+  // ============================================================
+  // HEADER MODULE RENDERERS (Grid-based, spans multiple columns)
+  // ============================================================
+
+  // Activity Display: 3-column module with white outline
+  const renderActivityDisplay = (width: number, height: number) => {
+    return (
+      <svg width={width} height={height} viewBox={`0 0 ${width} ${height}`}>
+        <rect x="0" y="0" width={width} height={height} fill={COLORS.BLACK} stroke={COLORS.WHITE} strokeWidth="1" />
+      </svg>
+    );
+  };
+
+  // IA/OVR/CA Status Indicators: 2-column module, no outline
+  const renderStatusIndicators = (width: number, height: number) => {
+    // IA and CA boxes match Keypad size, OVR box is half that width
+    const iaBoxWidth = 28; // Match Keypad rect width style
+    const ovrBoxWidth = 14;
+    const boxHeight = 26; // Match Keypad rect height
+    const textY = 14; // Aligned with Keypad text
+    const boxY = height - boxHeight - 4; // Aligned with Keypad rect position
+
+    // Module spans 2 cells with a gap between them
+    // IA centered in left cell, CA centered in right cell, OVR centered in module
+    const cellWidth = (width - GAP) / 2; // Width of each cell
+
+    // IA: centered in left cell
+    const iaCenterX = cellWidth / 2;
+    const iaX = iaCenterX - iaBoxWidth / 2;
+
+    // OVR: centered in entire module
+    const ovrCenterX = width / 2;
+    const ovrX = ovrCenterX - ovrBoxWidth / 2;
+
+    // CA: centered in right cell
+    const caCenterX = cellWidth + GAP + cellWidth / 2;
+    const caX = caCenterX - iaBoxWidth / 2;
+
+    return (
+      <svg width={width} height={height} viewBox={`0 0 ${width} ${height}`}>
+        {/* IA */}
+        <text x={iaCenterX} y={textY} textAnchor="middle" fill={COLORS.WHITE} fontSize="11" fontFamily="RDVSimulated, monospace" fontWeight="bold">IA</text>
+        <rect x={iaX} y={boxY} width={iaBoxWidth} height={boxHeight} fill="none" stroke={COLORS.WHITE} strokeWidth="1" />
+        {/* OVR */}
+        <text x={ovrCenterX} y={textY} textAnchor="middle" fill={COLORS.WHITE} fontSize="11" fontFamily="RDVSimulated, monospace" fontWeight="bold">OVR</text>
+        <rect x={ovrX} y={boxY} width={ovrBoxWidth} height={boxHeight} fill={ovrActive ? COLORS.GREEN : 'none'} stroke={COLORS.GREEN} strokeWidth="1" />
+        {/* CA */}
+        <text x={caCenterX} y={textY} textAnchor="middle" fill={COLORS.WHITE} fontSize="11" fontFamily="RDVSimulated, monospace" fontWeight="bold">CA</text>
+        <rect x={caX} y={boxY} width={iaBoxWidth} height={boxHeight} fill="none" stroke={COLORS.WHITE} strokeWidth="1" />
+      </svg>
+    );
+  };
+
+  // PAD (Keypad): 1-column module with title and gray outlined rect
+  const renderPadModule = (width: number, height: number) => {
+    const rectHeight = Math.min(26, height - 20);
+    const rectY = height - rectHeight - 4;
+
+    return (
+      <svg width={width} height={height} viewBox={`0 0 ${width} ${height}`}>
+        <text x={width / 2} y="14" textAnchor="middle" fill={COLORS.GREY} fontSize="11" fontFamily="RDVSimulated, monospace" fontWeight="bold">Keypad</text>
+        <rect x="4" y={rectY} width={width - 8} height={rectHeight} fill={COLORS.BLACK} stroke={COLORS.GREY} strokeWidth="1" />
+      </svg>
+    );
+  };
+
+  // Page Control: 2-column module with arrows and page indicators
+  const renderPageControl = (width: number, height: number) => {
+    const arrowW = Math.floor((width - 8) / 2);
+    const arrowH = Math.min(28, height - 24);
+
+    return (
+      <div style={{ width, height, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
+        <svg width={width} height="18" viewBox={`0 0 ${width} 18`}>
+          <text x={width / 2} y="14" textAnchor="middle" fill={COLORS.WHITE} fontSize="19" fontFamily="RDVSimulated, monospace" fontWeight="bold">Page {currentPage}</text>
+        </svg>
+        <div style={{ display: 'flex', gap: '4px' }}>
+          {renderHexArrow('prev')}
+          {renderHexArrow('next')}
+        </div>
+        <svg width={width} height="18" viewBox={`0 0 ${width} 18`}>
+          <text x={width / 2} y="14" textAnchor="middle" fill={COLORS.WHITE} fontSize="19" fontFamily="RDVSimulated, monospace" fontWeight="bold">of {maxPage}</text>
+        </svg>
+      </div>
+    );
+  };
+
+  // DIM Knob: 1-column module
+  const renderDimKnob = (width: number, height: number) => {
+    const knobRadius = Math.min(12, (height - 20) / 2);
+    const knobY = height / 2 + 6;
+
+    return (
+      <svg width={width} height={height} viewBox={`0 0 ${width} ${height}`}>
+        <text x={width / 2} y="14" textAnchor="middle" fill={COLORS.WHITE} fontSize="12" fontFamily="RDVSimulated, monospace" fontWeight="bold">Dim</text>
+        <circle cx={width / 2} cy={knobY} r={knobRadius} fill={COLORS.BLACK} stroke={COLORS.WHITE} strokeWidth="2" />
+      </svg>
+    );
+  };
+
+  // BRIGHT Knob: 1-column module
+  const renderBrightKnob = (width: number, height: number) => {
+    const knobRadius = Math.min(12, (height - 20) / 2);
+    const knobY = height / 2 + 6;
+
+    return (
+      <svg width={width} height={height} viewBox={`0 0 ${width} ${height}`}>
+        <text x={width / 2} y="14" textAnchor="middle" fill={COLORS.WHITE} fontSize="12" fontFamily="RDVSimulated, monospace" fontWeight="bold">Bright</text>
+        <circle cx={width / 2} cy={knobY} r={knobRadius} fill={COLORS.BLACK} stroke={COLORS.WHITE} strokeWidth="2" />
+      </svg>
+    );
+  };
+
+  // Brightness percentage overlay (positioned between DIM and BRIGHT)
+  const renderBrightnessValue = (height: number) => {
+    return (
+      <svg width="40" height={height} viewBox={`0 0 40 ${height}`} style={{ position: 'absolute', left: '50%', transform: 'translateX(-50%)' }}>
+        <text x="20" y={height / 2 + 4} textAnchor="middle" fill={COLORS.CYAN} fontSize="13" fontFamily="RDVSimulated, monospace" fontWeight="100">47%</text>
+      </svg>
+    );
+  };
+
+  // Header row renderer - uses grid positioning
+  const renderHeaderRow = () => {
+    // Left-hand mode (default): Activity Display | IA/OVR/CA | PAD | Page Control | DIM | BRIGHT
+    // Each module spans specific columns in row 0
+    const moduleConfigs = HANDEDNESS === 'left'
+      ? [
+          { key: 'activity', cols: 3, render: renderActivityDisplay },
+          { key: 'status', cols: 2, render: renderStatusIndicators },
+          { key: 'pad', cols: 1, render: renderPadModule },
+          { key: 'page', cols: 2, render: renderPageControl },
+          { key: 'dim', cols: 1, render: renderDimKnob },
+          { key: 'bright', cols: 1, render: renderBrightKnob },
+        ]
+      : [
+          { key: 'bright', cols: 1, render: renderBrightKnob },
+          { key: 'dim', cols: 1, render: renderDimKnob },
+          { key: 'page', cols: 2, render: renderPageControl },
+          { key: 'pad', cols: 1, render: renderPadModule },
+          { key: 'status', cols: 2, render: renderStatusIndicators },
+          { key: 'activity', cols: 3, render: renderActivityDisplay },
+        ];
+
+    let colStart = 1; // CSS grid is 1-indexed
+    const elements: React.ReactNode[] = [];
+
+    moduleConfigs.forEach((config, idx) => {
+      const moduleWidth = config.cols * CELL_WIDTH + (config.cols - 1) * GAP;
+      const moduleHeight = CELL_HEIGHT;
+
+      // Special handling for brightness value between DIM and BRIGHT
+      const isDimOrBright = config.key === 'dim' || config.key === 'bright';
+
+      elements.push(
+        <div
+          key={`header-${config.key}`}
+          style={{
+            gridColumn: `${colStart} / span ${config.cols}`,
+            gridRow: '1',
+            position: isDimOrBright ? 'relative' : undefined,
+          }}
+        >
+          {config.render(moduleWidth, moduleHeight)}
+        </div>
+      );
+
+      // Add brightness value overlay after DIM (for left-hand) or after BRIGHT (for right-hand)
+      if ((HANDEDNESS === 'left' && config.key === 'dim') || (HANDEDNESS === 'right' && config.key === 'bright')) {
+        elements.push(
+          <div
+            key="brightness-value"
+            style={{
+              gridColumn: `${colStart} / span 2`,
+              gridRow: '1',
+              position: 'relative',
+              pointerEvents: 'none',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+            }}
+          >
+            {renderBrightnessValue(moduleHeight)}
+          </div>
+        );
+      }
+
+      colStart += config.cols;
+    });
+
+    return elements;
+  };
+
+  // Render communication matrix cells (rows 1-8, all 10 columns)
+  const renderCommunicationMatrix = () => {
+    const elements: React.ReactNode[] = [];
+
+    // For stacked layout (Q2 and Q4 both frequency): left half is station buttons, right half is line panels
+    // For 2x2 layout: Q1/Q3 are station buttons (cols 0-4), Q2 is line panels (cols 5-9, rows 1-4), Q4 is station or mixed (cols 5-9, rows 5-8)
+    const isStackedLayout = layoutConfig.quadrants[1] === 'F' && layoutConfig.quadrants[3] === 'F';
+
+    // Rows 1-8 in the 10x10 grid (communication matrix)
+    for (let gridRow = 2; gridRow <= 9; gridRow++) {
+      const matrixRow = gridRow - 2; // 0-7 for the communication matrix
+
+      for (let col = 0; col < GRID_COLS; col++) {
+        const isRightHalf = col >= 5;
+        const isTopHalf = matrixRow < 4;
+
+        // Determine if this cell should be a line panel or station button
+        let isLinePanel = false;
+        if (isStackedLayout) {
+          // Stacked: right half (cols 5-9) are all line panels
+          isLinePanel = isRightHalf;
+        } else {
+          // 2x2 layout: Q2 (top-right) is always line panels
+          isLinePanel = isRightHalf && isTopHalf;
+        }
+
+        if (isLinePanel) {
+          // Line panels span 5 columns (cols 5-9) for each row
+          if (col === 5) {
+            elements.push(
+              <div
+                key={`line-${matrixRow}`}
+                style={{
+                  gridColumn: '6 / span 5',
+                  gridRow: `${gridRow}`,
+                }}
+              >
+                {renderLineControlPanel(matrixRow)}
+              </div>
+            );
+          }
+          // Skip cols 6-9 since line panel spans them
+          continue;
+        } else {
+          // Station button
+          elements.push(
+            <div
+              key={`btn-${matrixRow}-${col}`}
+              style={{
+                gridColumn: `${col + 1}`,
+                gridRow: `${gridRow}`,
+              }}
+            >
+              {renderStationButton(matrixRow, col)}
+            </div>
+          );
+        }
+      }
+    }
+
+    return elements;
   };
 
   return (
@@ -698,299 +982,33 @@ export default function RDVSWrapper({ variant = 'default' }: RDVSWrapperProps) {
           height: `${CONTAINER_HEIGHT}px`,
           backgroundColor: COLORS.BLACK,
           color: COLORS.WHITE,
-          fontFamily: 'Consolas, monospace',
+          fontFamily: 'RDVSimulated, monospace',
           fontWeight: 100,
           fontSize: '14px',
           userSelect: 'none',
-          display: 'flex',
-          flexDirection: 'column',
-          textTransform: 'uppercase',
           padding: `${PADDING}px`,
           boxSizing: 'border-box',
+          display: 'grid',
+          gridTemplateColumns: `repeat(${GRID_COLS}, ${CELL_WIDTH}px)`,
+          gridTemplateRows: `repeat(${GRID_ROWS}, ${CELL_HEIGHT}px)`,
+          gap: `${GAP}px`,
         }}
       >
-      {/* Header Module */}
-      <div
-        style={{
-          height: `${HEADER_HEIGHT}px`,
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-          flexShrink: 0,
-          marginBottom: `${GAP}px`,
-        }}
-      >
-        {layoutConfig.header === 'B' ? (
-          <>
-            {/* RDVS-2 Header: Status rect, IA/OVR/CA, Keypad rect, Page arrows, Dim/Bright */}
+        {/* Row 0: Header modules */}
+        {renderHeaderRow()}
 
-            {/* Status Display (same format as readout on far right of other variant) */}
-            <svg width="120" height="40" viewBox="0 0 120 40">
-              <rect x="0" y="0" width="120" height="40" fill={COLORS.BLACK} stroke={COLORS.WHITE} strokeWidth="1" />
-            </svg>
+        {/* Rows 1-8: Communication matrix */}
+        {renderCommunicationMatrix()}
 
-            {/* Status Indicators: IA, OVR, CA */}
-            <div style={{ display: 'flex', gap: '10px' }}>
-              <svg width="26" height="36" viewBox="0 0 26 36">
-                <text x="13" y="12" textAnchor="middle" fill={COLORS.WHITE} fontSize="11" fontFamily="Consolas, monospace" fontWeight="100">IA</text>
-                <rect x="4" y="16" width="18" height="18" fill="none" stroke={COLORS.WHITE} strokeWidth="1" />
-              </svg>
-              <svg width="30" height="36" viewBox="0 0 30 36">
-                <text x="15" y="12" textAnchor="middle" fill={COLORS.WHITE} fontSize="11" fontFamily="Consolas, monospace" fontWeight="100">OVR</text>
-                <rect x="6" y="16" width="18" height="18" fill={ovrActive ? COLORS.GREEN : 'none'} stroke={COLORS.GREEN} strokeWidth="1" />
-              </svg>
-              <svg width="26" height="36" viewBox="0 0 26 36">
-                <text x="13" y="12" textAnchor="middle" fill={COLORS.WHITE} fontSize="11" fontFamily="Consolas, monospace" fontWeight="100">CA</text>
-                <rect x="4" y="16" width="18" height="18" fill="none" stroke={COLORS.WHITE} strokeWidth="1" />
-              </svg>
-            </div>
-
-            {/* Keypad: gray text on black background, above larger hollow gray rect */}
-            <svg width="80" height="50" viewBox="0 0 80 50">
-              <text x="40" y="14" textAnchor="middle" fill={COLORS.GREY} fontSize="11" fontFamily="Consolas, monospace" fontWeight="100">KEYPAD</text>
-              <rect x="5" y="20" width="70" height="26" fill={COLORS.BLACK} stroke={COLORS.GREY} strokeWidth="1" />
-            </svg>
-
-            {/* Pagination Control with Page X and of X */}
-            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-              <svg width="80" height="16" viewBox="0 0 80 16">
-                <text x="40" y="12" textAnchor="middle" fill={COLORS.WHITE} fontSize="12" fontFamily="Consolas, monospace" fontWeight="100">PAGE {currentPage}</text>
-              </svg>
-              <div style={{ display: 'flex', gap: '4px' }}>
-                {renderHexArrow('prev')}
-                {renderHexArrow('next')}
-              </div>
-              <svg width="50" height="16" viewBox="0 0 50 16">
-                <text x="25" y="12" textAnchor="middle" fill={COLORS.WHITE} fontSize="12" fontFamily="Consolas, monospace" fontWeight="100">OF {maxPage}</text>
-              </svg>
-            </div>
-
-            {/* Dim/Bright controls */}
-            <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-                <svg width="40" height="44" viewBox="0 0 40 44">
-                  <text x="20" y="12" textAnchor="middle" fill={COLORS.WHITE} fontSize="13" fontFamily="Consolas, monospace" fontWeight="100">DIM</text>
-                  <circle cx="20" cy="30" r="12" fill={COLORS.BLACK} stroke={COLORS.WHITE} strokeWidth="2" />
-                </svg>
-              </div>
-              <svg width="36" height="20" viewBox="0 0 36 20">
-                <text x="18" y="14" textAnchor="middle" fill={COLORS.CYAN} fontSize="14" fontFamily="Consolas, monospace" fontWeight="100">47%</text>
-              </svg>
-              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-                <svg width="56" height="44" viewBox="0 0 56 44">
-                  <text x="28" y="12" textAnchor="middle" fill={COLORS.WHITE} fontSize="13" fontFamily="Consolas, monospace" fontWeight="100">BRIGHT</text>
-                  <circle cx="28" cy="30" r="12" fill={COLORS.BLACK} stroke={COLORS.WHITE} strokeWidth="2" />
-                </svg>
-              </div>
-            </div>
-          </>
-        ) : (
-          <>
-            {/* Default/RDVS-1 Header: Brightness, Pagination, IA/OVR/CA, Readout */}
-
-            {/* Brightness Control - larger circles and +2pt font */}
-            <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-                <svg width="56" height="44" viewBox="0 0 56 44">
-                  <text x="28" y="12" textAnchor="middle" fill={COLORS.WHITE} fontSize="13" fontFamily="Consolas, monospace" fontWeight="100">BRIGHT</text>
-                  <circle cx="28" cy="30" r="12" fill={COLORS.BLACK} stroke={COLORS.WHITE} strokeWidth="2" />
-                </svg>
-              </div>
-              <svg width="36" height="20" viewBox="0 0 36 20">
-                <text x="18" y="14" textAnchor="middle" fill={COLORS.CYAN} fontSize="14" fontFamily="Consolas, monospace" fontWeight="100">47%</text>
-              </svg>
-              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-                <svg width="40" height="44" viewBox="0 0 40 44">
-                  <text x="20" y="12" textAnchor="middle" fill={COLORS.WHITE} fontSize="13" fontFamily="Consolas, monospace" fontWeight="100">DIM</text>
-                  <circle cx="20" cy="30" r="12" fill={COLORS.BLACK} stroke={COLORS.WHITE} strokeWidth="2" />
-                </svg>
-              </div>
-            </div>
-
-            {/* Pagination Control */}
-            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-              <svg width="80" height="16" viewBox="0 0 80 16">
-                <text x="40" y="12" textAnchor="middle" fill={COLORS.WHITE} fontSize="12" fontFamily="Consolas, monospace" fontWeight="100">PAGE {currentPage}</text>
-              </svg>
-              <div style={{ display: 'flex', gap: '4px' }}>
-                {renderHexArrow('prev')}
-                {renderHexArrow('next')}
-              </div>
-              <svg width="50" height="16" viewBox="0 0 50 16">
-                <text x="25" y="12" textAnchor="middle" fill={COLORS.WHITE} fontSize="12" fontFamily="Consolas, monospace" fontWeight="100">OF {maxPage}</text>
-              </svg>
-            </div>
-
-            {/* Status Indicators: IA, OVR, CA */}
-            <div style={{ display: 'flex', gap: '10px' }}>
-              <svg width="26" height="36" viewBox="0 0 26 36">
-                <text x="13" y="12" textAnchor="middle" fill={COLORS.WHITE} fontSize="11" fontFamily="Consolas, monospace" fontWeight="100">IA</text>
-                <rect x="4" y="16" width="18" height="18" fill="none" stroke={COLORS.WHITE} strokeWidth="1" />
-              </svg>
-              <svg width="30" height="36" viewBox="0 0 30 36">
-                <text x="15" y="12" textAnchor="middle" fill={COLORS.WHITE} fontSize="11" fontFamily="Consolas, monospace" fontWeight="100">OVR</text>
-                <rect x="6" y="16" width="18" height="18" fill={ovrActive ? COLORS.GREEN : 'none'} stroke={COLORS.GREEN} strokeWidth="1" />
-              </svg>
-              <svg width="26" height="36" viewBox="0 0 26 36">
-                <text x="13" y="12" textAnchor="middle" fill={COLORS.WHITE} fontSize="11" fontFamily="Consolas, monospace" fontWeight="100">CA</text>
-                <rect x="4" y="16" width="18" height="18" fill="none" stroke={COLORS.WHITE} strokeWidth="1" />
-              </svg>
-            </div>
-
-            {/* Readout Display */}
-            <svg width="120" height="40" viewBox="0 0 120 40">
-              <rect x="0" y="0" width="120" height="40" fill={COLORS.BLACK} stroke={COLORS.WHITE} strokeWidth="1" />
-            </svg>
-          </>
-        )}
-      </div>
-
-      {/* Main Communication Matrix - quadrant-based layout */}
-      {/* If Q2 and Q4 are both frequency, use stacked layout (Q1+Q3 left, Q2+Q4 right as 8 panels) */}
-      {/* Otherwise use 2x2 quadrant layout */}
-      {layoutConfig.quadrants[1] === 'F' && layoutConfig.quadrants[3] === 'F' ? (
-        // Stacked layout: Q1+Q3 (5 cols x 8 rows) side by side with Q2+Q4 (8 line panels)
-        <div style={{ flex: 1, display: 'flex', gap: `${GAP}px`, width: '100%' }}>
-          {/* Left: Q1 + Q3 stacked */}
-          <div
-            style={{
-              flex: 1,
-              display: 'grid',
-              gridTemplateColumns: `repeat(5, 1fr)`,
-              gridTemplateRows: `repeat(${GRID_ROWS}, ${BTN_HEIGHT}px)`,
-              gap: `${GAP}px`,
-              backgroundColor: COLORS.BLACK,
-            }}
-          >
-            {Array.from({ length: GRID_ROWS }).map((_, rowIdx) =>
-              Array.from({ length: 5 }).map((_, colIdx) =>
-                renderStationButton(rowIdx, colIdx)
-              )
-            )}
-          </div>
-          {/* Right: Q2 + Q4 as 8 line panels */}
-          <div
-            style={{
-              flex: 1,
-              display: 'flex',
-              flexDirection: 'column',
-              gap: `${GAP}px`,
-            }}
-          >
-            {Array.from({ length: 8 }).map((_, rowIdx) =>
-              renderLineControlPanel(rowIdx)
-            )}
-          </div>
+        {/* Row 9: Footer (empty for now) */}
+        <div
+          style={{
+            gridColumn: '1 / span 10',
+            gridRow: '10',
+          }}
+        >
+          {/* Footer content removed - reserved for future use */}
         </div>
-      ) : (
-        // RDVS-1/RDVS-2: Top row (Q1 + Q2 panels), Bottom row (Q3 + Q4)
-        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: `${GAP}px`, width: '100%' }}>
-          {/* Top row: Q1 (5 cols) + Q2 (4 line panels) */}
-          <div style={{ flex: 1, display: 'flex', gap: `${GAP}px`, width: '100%' }}>
-            {/* Q1: 5 cols x 4 rows */}
-            <div
-              style={{
-                flex: 1,
-                display: 'grid',
-                gridTemplateColumns: `repeat(5, 1fr)`,
-                gridTemplateRows: `repeat(4, ${BTN_HEIGHT}px)`,
-                gap: `${GAP}px`,
-                backgroundColor: COLORS.BLACK,
-              }}
-            >
-              {Array.from({ length: 4 }).map((_, rowIdx) =>
-                Array.from({ length: 5 }).map((_, colIdx) =>
-                  renderStationButton(rowIdx, colIdx)
-                )
-              )}
-            </div>
-            {/* Q2: 4 line panels */}
-            <div
-              style={{
-                flex: 1,
-                display: 'flex',
-                flexDirection: 'column',
-                gap: `${GAP}px`,
-              }}
-            >
-              {Array.from({ length: 4 }).map((_, rowIdx) =>
-                renderLineControlPanel(rowIdx)
-              )}
-            </div>
-          </div>
-          {/* Bottom row: Q3 (5 cols) + Q4 (5 cols) */}
-          <div style={{ flex: 1, display: 'flex', gap: `${GAP}px`, width: '100%' }}>
-            {/* Q3: 5 cols x 4 rows */}
-            <div
-              style={{
-                flex: 1,
-                display: 'grid',
-                gridTemplateColumns: `repeat(5, 1fr)`,
-                gridTemplateRows: `repeat(4, ${BTN_HEIGHT}px)`,
-                gap: `${GAP}px`,
-                backgroundColor: COLORS.BLACK,
-              }}
-            >
-              {Array.from({ length: 4 }).map((_, qRowIdx) =>
-                Array.from({ length: 5 }).map((_, colIdx) =>
-                  renderStationButton(qRowIdx + 4, colIdx)
-                )
-              )}
-            </div>
-            {/* Q4: 5 cols x 4 rows */}
-            <div
-              style={{
-                flex: 1,
-                display: 'grid',
-                gridTemplateColumns: `repeat(5, 1fr)`,
-                gridTemplateRows: `repeat(4, ${BTN_HEIGHT}px)`,
-                gap: `${GAP}px`,
-                backgroundColor: COLORS.BLACK,
-              }}
-            >
-              {Array.from({ length: 4 }).map((_, qRowIdx) =>
-                Array.from({ length: 5 }).map((_, colIdx) =>
-                  renderStationButton(qRowIdx + 4, colIdx + 5)
-                )
-              )}
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Footer Module */}
-      <div
-        style={{
-          height: `${FOOTER_HEIGHT}px`,
-          display: 'flex',
-          alignItems: 'flex-end',
-          justifyContent: layoutConfig.footer === 'B' ? 'center' : 'space-between',
-          flexShrink: 0,
-        }}
-      >
-        {/* Page Tabs */}
-        <div style={{ display: 'flex', alignItems: 'flex-end', gap: '4px' }}>
-          {Array.from({ length: Math.min(maxPage, 3) }).map((_, idx) =>
-            renderPageTab(idx + 1, currentPage === idx + 1)
-          )}
-        </div>
-
-        {/* Master Audio Status - global HS/LS radial selectors (hidden for footer type B) */}
-        {layoutConfig.footer === 'A' && (
-          <div style={{ display: 'flex', gap: '12px', paddingBottom: '4px' }}>
-            <svg width="56" height="22" viewBox="0 0 56 22">
-              <rect x="0" y="2" width="30" height="18" fill="none" stroke={COLORS.GREEN} strokeWidth="1" />
-              <text x="15" y="15" textAnchor="middle" fill={COLORS.WHITE} fontSize="12" fontFamily="Consolas, monospace" fontWeight="100">HS</text>
-              <circle cx="46" cy="11" r="6" fill={COLORS.BLACK} stroke={COLORS.RED} strokeWidth="1" />
-            </svg>
-            <svg width="56" height="22" viewBox="0 0 56 22">
-              <rect x="0" y="2" width="30" height="18" fill="none" stroke={COLORS.GREEN} strokeWidth="1" />
-              <text x="15" y="15" textAnchor="middle" fill={COLORS.WHITE} fontSize="12" fontFamily="Consolas, monospace" fontWeight="100">LS</text>
-              <circle cx="46" cy="11" r="6" fill={COLORS.BLACK} stroke={COLORS.RED} strokeWidth="1" />
-            </svg>
-          </div>
-        )}
-      </div>
       </div>
     </div>
   );
