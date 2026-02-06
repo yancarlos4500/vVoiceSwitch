@@ -120,6 +120,25 @@ interface CoreState {
     activeDialLine: { trunkName: string; lineType: number } | null;
     dialCallStatus: 'idle' | 'dialing' | 'ringback' | 'connected' | 'busy' | 'error';
 
+    // IA DISPLAY area state
+    iaDisplayBuffer: string; // Shows dialed digits for outgoing calls
+    callerIdBuffer: string;  // Shows caller ID for incoming calls
+    setIaDisplayBuffer: (buffer: string) => void;
+    setCallerIdBuffer: (buffer: string) => void;
+    appendToIaDisplay: (digit: string) => void;
+    clearIaDisplay: () => void;
+    backspaceIaDisplay: () => void;
+
+    // G/G Chime selection (1-13)
+    selectedChime: number;
+    setSelectedChime: (chime: number) => void;
+    cycleChime: () => void;
+
+    // UI brightness control (0-100, default 100)
+    brightness: number;
+    setBrightness: (brightness: number) => void;
+    adjustBrightness: (delta: number) => void;
+
     // VSCS-specific props
     activeLandlines: any[];
     incomingLandlines: any[];
@@ -151,6 +170,8 @@ interface CoreState {
 }
 
 let call_table: Record<string, [string, number]> = {}
+let line_order: Record<string, number> = {} // Track original line order for sorting
+let placeholder_indices: number[] = [] // Track indices where empty placeholder buttons should appear
 
 // RDVS-specific types
 export interface RDVSButton {
@@ -248,7 +269,15 @@ function getAudioElement(audioType: 'ringback' | 'ggchime'): HTMLAudioElement | 
     
     // Fallback to VSCS config if current UI config not found
     const defaultConfig = audioConfigs.vscs || { ringback: 'Ringback.wav', ggchime: 'GGChime.mp3' };
-    const audioSrc = config ? config[audioType] : defaultConfig[audioType];
+    let audioSrc = config ? config[audioType] : defaultConfig[audioType];
+    
+    // For IVSR chime, use the selected chime from the store
+    if (uiContext === 'ivsr' && audioType === 'ggchime') {
+        // Access the store to get selectedChime
+        const selectedChime = useCoreStore.getState().selectedChime || 1;
+        const paddedNum = selectedChime.toString().padStart(2, '0');
+        audioSrc = `/ivsr/IVSRChime-${paddedNum}.wav`;
+    }
     
     // Create unique ID for this UI context and audio type
     const audioId = `${uiContext}_${audioType}`;
@@ -263,6 +292,11 @@ function getAudioElement(audioType: 'ringback' | 'ggchime'): HTMLAudioElement | 
         audioElement.src = audioSrc;
         audioElement.preload = 'auto';
         document.body.appendChild(audioElement);
+    } else {
+        // Update src in case chime selection changed
+        if (audioElement.src !== audioSrc && !audioElement.src.endsWith(audioSrc)) {
+            audioElement.src = audioSrc;
+        }
     }
     
     return audioElement;
@@ -410,9 +444,16 @@ export const useCoreStore = create<CoreState>((set: any, get: any) => {
             const call_id = fullCall?.replace(/^(?:gg_\d+_|OV_|SO_)/, '') || '';
 
             if (call_id && sendMessageNow) {
+                // Look up the original line type from call_table to use matching dbl1 value
+                const lineInfo = call_table[call_id];
+                const lineType = lineInfo ? lineInfo[1] : 2; // Default to 2 if not found
+                
+                // SO_ lines always use dbl1: 1, others use their original line type
                 const isShoutOverride = fullCall?.startsWith('SO_');
-                console.log('[releaseBtn] Stopping call:', call_id, 'isShoutOverride:', isShoutOverride);
-                sendMessageNow({ type: 'stop', cmd1: call_id, dbl1: isShoutOverride ? 1 : 2 });
+                const dbl1 = isShoutOverride ? 1 : lineType;
+                
+                console.log('[releaseBtn] Stopping call:', call_id, 'lineType:', lineType, 'dbl1:', dbl1);
+                sendMessageNow({ type: 'stop', cmd1: call_id, dbl1: dbl1 });
             }
         });
     },
@@ -428,8 +469,38 @@ export const useCoreStore = create<CoreState>((set: any, get: any) => {
     // Dial call state defaults
     activeDialLine: null,
     dialCallStatus: 'idle' as const,
-    setActiveDialLine: () => {},
-    sendDialCall: () => {},
+
+    // IA DISPLAY area state
+    iaDisplayBuffer: '',
+    callerIdBuffer: '',
+    setIaDisplayBuffer: (buffer: string) => set({ iaDisplayBuffer: buffer }),
+    setCallerIdBuffer: (buffer: string) => set({ callerIdBuffer: buffer }),
+    appendToIaDisplay: (digit: string) => {
+        const current = get().iaDisplayBuffer;
+        set({ iaDisplayBuffer: current + digit });
+    },
+    clearIaDisplay: () => set({ iaDisplayBuffer: '' }),
+    backspaceIaDisplay: () => {
+        const current = get().iaDisplayBuffer;
+        set({ iaDisplayBuffer: current.slice(0, -1) });
+    },
+
+    // G/G Chime selection (1-13)
+    selectedChime: 1,
+    setSelectedChime: (chime: number) => set({ selectedChime: Math.max(1, Math.min(13, chime)) }),
+    cycleChime: () => {
+        const current = get().selectedChime;
+        const next = current >= 13 ? 1 : current + 1;
+        set({ selectedChime: next });
+    },
+
+    // Brightness controls
+    brightness: 100,
+    setBrightness: (brightness: number) => set({ brightness: Math.max(20, Math.min(100, brightness)) }),
+    adjustBrightness: (delta: number) => {
+        const current = get().brightness;
+        set({ brightness: Math.max(20, Math.min(100, current + delta)) });
+    },
     
         setConnected: (status: boolean) => {
             set({
@@ -503,18 +574,24 @@ export const useCoreStore = create<CoreState>((set: any, get: any) => {
             
             console.log('[dial_call] Resolved:', { trunkName, dialCode, target });
             
-            // Set status to dialing
+            // Set status to dialing, then ringback
             set({ dialCallStatus: 'dialing' });
             
-            // Send the dial_call command to the backend
-            // The dial_call type will initiate a call to the resolved target
+            // Send the call command - use type 'call' with the resolved target
+            // dbl1 = 1 for ring-type call (plays chime at destination)
             sendMessageNow({ 
-                type: 'dial_call', 
+                type: 'call', 
                 cmd1: target,           // The resolved target callsign
-                cmd2: trunkName,        // The trunk name for reference
-                cmd3: dialCode,         // The dial code for reference
-                dbl1: 2                 // Call type (2 = ring/shout style call)
+                dbl1: 1                 // Call type 1 = ring call
             });
+            
+            // Set to ringback after a short delay (simulating call routing)
+            setTimeout(() => {
+                const currentStatus = get().dialCallStatus;
+                if (currentStatus === 'dialing') {
+                    set({ dialCallStatus: 'ringback' });
+                }
+            }, 200);
         }
     }
 
@@ -545,27 +622,64 @@ export const useCoreStore = create<CoreState>((set: any, get: any) => {
         if (!callsign) {
             return;
         }
-    const lines: Record<string, any[]> = {}
+        // Collect all lines from selected positions, preserving order
+        // Track placeholder indices for empty [] entries
+        const orderedLines: any[] = [];
+        const placeholderPositions: number[] = [];
+        const seenIds = new Set<string>();
         const { selectedPositions: selected_positions } = get();
+        let positionIndex = 0;
+        
+        // First pass: collect lines in order from position config
         Object.values(selected_positions || {}).map((pos: any) => {
             pos.lines?.map((line: any[]) => {
-        (lines[line[0]] ||= []).push(line)
+                // Check if this is an empty placeholder []
+                if (!line || line.length === 0) {
+                    placeholderPositions.push(positionIndex);
+                    positionIndex++;
+                    return;
+                }
+                
+                const lineId = String(line[0]);
+                const lineType = line[1];
+                // For shout lines (type 2), allow duplicates from multiple positions
+                // For other types, only add if not seen before
+                if (lineType === 2 || !seenIds.has(lineId)) {
+                    orderedLines.push({ line, originalIndex: positionIndex });
+                    positionIndex++;
+                    if (lineType !== 2) {
+                        seenIds.add(lineId);
+                    }
+                }
             })
         })
-        const dedup_dest: Record<string, any> = {}
-        const available_lines = Object.values(lines || {}).filter((k: any[]) => {
-            return k.length == 1 || k[0][1] == 2
-        }).map((k: any[]) => {
-            const v = k[0]
-            dedup_dest[v[2]] = v
-        })
+        
+        // Deduplicate while preserving order (keep first occurrence)
+        const dedup_ordered: any[] = [];
+        const dedup_ids = new Set<string>();
+        for (const item of orderedLines) {
+            const lineId = String(item.line[0]);
+            if (!dedup_ids.has(lineId)) {
+                dedup_ordered.push(item);
+                dedup_ids.add(lineId);
+            }
+        }
+        
         call_table = {
             "891": ["TEST", 2],
         }
-        for (const line of Object.values(dedup_dest) as any[]) {
+        // Reset and populate line_order for sorting gg_status later
+        line_order = {};
+        placeholder_indices = placeholderPositions;
+        
+        for (const item of dedup_ordered) {
+            const line = item.line;
             call_table[line[0]] = [line[2], line[1]]
+            line_order[String(line[0])] = item.originalIndex;
             addCall(line[1], '' + line[0])
         }
+        // TEST line comes after all configured lines
+        line_order["891"] = positionIndex++;
         addCall(2, '891')
         cid && addIaCall(1, '' + cid)
         setTimeout(() => {
@@ -646,27 +760,41 @@ export const useCoreStore = create<CoreState>((set: any, get: any) => {
                             new_ag.push({ ...k })
                         } else if (k.call?.startsWith('VSCS_')) {
                             // Handle VSCS buttons - similar to G/G processing
-                            k.call_name = call_table[k.call?.substring(5)]?.[0] || k.call?.substring(5)
+                            const vscs_call_id = k.call?.substring(5);
+                            k.call_name = call_table[vscs_call_id]?.[0] || vscs_call_id
+                            k.lineType = call_table[vscs_call_id]?.[1] ?? 2; // Default to type 2 (regular)
                             new_vscs.push({ ...k })
                         } else if (k.call?.startsWith('OV_')) {
                             // Handle incoming override calls - OV_ prefix indicates this position is being overridden
                             console.log('[WebSocket] Override call detected:', k);
-                            k.call_name = call_table[k.call?.substring(3)]?.[0] || k.call?.substring(3)
+                            const call_id = k.call?.substring(3);
+                            k.call_name = call_table[call_id]?.[0] || call_id
+                            k.lineType = call_table[call_id]?.[1] ?? 0; // Override defaults to type 0
                             new_override.push({ ...k })
                             // Also add to G/G list for button display
                             new_gg.push({ ...k })
                         } else {
-                k.call_name = call_table[k.call?.substring(3)]?.[0]
+                            const call_id = k.call?.substring(3);
+                            k.call_name = call_table[call_id]?.[0]
+                            k.lineType = call_table[call_id]?.[1] ?? 2; // Default to type 2 (regular)
                             new_gg.push({ ...k })
                             if (k.call?.startsWith('SO_')) {
 
                             } else {
                                 if (k.status === 'chime') {
                                     chime(getAudioElement('ggchime'));
+                                    // For dial lines (type 3), show caller ID from who's calling us
+                                    if (k.lineType === 3 && k.otherPosition) {
+                                        set({ callerIdBuffer: k.otherPosition });
+                                    }
                                 } else if (k.status == 'ringing') {
                                     chime(getAudioElement('ringback'))
                                 } else {
                                     stopAudio();
+                                    // Clear caller ID when call ends or connects
+                                    if (k.lineType === 3) {
+                                        set({ callerIdBuffer: '' });
+                                    }
                                 }
                             }
                         }

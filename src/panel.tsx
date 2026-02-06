@@ -37,7 +37,7 @@ function AGRow({ data }: { data: any }) {
             <div className="button" onClick={() => {
                 sendMsg({ type: 'tx', cmd1: "" + data.freq, dbl1: !data.t })
             }}>
-                <span className="text">TX SEL</span>
+                <span className="text" style={{ lineHeight: '1.1', position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -60%)', textAlign: 'center' }}>TX<br/>SEL</span>
                 <div className={data.t ? ptt ? "flutter active" : "steady green" : ""}>
                     <div className="ct">
                         <div className="inner">
@@ -49,7 +49,7 @@ function AGRow({ data }: { data: any }) {
             <div className={"button"} onClick={() => {
                 sendMsg({ type: 'rx', cmd1: "" + data.freq, dbl1: !data.r })
             }}>
-                <span className="text">RX SEL</span>
+                <span className="text" style={{ lineHeight: '1.1', position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -60%)', textAlign: 'center' }}>RX<br/>SEL</span>
                 <div className={data.r ? data.talking ? "flutter active" : "steady green" : ""}>
                     <div className="ct">
                         <div className="inner">
@@ -61,7 +61,7 @@ function AGRow({ data }: { data: any }) {
             <div className="button" onClick={() => {
 
             }}>
-                <span className="text">TX MAIN</span>
+                <span className="text" style={{ lineHeight: '1.1', position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -60%)', textAlign: 'center' }}>TX<br/>MAIN</span>
                 <div className={"steady green"}>
                     <div className="ct">
                         <div className="inner">
@@ -72,7 +72,7 @@ function AGRow({ data }: { data: any }) {
             <div className="button" onClick={() => {
 
             }}>
-                <span className="text">RX MAIN</span>
+                <span className="text" style={{ lineHeight: '1.1', position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -60%)', textAlign: 'center' }}>RX<br/>MAIN</span>
                 <div className={"steady green"}>
                     <div className="ct">
                         <div className="inner">
@@ -127,11 +127,13 @@ function GGButton({ data }: { data: any }) {
     const [v, setV] = useState(0)
     const sendMsg = useCoreStore(s => s.sendMessageNow)
     const ptt = useCoreStore(s => s.ptt)
-    if (!data) {
+    // Handle empty slots (undefined) or placeholder entries from [] in config
+    if (!data || data.isPlaceholder) {
         return <div className="button empty"></div>
     }
     const call_type = data?.call?.substring(0, 2)
     const call_id = data.call?.substring(3)
+    const lineType = data.lineType ?? 2; // Use line type from data, default to 2 (regular)
     const d = ['steady green', 'steady red', 'flutter active', 'flutter receive', 'flutter inuse', 'flutter hold']
     let csn = ''
     let onClick = () => {
@@ -157,7 +159,7 @@ function GGButton({ data }: { data: any }) {
         if (data.status === 'off' || data.status === '') {
             // nothing
             onClick = () => {
-                sendMsg({ type: 'call', cmd1: call_id, dbl1: 2 })
+                sendMsg({ type: 'call', cmd1: call_id, dbl1: lineType })
             }
         } else if (data.status === 'busy') {
             csn = 'steady red'
@@ -169,7 +171,7 @@ function GGButton({ data }: { data: any }) {
             onClick = () => {}
         } else if (data.status === 'ok' || data.status === 'active') {
             onClick = () => {
-                sendMsg({ type: 'stop', cmd1: call_id, dbl1: 2 })
+                sendMsg({ type: 'stop', cmd1: call_id, dbl1: lineType })
             }
             if (ptt || data.status === 'active') {
                 csn = 'flutter active'
@@ -179,7 +181,7 @@ function GGButton({ data }: { data: any }) {
         } else if (data.status === 'chime' || data.status === 'ringing') {
             csn = 'flutter receive flashing'
             onClick = () => {
-                sendMsg({ type: 'stop', cmd1: call_id, dbl1: 2 })
+                sendMsg({ type: 'stop', cmd1: call_id, dbl1: lineType })
             }
         } else {
             // csn = d[v]
