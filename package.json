@@ -1,12 +1,10 @@
 {
-  "homepage": "https://DivineWind04.github.io/vVoiceSwitch/",
   "name": "v-ivsr",
   "version": "0.1.0",
   "private": true,
   "type": "module",
   "scripts": {
     "build": "cross-env TSC_COMPILE_ON_ERROR=true next build",
-    "export": "cross-env TSC_COMPILE_ON_ERROR=true next export",
     "dev": "next dev -p 3001",
     "lint": "next lint",
     "start": "next start"
