@@ -60,13 +60,15 @@ function injectTestCalls(): void {
     );
     const mergedOverrides = [...currentOverrides, ...overrideEntries];
     const hasActiveOverride = mergedOverrides.some(
-        (ov: any) => ov.status === 'ok' || ov.status === 'active'
+        (ov: any) => ov.status === 'ok' || ov.status === 'active' || ov.status === 'hold'
     );
+    const overrideCallStatus = mergedOverrides.length > 0 ? mergedOverrides[0].status : 'off';
 
     useCoreStore.setState({
         gg_status: mergedGG,
         overrideStatus: mergedOverrides,
         isBeingOverridden: hasActiveOverride,
+        overrideCallStatus,
     });
 
     // Reset flag on next microtask to allow future injections
@@ -244,6 +246,11 @@ function handleInterceptedMessage(message: any): void {
             // Answer the call
             clearAutoAdvanceTimer(call.id);
             transitionCall(call.id, 'ok');
+        }
+    } else if (message.type === 'hold') {
+        // User pressed HOLD via the UI
+        if (call.status === 'ok' || call.status === 'active') {
+            transitionCall(call.id, 'hold');
         }
     } else if (message.type === 'stop') {
         // User is hanging up via the UI button

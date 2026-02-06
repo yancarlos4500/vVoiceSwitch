@@ -528,7 +528,7 @@ export const useCoreStore = create<CoreState>((set: any, get: any) => {
     }
     function sendMessageNow(message: any) {
         // Intercept test bench calls (call/stop messages for active test bench lineIds)
-        if (message && (message.type === 'call' || message.type === 'stop')) {
+        if (message && (message.type === 'call' || message.type === 'stop' || message.type === 'hold')) {
             const tbHandler = typeof window !== 'undefined' ? (window as any).__TB_HANDLER__ : null;
             if (tbHandler?.isTestBenchCall(message.cmd1)) {
                 tbHandler.handleMessage(message);
