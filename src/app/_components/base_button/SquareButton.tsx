@@ -1,6 +1,7 @@
 // components/SquareButton.tsx
 
 import React, { useState } from 'react';
+import '../vatlines/styles.css';
 
 type SquareButtonProps = {
   topLine: string;
@@ -8,9 +9,11 @@ type SquareButtonProps = {
   onClick?: () => void; // Optional onClick handler
   showIndicator?: boolean; // Optional prop to show indicator
   style?: React.CSSProperties;
+  controlledIndicator?: boolean; // if provided, indicator visibility is controlled by this prop
+  indicatorClassName?: string; // panel-style indicator class: e.g., "flutter active", "steady green"
 };
 
-const SquareButton: React.FC<SquareButtonProps> = ({ topLine, bottomLine, onClick, showIndicator = false, style }) => {
+const SquareButton: React.FC<SquareButtonProps> = ({ topLine, bottomLine, onClick, showIndicator = false, style, controlledIndicator, indicatorClassName }) => {
   const [isActive, setIsActive] = useState(false);
   const [isIndicatorVisible, setIndicatorVisible] = useState(showIndicator);
 
@@ -24,6 +27,7 @@ const SquareButton: React.FC<SquareButtonProps> = ({ topLine, bottomLine, onClic
     if (onClick) onClick();
   };
 
+  const indicatorVisible = controlledIndicator ?? isIndicatorVisible;
   return (
     <button
       className={`relative w-16 h-16 bg-customBlue text-customYellow 
@@ -38,18 +42,24 @@ const SquareButton: React.FC<SquareButtonProps> = ({ topLine, bottomLine, onClic
       onMouseUp={handleMouseUp}
       onMouseLeave={() => setIsActive(false)} // Handle case where mouse leaves without release
     >
-      {/* Text anchored to top of indicator */}
-      <div className="absolute bottom-2.5 left-0 right-0 flex flex-col items-center justify-end">
-        <span className="text-lg font-bold uppercase break-words leading-tight">
+      {/* Text centered in button, above indicator bar */}
+      <div className="absolute inset-0 bottom-3 flex flex-col items-center justify-center">
+        <span className="text-2xl rdvs-label uppercase leading-none">
           {topLine}
         </span>
         {bottomLine && (
-          <span className="text-lg font-bold uppercase break-words leading-tight">
+          <span className="text-2xl rdvs-label uppercase leading-none">
             {bottomLine}
           </span>
         )}
       </div>
-      {isIndicatorVisible && (
+      {indicatorClassName ? (
+        <div className={indicatorClassName}>
+          <div className="ct">
+            <div className="inner"></div>
+          </div>
+        </div>
+      ) : indicatorVisible && (
         <div className="absolute bottom-0 left-0 right-0 h-3 bg-customGreen"></div>
       )}
     </button>

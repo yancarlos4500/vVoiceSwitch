@@ -1,0 +1,234 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+html {
+  -webkit-font-smoothing: antialiased;
+  -text-rendering: optimizeLegibility;
+}
+
+@font-face {
+  font-family: 'ivsr';
+  src: url('/Fonts/PIXEARG_.TTF') format('truetype');
+  font-weight: normal;
+  font-style: normal;
+}
+
+@layer utilities {
+  .clipped-box {
+    clip-path: polygon(0 150px,150px 0,calc(100% - 150px) 0,100% 150px,100% 100%,0 100%);
+  }
+  .clipped-boxSmall {
+    clip-path: polygon(0 0,100% 0,100% calc(100% - 14px),calc(100% - 14px) 100%,14px 100%,0 calc(100% - 14px));
+  }
+
+  .chiseled-btn {
+    background: linear-gradient(180deg, #1a3a7b 0%, #06329d 80%, #021a3a 100%);
+    border-top: 3px solid #3a5db7;
+    border-left: 3px solid #3a5db7;
+    border-bottom: 3px solid #021a3a;
+    border-right: 3px solid #021a3a;
+    color: #ffff6b;
+    font-weight: bold;
+    box-shadow: 0 2px 0 #021a3a, inset 0 1px 0 #3a5db7;
+    border-radius: 4px;
+    margin: 2px;
+    text-align: center;
+    letter-spacing: 0.5px;
+    user-select: none;
+    transition: filter 0.1s;
+  }
+  .chiseled-btn:active {
+    filter: brightness(0.85);
+    border-top: 3px solid #021a3a;
+    border-left: 3px solid #021a3a;
+    border-bottom: 3px solid #3a5db7;
+    border-right: 3px solid #3a5db7;
+    box-shadow: none;
+  }
+
+  /* Ported base_button styles */
+  .etvs-btn {
+    width: 4rem; /* w-16 */
+    height: 4rem; /* h-16 */
+    background-color: var(--tw-bg-customBlue, #1f67fa);
+    color: var(--tw-text-customYellow, #ffff6b);
+    border-width: 4px;
+    border-style: solid;
+    border-top-color: #3275ff;
+    border-left-color: #3275ff;
+    border-bottom-color: #000000;
+    border-right-color: #000000;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    justify-content: center;
+    text-align: center;
+    border-radius: 0;
+    font-family: 'ivsr', sans-serif;
+    font-size: 12px;
+    font-weight: bold;
+    position: relative;
+    overflow: hidden;
+    transition: filter 0.1s, border-color 0.1s;
+    user-select: none;
+    gap: 0.5rem;
+  }
+  .etvs-btn > * {
+    line-height: 1.3;
+  }
+  .etvs-btn-small {
+    height: 3.5rem; /* h-14 */
+  }
+  .etvs-btn-inactive {
+    border-top-color: #3275ff;
+    border-left-color: #3275ff;
+    border-bottom-color: #000000;
+    border-right-color: #000000;
+    background-image: linear-gradient(45deg, #1f67fa 25%, transparent 25%),
+      linear-gradient(-45deg, #1f67fa 25%, transparent 25%),
+      linear-gradient(45deg, transparent 75%, #1f67fa 75%),
+      linear-gradient(-45deg, transparent 75%, #1f67fa 75%);
+    background-size: 2px 2px;
+    background-position: 0 0, 0 1px, 1px -1px, -1px 0px;
+    background-color: #000000;
+  }
+  .etvs-btn-active {
+    border-top-color: #000000;
+    border-left-color: #000000;
+    border-bottom-color: #1f67fa;
+    border-right-color: #1f67fa;
+    background-image: linear-gradient(45deg, #1f67fa 25%, transparent 25%),
+      linear-gradient(-45deg, #1f67fa 25%, transparent 25%),
+      linear-gradient(45deg, transparent 75%, #1f67fa 75%),
+      linear-gradient(-45deg, transparent 75%, #1f67fa 75%);
+    background-size: 2px 2px;
+    background-position: 0 0, 0 1px, 1px -1px, -1px 0px;
+    background-color: #000000;
+  }
+  .etvs-btn-indicator {
+    position: absolute;
+    bottom: 1px;
+    width: 46px;
+    height: 13px;
+    padding-top: 2px;
+    padding-bottom: 2px;
+    background-color: var(--tw-bg-customGreen, #00ff00);
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 2;
+  }
+  .etvs-btn-label {
+    position: absolute;
+    top: 42%; /* moved up from 50% to make room for green bar */
+    left: 50%;
+    transform: translate(-50%, -50%);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    font-size: 14px;
+    font-family: 'ivsr', sans-serif;
+    text-transform: uppercase;
+    line-height: 1.6;
+    z-index: 3;
+    text-align: center;
+    pointer-events: none;
+  }
+  .etvs-btn-label-small {
+    font-size: 12px;
+    font-weight: normal;
+    text-transform: none;
+  }
+  .etvs-btn-label-bold {
+    font-weight: bold;
+  }
+
+  /* Add more space between button rows */
+  .etvs-row, .ag-row, .gg-row, .airground-row {
+    margin-bottom: 7px !important;
+  }
+}
+
+/* Flutter animation styles matching IVSR */
+.flutter {
+	position: absolute;
+	bottom: 4px;
+	left: -1px;
+	height: 9px;
+	width: calc(100% - 10px);
+	margin-left: 4px;
+	margin-right: 4px;
+	border-radius: 1px;
+}
+.flutter .ct { position: relative; width: 100%; height: 100%; }
+.flutter .inner {
+	height: 0px;
+	width: 0px;
+	border-style: solid;
+	border-width: 5px 26px 5px 26px;
+}
+
+.active { border: 2px solid #00fd3f; }
+.active .inner { border-color: #00fd3f transparent #00fd3f transparent; }
+
+.receive { border: 2px solid #00fd3f; }
+.receive .inner { border-color: transparent #00fd3f #00fd3f transparent; }
+
+.inuse { border: 2px solid #ff001c; }
+.inuse .inner { border-color: transparent #ff001c #ff001c transparent; }
+
+.hold { border: 2px solid #ff001c; }
+.hold .inner { border-color: #ff001c transparent #ff001c transparent; }
+
+.steady { border: 2px solid #00fd3f; }
+.steady .inner { border-color: #00fd3f transparent #00fd3f transparent; }
+
+.green { border: 2px solid #00fd3f; }
+.green .inner { border-color: #00fd3f transparent #00fd3f transparent; }
+
+/* ETVS Flutter animation: 72 times per minute = 833ms per cycle, 90% on (750ms) / 10% off (83ms) */
+.etvs-btn-indicator.etvs-flutter {
+  animation: etvs-flutter-effect 833ms infinite;
+}
+
+.etvs-btn-indicator.etvs-flutter-red {
+  animation: etvs-flutter-effect 833ms infinite;
+  background-color: #ff001c !important; /* Red background for remote TX */
+}
+
+/* ETVS Flash animation for incoming calls: 60 times per minute = 1000ms per cycle, 50% on/50% off */
+.etvs-btn-indicator.etvs-flash-green {
+  animation: etvs-flash-effect 1000ms infinite;
+  background-color: #00fd3f !important; /* Green background for incoming calls */
+}
+
+/* ETVS Solid red for busy lines */
+.etvs-btn-indicator.etvs-solid-red {
+  animation: none;
+  background-color: #ff001c !important;
+  opacity: 1;
+}
+
+.etvs-btn-indicator.etvs-steady {
+  /* Steady state - no animation */
+  animation: none;
+  opacity: 1;
+}
+
+/* Correct flutter timing: 90% on, 10% off */
+@keyframes etvs-flutter-effect {
+  0% { opacity: 1; }
+  90% { opacity: 1; }
+  90.1% { opacity: 0.1; }
+  100% { opacity: 0.1; }
+}
+
+/* Flash timing: 50% on, 50% off */
+@keyframes etvs-flash-effect {
+  0% { opacity: 1; }
+  50% { opacity: 1; }
+  50.1% { opacity: 0.1; }
+  100% { opacity: 0.1; }
+}

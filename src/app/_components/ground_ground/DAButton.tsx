@@ -1,6 +1,7 @@
 // components/DAButton.tsx
 
 import React, { useState } from 'react';
+import '../vatlines/styles.css';
 
 type DAButtonProps = {
   topLine: string;
@@ -11,9 +12,11 @@ type DAButtonProps = {
   showIndicator?: boolean; // Optional prop to show indicator
   dialLine?: number; // Dial line number. Could be phone number, IA code, or Function Code
   style?: React.CSSProperties;
+  controlledIndicator?: boolean;
+  indicatorClassName?: string;
 };
 
-const DAButton: React.FC<DAButtonProps> = ({ topLine, middleLine, bottomLine, onClick, showIndicator = false, style, latching, dialLine }) => {
+const DAButton: React.FC<DAButtonProps> = ({ topLine, middleLine, bottomLine, onClick, showIndicator = false, style, latching, dialLine, controlledIndicator, indicatorClassName }) => {
   const [isActive, setIsActive] = useState(false);
   const [isIndicatorVisible, setIndicatorVisible] = useState(showIndicator);
 
@@ -29,6 +32,7 @@ const DAButton: React.FC<DAButtonProps> = ({ topLine, middleLine, bottomLine, on
     if (!latching) setIndicatorVisible(false);
   };
 
+  const indicatorVisible = controlledIndicator ?? isIndicatorVisible;
   return (
     <button
       className={`relative w-16 h-16 bg-customBlue text-customYellow 
@@ -46,27 +50,33 @@ const DAButton: React.FC<DAButtonProps> = ({ topLine, middleLine, bottomLine, on
       {/* Centered and styled text */}
       {!middleLine && !bottomLine ? (
         // Single line - center vertically
-        <span className="text-lg font-bold break-words">
+        <span className="text-2xl rdvs-label break-words">
           {topLine}
         </span>
       ) : (
         <div className="flex flex-col items-center justify-center">
-          <span className="text-lg font-bold break-words leading-tight">
+          <span className="text-2xl rdvs-label break-words leading-tight">
             {topLine}
           </span>
           {middleLine && (
-            <span className="text-lg font-bold break-words leading-tight">
+            <span className="text-2xl rdvs-label break-words leading-tight">
               {middleLine}
             </span>
           )}
           {bottomLine && (
-            <span className="text-lg font-bold break-words leading-tight">
+            <span className="text-2xl rdvs-label break-words leading-tight">
               {bottomLine}
             </span>
           )}
         </div>
       )}
-      {isIndicatorVisible && (
+      {indicatorClassName ? (
+        <div className={indicatorClassName}>
+          <div className="ct">
+            <div className="inner"></div>
+          </div>
+        </div>
+      ) : indicatorVisible && (
         <div className="absolute bottom-0 left-0 right-0 h-3 bg-customGreen"></div>
       )}
     </button>

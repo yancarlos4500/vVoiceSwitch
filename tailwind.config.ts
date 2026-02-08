@@ -3,11 +3,18 @@ import { fontFamily } from "tailwindcss/defaultTheme";
 import { custom } from "zod";
 
 export default {
-  content: ["./src/**/*.tsx"],
+  content: [
+    "./src/**/*.tsx",
+    "./etvs-src/**/*.tsx",
+    "./etvs-src/**/*.ts",
+    "./etvs-src/**/*.js",
+    "./etvs-src/**/*.jsx"
+  ],
   theme: {
     extend: {
       fontFamily: {
         sans: ['"Arial"', 'sans-serif'],
+        ivsr: ['ivsr', 'sans-serif'],
       },
       colors: {
         customBlue: '#06329d',

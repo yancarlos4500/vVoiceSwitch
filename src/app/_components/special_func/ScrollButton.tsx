@@ -23,7 +23,7 @@ const ScrollButton: React.FC<ScrollButtonProps> = ({ direction, onClick, style }
   return (
     <button
       className={`relative w-16 h-8 bg-customBlue text-customYellow 
-    border-2 border-customGray flex items-start justify-center text-center
+    border-2 border-customGray flex items-center justify-center text-center overflow-hidden
     ${isActive ? 'border-customBlue' : ' border-customWhite'}`}
       onClick={onClick}
       style={{
@@ -35,7 +35,11 @@ const ScrollButton: React.FC<ScrollButtonProps> = ({ direction, onClick, style }
       onMouseUp={handleMouseUp}
       onMouseLeave={() => setIsActive(false)} // Handle case where mouse leaves without release
     >
-      <span className={`text-xl self-center ${direction === 'up' ? '' : 'rotate-180'}`}>&#9650;</span>
+      <span
+        className={`text-5xl leading-none select-none origin-center transform scale-110 ${direction === 'up' ? 'rotate-[-90deg]' : 'rotate-90'}`}
+      >
+        &#10095;
+      </span>
     </button>
   );
 };

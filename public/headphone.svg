@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg id="_图层_1" xmlns="http://www.w3.org/2000/svg" version="1.1" viewBox="0 0 576 512">
+  <!-- Generator: Adobe Illustrator 29.1.0, SVG Export Plug-In . SVG Version: 2.1.0 Build 142)  -->
+  <defs>
+    <style>
+      .st0 {
+        fill: none;
+        stroke: #ff0;
+        stroke-linecap: round;
+        stroke-linejoin: round;
+        stroke-width: 40px;
+      }
+
+      .st1 {
+        fill: #ff0;
+        fill-rule: evenodd;
+      }
+    </style>
+  </defs>
+  <polyline class="st0" points="150.4 425.2 150.4 160.8 216.6 94.7 349.1 94.7 419.5 164.9 419.5 425.2 487.8 357 423.6 293"/>
+  <polygon class="st1" points="58.7 353 142.3 273.2 142.3 440.2 58.7 353"/>
+  <polygon class="st1" points="498.5 359 424 298.4 424 425.1 498.5 359"/>
+</svg>

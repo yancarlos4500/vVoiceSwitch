@@ -1,3 +1,226 @@
+/* RDVS Cyan Box Indicator Animations */
+/* These animations control background fill while preserving the cyan border */
+.rdvs-flash {
+  background-color: rgb(103, 232, 249); /* Start with cyan fill */
+  animation: rdvs-flash 1s steps(2, start) infinite;
+}
+@keyframes rdvs-flash {
+  0%, 50% { background-color: rgb(103, 232, 249); } /* cyan-300 filled */
+  51%, 100% { background-color: #000000; } /* black background, border remains */
+}
+
+.rdvs-wink {
+  background-color: rgb(103, 232, 249); /* Start with cyan fill */
+  animation: rdvs-wink 1s steps(2, start) infinite;
+}
+@keyframes rdvs-wink {
+  0%, 95% { background-color: rgb(103, 232, 249); } /* cyan-300 filled */
+  96%, 100% { background-color: #000000; } /* black background, border remains */
+}
+
+.rdvs-flutter {
+  background-color: rgb(103, 232, 249); /* Start with cyan fill */
+  animation: rdvs-flutter 0.083s steps(2, start) infinite; /* 12 times per second = 83ms per cycle */
+}
+@keyframes rdvs-flutter {
+  0%, 80% { background-color: rgb(103, 232, 249); } /* cyan-300 filled */
+  81%, 100% { background-color: #000000; } /* black background, border remains */
+}
+
+/* Green flutter for override calls */
+.rdvs-flutter-green {
+  animation: rdvs-flutter-green 0.083s steps(2, start) infinite; /* 12 times per second = 83ms per cycle */
+}
+@keyframes rdvs-flutter-green {
+  0%, 80% { background-color: #93ca63; } /* green filled */
+  81%, 100% { background-color: #000000; } /* black background */
+}
+
+/* RDVS Air-to-Ground Circle Flutter - 8Hz frequency like other UIs */
+@keyframes flutter-8hz {
+  0%, 50% { 
+    opacity: 1; 
+    transform: scale(1); 
+  }
+  51%, 100% { 
+    opacity: 0; 
+    transform: scale(0.8); 
+  }
+}
+body {
+	background: #000 !important;
+	color-scheme: dark;
+}
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+/* Shared indicator styles (ported from panel button.scss) */
+.steady {
+	position: absolute;
+	bottom: 0px;
+	left: 0px;
+    right: 0px;
+	height: 14px;
+	margin-left: 0px;
+	margin-right: 4px;
+	width: calc(100% - 0px);
+}
+.steady .ct { display: none; }
+.steady .inner { display: none; }
+
+.flutter {
+	position: absolute;
+	bottom: 0px;
+	left: 0px;
+	right: 0px;
+	height: 12px;
+}
+.flutter .ct { 
+	position: relative; 
+	width: 100%; 
+	height: 100%; 
+	display: flex;
+	align-items: center;
+	justify-content: center;
+}
+.flutter .inner {
+	height: 5px;
+	width: 5px;
+	border-style: solid;
+	border-width: 6px 20px 6px 20px;
+}
+
+.active { border: 2px solid #00fd3f; }
+.active .inner { border-color: #00fd3f transparent #00fd3f transparent; }
+
+.receive { border: 2px solid #00fd3f; }
+.receive .inner { border-color: transparent #00fd3f #00fd3f transparent; }
+
+.inuse { border: 2px solid #ff001c; }
+.inuse .inner { border-color: transparent #ff001c #ff001c transparent; }
+
+.hold { border: 2px solid #ff001c; }
+.hold .inner { border-width: 0px 26px 10px 26px; border-color: transparent transparent #ff001c transparent; }
+
+.flashing { animation: cssAnimation 1s infinite; visibility: hidden; }
+@keyframes cssAnimation { 50% { visibility: hidden; } 51% { visibility: visible; } }
+
+.green { background: #00fd3f; }
+.red { background: #ff001c; }
+
+/* STVS Diode Flutter Animations - 72 times/minute = 833ms cycle, 90% on/10% off */
+@keyframes stvs-flutter-green {
+  0% { 
+    background-color: #00ff00; 
+    box-shadow: 0 0 8px 2px #00ff00, 0 0 2px #00ff00;
+    filter: brightness(1.2) drop-shadow(0 0 6px #00ff00);
+  }
+  90% { 
+    background-color: #00ff00; 
+    box-shadow: 0 0 8px 2px #00ff00, 0 0 2px #00ff00;
+    filter: brightness(1.2) drop-shadow(0 0 6px #00ff00);
+  }
+  91% { 
+    background-color: #004400; 
+    box-shadow: none;
+    filter: none;
+  }
+  100% { 
+    background-color: #004400; 
+    box-shadow: none;
+    filter: none;
+  }
+}
+
+.stvs-flutter-green {
+  animation: stvs-flutter-green 833ms infinite;
+}
+
+/* STVS G/G Button Animations */
+/* Flash green for incoming calls - 60 times/minute = 1000ms cycle, 50% on/50% off */
+@keyframes stvs-flash-green {
+  0% { 
+    background-color: #00ff00; 
+    box-shadow: 0 0 8px 2px #00ff00, 0 0 2px #00ff00;
+    filter: brightness(1.2) drop-shadow(0 0 6px #00ff00);
+  }
+  50% { 
+    background-color: #00ff00; 
+    box-shadow: 0 0 8px 2px #00ff00, 0 0 2px #00ff00;
+    filter: brightness(1.2) drop-shadow(0 0 6px #00ff00);
+  }
+  51% { 
+    background-color: #004400; 
+    box-shadow: none;
+    filter: none;
+  }
+  100% { 
+    background-color: #004400; 
+    box-shadow: none;
+    filter: none;
+  }
+}
+
+.stvs-flash-green {
+  animation: stvs-flash-green 1000ms infinite;
+}
+
+/* Solid red for busy lines */
+.stvs-solid-red {
+  background-color: #ff0000 !important;
+  box-shadow: 0 0 8px 2px #ff0000, 0 0 2px #ff0000 !important;
+  filter: brightness(1.2) drop-shadow(0 0 6px #ff0000) !important;
+}
+
+/* Zoom-resistant utility classes for frequency buttons and UI elements */
+.zoom-resistant {
+  zoom: 1 !important;
+  transform: scale(1) !important;
+  transform-origin: top left !important;
+}
+
+.zoom-resistant-container {
+  zoom: 1 !important;
+  transform: scale(1) !important;
+  transform-origin: top left !important;
+  min-width: max-content !important;
+}
+
+.frequency-button-container {
+  zoom: 1 !important;
+  transform: scale(1) !important;
+  transform-origin: top left !important;
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 2px !important;
+}
+
+.frequency-button {
+  zoom: 1 !important;
+  transform: scale(1) !important;
+  transform-origin: top left !important;
+  min-width: 280px !important;
+  max-width: 280px !important;
+}
+
+.ag-page-container {
+  zoom: 1 !important;
+  transform: scale(1) !important;
+  transform-origin: top left !important;
+}
+
+/* Override browser zoom on frequency-related elements */
+@media screen and (min-resolution: 1.25dppx) {
+  .frequency-button, .zoom-resistant, .ag-page-container {
+    zoom: 1 !important;
+  }
+}
+
+/* AG Button - rounded top, square bottom */
+.ag-button-rounded-top {
+  border-top-left-radius: 1.0rem !important;
+  border-top-right-radius: 1.0rem !important;
+  border-bottom-left-radius: 0 !important;
+  border-bottom-right-radius: 0 !important;
+}
