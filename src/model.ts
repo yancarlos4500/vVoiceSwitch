@@ -172,6 +172,7 @@ interface CoreState {
 let call_table: Record<string, [string, number]> = {}
 let line_order: Record<string, number> = {} // Track original line order for sorting
 let placeholder_indices: number[] = [] // Track indices where empty placeholder buttons should appear
+let ag_freq_order: number[] = [] // Track A/G frequency insertion order (preserves CRC add order)
 
 // RDVS-specific types
 export interface RDVSButton {
@@ -678,6 +679,7 @@ export const useCoreStore = create<CoreState>((set: any, get: any) => {
         }
         // Reset and populate line_order for sorting gg_status later
         line_order = {};
+        ag_freq_order = [];
         placeholder_indices = placeholderPositions;
         
         for (const item of dedup_ordered) {
@@ -813,6 +815,23 @@ export const useCoreStore = create<CoreState>((set: any, get: any) => {
                         ov.status === 'ok' || ov.status === 'active' || ov.status === 'hold'
                     );
                     const overrideCallStatus = new_override.length > 0 ? new_override[0].status : 'off';
+
+                    // Track A/G frequency insertion order: new freqs appended, removed freqs pruned
+                    const currentFreqs = new Set(new_ag.map((a: any) => a.freq));
+                    // Remove frequencies no longer present
+                    ag_freq_order = ag_freq_order.filter(f => currentFreqs.has(f));
+                    // Append any new frequencies (preserves order they first appeared)
+                    for (const ag of new_ag) {
+                        if (!ag_freq_order.includes(ag.freq)) {
+                            ag_freq_order.push(ag.freq);
+                        }
+                    }
+                    // Sort A/G by insertion order
+                    new_ag.sort((a: any, b: any) => {
+                        const aIdx = ag_freq_order.indexOf(a.freq);
+                        const bIdx = ag_freq_order.indexOf(b.freq);
+                        return aIdx - bIdx;
+                    });
 
                     debounce_set({
                         ag_status: new_ag,
