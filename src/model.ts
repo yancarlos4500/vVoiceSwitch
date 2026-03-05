@@ -748,13 +748,53 @@ export const useCoreStore = create<CoreState>((set: any, get: any) => {
         line_order = {};
         ag_freq_order = [];
         placeholder_indices = placeholderPositions;
+
+        // Separate VACS lines (vacs: prefix) from AFV lines
+        const vacsConfigLines: Array<{ target: string; targetType: 'position' | 'station' | 'client'; label: string; lineType: number; sortIndex: number }> = [];
         
         for (const item of dedup_ordered) {
             const line = item.line;
-            call_table[line[0]] = [line[2], line[1]]
-            line_order[String(line[0])] = item.originalIndex;
-            addCall(line[1], '' + line[0])
+            const lineId = String(line[0]);
+
+            if (lineId.startsWith('vacs:')) {
+                // VACS line — parse target from ID, don't register with AFV
+                // Formats: "vacs:LON_S_CTR", "vacs:pos:LON_S_CTR", "vacs:stn:EGLL_GND", "vacs:cid:1234567"
+                const afterPrefix = lineId.substring(5); // remove 'vacs:'
+                let targetType: 'position' | 'station' | 'client' = 'position';
+                let target = afterPrefix;
+
+                if (afterPrefix.startsWith('pos:')) {
+                    target = afterPrefix.substring(4);
+                    targetType = 'position';
+                } else if (afterPrefix.startsWith('stn:')) {
+                    target = afterPrefix.substring(4);
+                    targetType = 'station';
+                } else if (afterPrefix.startsWith('cid:')) {
+                    target = afterPrefix.substring(4);
+                    targetType = 'client';
+                }
+
+                // Still add to call_table and line_order so labels resolve and sort correctly
+                call_table[lineId] = [line[2], line[1]];
+                line_order[lineId] = item.originalIndex;
+
+                vacsConfigLines.push({
+                    target: target.toUpperCase(),
+                    targetType,
+                    label: String(line[2] || target),
+                    lineType: line[1] ?? 2,
+                    sortIndex: item.originalIndex,
+                });
+            } else {
+                // AFV line — register normally
+                call_table[line[0]] = [line[2], line[1]];
+                line_order[String(line[0])] = item.originalIndex;
+                addCall(line[1], '' + line[0]);
+            }
         }
+
+        // Pass configured VACS lines to the VACS store
+        vacsStore.setConfiguredLines(vacsConfigLines);
         cid && addIaCall(1, '' + cid)
         syncTimeout = setTimeout(() => {
             sendMessageNow({ type: 'sync' })

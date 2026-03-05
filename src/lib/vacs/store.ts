@@ -55,11 +55,22 @@ export const INITIAL_VACS_STATE: VacsStoreState = {
 
 // ─── VACS Store Singleton ────────────────────────────────────────────────────
 
+/** A VACS line configured in the position JSON (e.g. ["vacs:LON_S_CTR", 2, "LON,SOUTH"]) */
+export interface VacsConfiguredLine {
+  target: string;
+  targetType: 'position' | 'station' | 'client';
+  label: string;
+  lineType: number;
+  sortIndex: number;
+}
+
 class VacsStore {
   private client: VacsClient | null = null;
   private storeSet: ((partial: any) => void) | null = null;
   private storeGet: (() => any) | null = null;
   private listeners = new Set<VacsClientEventHandler>();
+  /** VACS lines from the position JSON config */
+  private configuredLines: VacsConfiguredLine[] = [];
 
   /** Bind to the zustand store's set/get functions */
   bindStore(set: (partial: any) => void, get: () => any): void {
@@ -119,6 +130,23 @@ class VacsStore {
     });
   }
 
+  // ─── Configured Lines ────────────────────────────────────────────────
+
+  /**
+   * Set the VACS lines parsed from the position JSON.
+   * Called by model.ts resetWindow() when position config is loaded.
+   */
+  setConfiguredLines(lines: VacsConfiguredLine[]): void {
+    this.configuredLines = lines;
+    // Immediately refresh gg_status so static VACS buttons appear
+    this.refreshGgStatus();
+  }
+
+  /** Get the configured VACS lines */
+  getConfiguredLines(): VacsConfiguredLine[] {
+    return this.configuredLines;
+  }
+
   // ─── Call Management ─────────────────────────────────────────────────
 
   /** Call a station by its ID */
@@ -159,12 +187,21 @@ class VacsStore {
    * @param currentStatus - The current button status (off, chime, ringing, ok, etc.)
    */
   handleButtonPress(vacsCallId: CallId, currentStatus: string): void {
-    if (!this.client) return;
-
     switch (currentStatus) {
       case 'off':
-        // Button was off — this shouldn't typically happen since VACS buttons
-        // are dynamically added. Could be re-initiating a call.
+        // Button was idle — check if this is a configured line target to initiate a call
+        if (vacsCallId.startsWith('vacs_cfg:')) {
+          if (!this.client) {
+            console.warn('[VACS Store] Cannot call: not connected to VACS');
+            return;
+          }
+          const parts = vacsCallId.split(':');
+          const targetType = parts[1]; // pos, stn, cid
+          const targetId = parts.slice(2).join(':'); // handle colons in IDs
+          if (targetType === 'pos') this.callPosition(targetId);
+          else if (targetType === 'stn') this.callStation(targetId);
+          else if (targetType === 'cid') this.callClient(targetId);
+        }
         break;
       case 'chime':
         // Incoming call ringing — accept it
@@ -181,7 +218,9 @@ class VacsStore {
         break;
       default:
         // Unknown state — try ending
-        this.endCall(vacsCallId);
+        if (vacsCallId && !vacsCallId.startsWith('vacs_cfg:')) {
+          this.endCall(vacsCallId);
+        }
         break;
     }
   }
@@ -189,11 +228,65 @@ class VacsStore {
   // ─── G/G Status Bridge ──────────────────────────────────────────────
 
   /**
-   * Get VACS calls as gg_status entries.
-   * These are appended to the AFV gg_status array in the store's channel_status handler.
+   * Get VACS entries for gg_status.
+   * Merges configured (static) lines with active call state:
+   * - Configured lines appear as idle buttons when no call is active for that target
+   * - When a call is active for a configured target, the entry reflects the call state
+   * - Dynamic incoming calls not matching any configured line are also included
    */
   getGgStatusEntries(): any[] {
-    return this.client?.getGgStatusEntries() ?? [];
+    const activeEntries = this.client?.getGgStatusEntries() ?? [];
+
+    if (this.configuredLines.length === 0) {
+      // No configured lines — return only dynamic active call entries
+      return activeEntries;
+    }
+
+    const entries: any[] = [];
+    const matchedCallIds = new Set<string>();
+
+    for (const cfgLine of this.configuredLines) {
+      // Try to find an active call matching this configured target
+      const matchingCall = activeEntries.find((entry: any) => {
+        const remoteId = (entry.call || '').replace('VACS_', '').toUpperCase();
+        return remoteId === cfgLine.target.toUpperCase();
+      });
+
+      if (matchingCall) {
+        // Active call matches this configured line — use call state
+        matchedCallIds.add(matchingCall.vacsCallId);
+        entries.push({
+          ...matchingCall,
+          call_name: cfgLine.label, // Prefer config label over remote display name
+          lineType: cfgLine.lineType,
+          vacsTarget: cfgLine.target,
+          vacsTargetType: cfgLine.targetType,
+        });
+      } else {
+        // No active call — show as idle button ready to initiate a call
+        const abbrevType = cfgLine.targetType === 'position' ? 'pos'
+          : cfgLine.targetType === 'station' ? 'stn' : 'cid';
+        entries.push({
+          call: `VACS_${cfgLine.target}`,
+          call_name: cfgLine.label,
+          status: 'off',
+          isVacs: true,
+          vacsCallId: `vacs_cfg:${abbrevType}:${cfgLine.target}`,
+          vacsTarget: cfgLine.target,
+          vacsTargetType: cfgLine.targetType,
+          lineType: cfgLine.lineType,
+        });
+      }
+    }
+
+    // Add any active calls that don't match a configured line (incoming from unknown targets)
+    for (const entry of activeEntries) {
+      if (!matchedCallIds.has(entry.vacsCallId)) {
+        entries.push(entry);
+      }
+    }
+
+    return entries;
   }
 
   // ─── Event Handling ──────────────────────────────────────────────────
