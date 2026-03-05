@@ -1,6 +1,6 @@
 import { create } from 'zustand'
 import type { RDVSColorPattern } from './types/ted_pattern_types';
-import { vacsStore, INITIAL_VACS_STATE } from './lib/vacs/store';
+import { vacsStore, INITIAL_VACS_STATE, loadVacsCredentials } from './lib/vacs/store';
 import type { VacsStoreState } from './lib/vacs/store';
 import type { CallId as VacsCallId, ClientInfo as VacsClientInfo } from './lib/vacs/types';
 import { vvscsStore, INITIAL_VVSCS_STATE } from './lib/vvscs/store';
@@ -841,14 +841,16 @@ export const useCoreStore = create<CoreState>((set: any, get: any) => {
                 call_table[lineId] = [line[2], line[1]];
                 line_order[lineId] = item.originalIndex;
 
-                vvscsConfigLines.push({
+                const cfgEntry = {
                     target: target.toUpperCase(),
                     targetType,
                     remoteFacility: remoteFacility?.toUpperCase(),
                     label: String(line[2] || target),
                     lineType: line[1] ?? 2,
                     sortIndex: item.originalIndex,
-                });
+                };
+                console.log('[resetWindow] v-VSCS line found:', lineId, cfgEntry);
+                vvscsConfigLines.push(cfgEntry);
             } else {
                 // AFV line — register normally
                 call_table[line[0]] = [line[2], line[1]];
@@ -860,7 +862,44 @@ export const useCoreStore = create<CoreState>((set: any, get: any) => {
         // Pass configured VACS lines to the VACS store
         vacsStore.setConfiguredLines(vacsConfigLines);
         // Pass configured v-VSCS lines to the v-VSCS store
+        console.log('[resetWindow] Passing', vvscsConfigLines.length, 'v-VSCS lines to store:', vvscsConfigLines);
         vvscsStore.setConfiguredLines(vvscsConfigLines);
+
+        // Auto-connect to v-VSCS if position has vvscs: lines and we're not already connected
+        if (vvscsConfigLines.length > 0 && !vvscsStore.isConnected) {
+            const selectedPos = selected_positions[0] as any;
+            const posName = selectedPos?.pos || selectedPos?.cs || callsign;
+            // Derive facility ID by walking positionData tree to find which facility owns this position
+            const { positionData } = get();
+            let facilityId = '';
+            const findFacility = (fac: any): boolean => {
+                if (fac.positions?.some((p: any) => p.cs === selectedPos?.cs)) {
+                    facilityId = fac.id || '';
+                    return true;
+                }
+                for (const child of fac.childFacilities || []) {
+                    if (findFacility(child)) return true;
+                }
+                return false;
+            };
+            findFacility(positionData);
+            if (facilityId && posName) {
+                console.log('[resetWindow] Auto-connecting to v-VSCS as', facilityId, posName);
+                vvscsStore.connectVvscs(facilityId, posName);
+            }
+        }
+
+        // Auto-connect to VACS if position has vacs: lines, we're not already connected,
+        // and we have a saved token from a previous session
+        if (vacsConfigLines.length > 0 && !vacsStore.isConnected) {
+            const saved = loadVacsCredentials();
+            if (saved) {
+                const positionId = callsign || undefined;
+                console.log('[resetWindow] Auto-connecting to VACS with saved token (prod=' + saved.useProd + ')');
+                vacsStore.connectVacs(saved.token, positionId, saved.useProd);
+            }
+        }
+
         cid && addIaCall(1, '' + cid)
         syncTimeout = setTimeout(() => {
             sendMessageNow({ type: 'sync' })

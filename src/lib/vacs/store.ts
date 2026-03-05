@@ -24,6 +24,38 @@ import type {
 } from './types';
 import { VACS_DEV_CONFIG, VACS_PROD_CONFIG } from './types';
 
+// ─── localStorage keys for token persistence ─────────────────────────────────
+const LS_VACS_TOKEN = 'vacs_token';
+const LS_VACS_USE_PROD = 'vacs_use_prod';
+
+/** Save VACS credentials to localStorage for auto-reconnect */
+function persistVacsCredentials(token: string, useProd: boolean): void {
+  try {
+    localStorage.setItem(LS_VACS_TOKEN, token);
+    localStorage.setItem(LS_VACS_USE_PROD, useProd ? '1' : '0');
+  } catch { /* SSR or quota exceeded – ignore */ }
+}
+
+/** Load saved VACS credentials from localStorage */
+export function loadVacsCredentials(): { token: string; useProd: boolean } | null {
+  try {
+    const token = localStorage.getItem(LS_VACS_TOKEN);
+    if (!token) return null;
+    const useProd = localStorage.getItem(LS_VACS_USE_PROD) === '1';
+    return { token, useProd };
+  } catch {
+    return null;
+  }
+}
+
+/** Clear saved VACS credentials (e.g. on auth failure or manual disconnect) */
+export function clearVacsCredentials(): void {
+  try {
+    localStorage.removeItem(LS_VACS_TOKEN);
+    localStorage.removeItem(LS_VACS_USE_PROD);
+  } catch { /* ignore */ }
+}
+
 // ─── Store State ─────────────────────────────────────────────────────────────
 
 export interface VacsStoreState {
@@ -71,6 +103,10 @@ class VacsStore {
   private listeners = new Set<VacsClientEventHandler>();
   /** VACS lines from the position JSON config */
   private configuredLines: VacsConfiguredLine[] = [];
+  /** Token used for the current/last connection attempt (for persistence) */
+  private lastToken: string | null = null;
+  /** Whether the current/last connection used production */
+  private lastUseProd = false;
 
   /** Bind to the zustand store's set/get functions */
   bindStore(set: (partial: any) => void, get: () => any): void {
@@ -103,6 +139,10 @@ class VacsStore {
    * @param useProd - Use production server (default: false = dev/sandbox)
    */
   connectVacs(token: string, positionId?: PositionId, useProd = false): void {
+    // Remember token/env for persistence on successful auth
+    this.lastToken = token;
+    this.lastUseProd = useProd;
+
     // Disconnect existing client if any
     if (this.client) {
       this.client.destroy();
@@ -118,13 +158,15 @@ class VacsStore {
     this.client.connect(token, positionId?.toUpperCase());
   }
 
-  /** Disconnect from VACS */
+  /** Disconnect from VACS and clear saved credentials */
   disconnectVacs(): void {
     if (this.client) {
       this.client.disconnect();
       this.client.destroy();
       this.client = null;
     }
+    this.lastToken = null;
+    clearVacsCredentials();
     this.updateState({
       ...INITIAL_VACS_STATE,
     });
@@ -310,6 +352,11 @@ class VacsStore {
           vacsClientInfo: event.clientInfo,
           vacsError: null,
         });
+        // Persist token on successful auth so we can auto-reconnect later
+        if (this.lastToken) {
+          persistVacsCredentials(this.lastToken, this.lastUseProd);
+          console.log('[VACS Store] Token saved to localStorage for auto-reconnect');
+        }
         console.log('[VACS Store] Connected:', event.clientInfo.displayName);
         break;
 
@@ -356,6 +403,14 @@ class VacsStore {
         this.updateState({
           vacsError: event.error,
         });
+        // Clear stored credentials if it looks like an auth/token error
+        if (
+          event.error &&
+          /auth|token|unauthorized|forbidden|invalid/i.test(event.error)
+        ) {
+          clearVacsCredentials();
+          console.warn('[VACS Store] Auth error — cleared saved token');
+        }
         console.error('[VACS Store] Error:', event.error);
         break;
     }

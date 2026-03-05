@@ -4,8 +4,9 @@ import Input from 'antd/es/input'
 import Button from 'antd/es/button'
 import Switch from 'antd/es/switch'
 import { useCoreStore, type Facility } from '../model';
-import { useMemo, useState, useCallback } from 'react';
+import { useMemo, useState, useCallback, useEffect } from 'react';
 import { VACS_DEV_CONFIG, VACS_PROD_CONFIG } from '../lib/vacs/types';
+import { loadVacsCredentials, clearVacsCredentials } from '../lib/vacs/store';
 import { VVSCS_SERVER_URL } from '../lib/vvscs/types';
 
 interface Position {
@@ -55,7 +56,11 @@ function SettingModal({ open, setModal }: SettingModalProps) {
     const [search, setSearch] = useState('')
     const [selectedPosition, setSelectedPosition] = useState<Position | null>(null)
     const [vacsToken, setVacsToken] = useState('')
-    const [useProdVacs, setUseProdVacs] = useState(false)
+    const [useProdVacs, setUseProdVacs] = useState(() => {
+        const saved = loadVacsCredentials();
+        return saved?.useProd ?? false;
+    })
+    const [hasSavedToken, setHasSavedToken] = useState(() => !!loadVacsCredentials())
     const [vvscsFacility, setVvscsFacility] = useState('')
     const [vvscsPosition, setVvscsPosition] = useState('')
 
@@ -106,7 +111,16 @@ function SettingModal({ open, setModal }: SettingModalProps) {
         const positionId = callsign || undefined;
         connectVacs(vacsToken.trim(), positionId, useProdVacs);
         setVacsToken('');
+        // Token will be persisted on successful 'connected' event in the store
+        // Refresh saved-token indicator after a short delay
+        setTimeout(() => setHasSavedToken(!!loadVacsCredentials()), 3000);
     }, [vacsToken, callsign, connectVacs, useProdVacs]);
+
+    /** Clear saved VACS token from localStorage */
+    const handleClearSavedToken = useCallback(() => {
+        clearVacsCredentials();
+        setHasSavedToken(false);
+    }, []);
 
     const vacsBaseUrl = useProdVacs ? VACS_PROD_CONFIG.httpBaseUrl : VACS_DEV_CONFIG.httpBaseUrl;
 
@@ -217,10 +231,20 @@ function SettingModal({ open, setModal }: SettingModalProps) {
                     </Button>
                 ) : (
                     <>
+                        {hasSavedToken && (
+                            <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
+                                <span style={{ fontSize: 12, color: '#52c41a' }}>
+                                    Token saved — will auto-connect when position has vacs: lines
+                                </span>
+                                <Button size="small" onClick={handleClearSavedToken} style={{ marginLeft: 'auto' }}>
+                                    Forget
+                                </Button>
+                            </div>
+                        )}
                         <div style={{ display: 'flex', gap: 8, marginBottom: 8 }}>
                             <Input
                                 size="small"
-                                placeholder="WS Token"
+                                placeholder={hasSavedToken ? 'Paste new token to update' : 'WS Token'}
                                 value={vacsToken}
                                 onChange={e => setVacsToken(e.target.value)}
                                 onPressEnter={handleVacsConnect}
