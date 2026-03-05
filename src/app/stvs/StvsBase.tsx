@@ -81,6 +81,7 @@ const StvsBase: React.FC = () => {
   const ggData = useCoreStore(ggSelector);
   const pttActive = useCoreStore(pttSelector);
   const sendMsg = useCoreStore((s: any) => s.sendMessageNow);
+  const vacsHandleButtonPress = useCoreStore((s: any) => s.vacsHandleButtonPress);
   
   // Convert ILLUM knob angle (-135 to +135) to brightness (0.1 to 1.0)
   const handleIllumChange = useCallback((angle: number) => {
@@ -254,6 +255,10 @@ const StvsBase: React.FC = () => {
           let onClick: (() => void) | undefined = undefined;
           
           if (ggItem && ggItem.call) {
+            // VACS WebRTC calls — route through VACS handler
+            if (ggItem.isVacs && ggItem.vacsCallId) {
+              onClick = () => vacsHandleButtonPress(ggItem.vacsCallId, ggItem.status);
+            } else {
             const call_type = ggItem.call?.substring(0, 2);
             const call_id = ggItem.call?.substring(3);
             const lineType = ggItem.lineType ?? 2; // Use line type from data, default to 2 (regular)
@@ -281,6 +286,7 @@ const StvsBase: React.FC = () => {
                 onClick = () => sendMsg({ type: 'stop', cmd1: call_id, dbl1: lineType }); // Hangup DL
               }
             }
+            } // end else (non-VACS)
           }
           
           return (

@@ -1,5 +1,8 @@
 import { create } from 'zustand'
 import type { RDVSColorPattern } from './types/ted_pattern_types';
+import { vacsStore, INITIAL_VACS_STATE } from './lib/vacs/store';
+import type { VacsStoreState } from './lib/vacs/store';
+import type { CallId as VacsCallId, ClientInfo as VacsClientInfo } from './lib/vacs/types';
 
 interface Position {
     cs: string;
@@ -96,7 +99,7 @@ export function resolveDialCode(dialCodeTable: DialCodeTable | null, trunkName: 
     return trunkCodes[dialCode] || null;
 }
 
-interface CoreState {
+interface CoreState extends VacsStoreState {
     connected: boolean;
     afv_version: string;
     ptt: boolean;
@@ -167,6 +170,15 @@ interface CoreState {
     // Dial call functions
     setActiveDialLine: (dialLine: { trunkName: string; lineType: number } | null) => void;
     sendDialCall: (trunkName: string, dialCode: string) => void;
+
+    // VACS integration
+    connectVacs: (token: string, positionId?: string, useProd?: boolean) => void;
+    disconnectVacs: () => void;
+    vacsCallStation: (stationId: string, prio?: boolean) => string | null;
+    vacsCallPosition: (positionId: string, prio?: boolean) => string | null;
+    vacsAcceptCall: (callId: string) => void;
+    vacsEndCall: (callId: string) => void;
+    vacsHandleButtonPress: (callId: string, currentStatus: string) => void;
 }
 
 let call_table: Record<string, [string, number]> = {}
@@ -401,6 +413,9 @@ export function chime(audio: HTMLAudioElement | null | undefined) {
 }
 
 export const useCoreStore = create<CoreState>((set: any, get: any) => {
+    // Bind VACS store bridge to this zustand instance
+    vacsStore.bindStore(set, get);
+
     let socket: WebSocket | null;
     const ds: CoreState = {
         connected: false,
@@ -427,13 +442,13 @@ export const useCoreStore = create<CoreState>((set: any, get: any) => {
     heldLandlines: [],
     buttonPress: () => {},
     holdBtn: () => {
-        // Hold all active G/G calls
+        // Hold all active G/G calls (AFV only — VACS does not support hold)
         const { gg_status, sendMessageNow } = get();
         const activeCalls = (gg_status || []).filter((call: any) =>
-            call && (call.status === 'ok' || call.status === 'active')
+            call && (call.status === 'ok' || call.status === 'active') && !call.isVacs
         );
 
-        console.log('[holdBtn] Holding', activeCalls.length, 'active calls');
+        console.log('[holdBtn] Holding', activeCalls.length, 'active AFV calls');
 
         activeCalls.forEach((call: any) => {
             const fullCall = call.call;
@@ -456,6 +471,13 @@ export const useCoreStore = create<CoreState>((set: any, get: any) => {
         console.log('[releaseBtn] Releasing', activeCalls.length, 'active calls');
 
         activeCalls.forEach((call: any) => {
+            // VACS calls: end via WebRTC
+            if (call.isVacs && call.vacsCallId) {
+                console.log('[releaseBtn] Ending VACS call:', call.vacsCallId);
+                vacsStore.endCall(call.vacsCallId);
+                return;
+            }
+
             const fullCall = call.call;
             // Strip variable-length prefixes: gg_05_, OV_, SO_, etc.
             const call_id = fullCall?.replace(/^(?:gg_\d+_|OV_|SO_)/, '') || '';
@@ -609,7 +631,33 @@ export const useCoreStore = create<CoreState>((set: any, get: any) => {
                     set({ dialCallStatus: 'ringback' });
                 }
             }, 200);
-        }
+        },
+
+        // VACS integration state
+        ...INITIAL_VACS_STATE,
+
+        // VACS integration methods
+        connectVacs: (token: string, positionId?: string, useProd?: boolean) => {
+            vacsStore.connectVacs(token, positionId, useProd);
+        },
+        disconnectVacs: () => {
+            vacsStore.disconnectVacs();
+        },
+        vacsCallStation: (stationId: string, prio = false) => {
+            return vacsStore.callStation(stationId, prio);
+        },
+        vacsCallPosition: (positionId: string, prio = false) => {
+            return vacsStore.callPosition(positionId, prio);
+        },
+        vacsAcceptCall: (callId: string) => {
+            vacsStore.acceptCall(callId);
+        },
+        vacsEndCall: (callId: string) => {
+            vacsStore.endCall(callId);
+        },
+        vacsHandleButtonPress: (callId: string, currentStatus: string) => {
+            vacsStore.handleButtonPress(callId, currentStatus);
+        },
     }
 
     function addCall(callType: number, cmd1: string) {
@@ -864,9 +912,13 @@ export const useCoreStore = create<CoreState>((set: any, get: any) => {
                         return aIdx - bIdx;
                     });
 
+                    // Append any active VACS G/G entries so they aren't wiped by AFV updates
+                    const vacsGg = vacsStore.getGgStatusEntries();
+                    const merged_gg = [...new_gg, ...vacsGg];
+
                     debounce_set({
                         ag_status: new_ag,
-                        gg_status: new_gg,
+                        gg_status: merged_gg,
                         vscs_status: new_vscs,
                         overrideStatus: new_override,
                         isBeingOverridden: hasActiveOverride,

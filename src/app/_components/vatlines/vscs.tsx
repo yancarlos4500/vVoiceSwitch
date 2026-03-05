@@ -840,6 +840,7 @@ function VikKeypad() {
   const [showBrightnessScale, setShowBrightnessScale] = useState<'disp' | 'key' | null>(null); // Show brightness scale in display
   
   const sendMsg = useCoreStore((s: any) => s.sendMessageNow);
+  const vacsHandleButtonPress = useCoreStore((s: any) => s.vacsHandleButtonPress);
   const positionData = useCoreStore((s: any) => s.positionData);
   const selectedPositions = useCoreStore((s: any) => s.selectedPositions);
   const gg_status = useCoreStore((s: any) => s.gg_status);
@@ -1154,7 +1155,21 @@ function VikKeypad() {
     if (callState === 'active' || callState === 'ringing') {
       // Release active call using the stored line ID
       console.log('VIK: Releasing call, lineId:', activeLineId);
-      
+
+      // Check if this is a VACS call — find matching entry in gg_status
+      const vacsEntry = activeLineId && (gg_status || []).find((call: any) =>
+        call?.isVacs && call?.call?.includes(activeLineId)
+      );
+      if (vacsEntry) {
+        console.log('VIK: Releasing VACS call:', vacsEntry.vacsCallId);
+        vacsHandleButtonPress(vacsEntry.vacsCallId, vacsEntry.status);
+        setDisplayLine1(VIK_MESSAGES.CALL_RELEASED);
+        setDisplayLine2('');
+        setCallState('released');
+        setTimeout(() => { setDisplayLine1(''); setDisplayLine2(''); setCallState('idle'); setDialBuffer(''); setActiveLineId(null); }, 3000);
+        return;
+      }
+
       if (activeLineId) {
         // Determine the correct dbl1 based on the call type (first digit of dialBuffer)
         const firstDigit = dialBuffer[0] || '';
@@ -1509,6 +1524,7 @@ function VscsPanel(props: VscsProps & { panelId?: string; defaultScreenMode?: st
   const gg_status = useCoreStore((s: any) => s.gg_status);
   const ag_status = useCoreStore((s: any) => s.ag_status);
   const sendMsg = useCoreStore((s: any) => s.sendMessageNow);
+  const vacsHandleButtonPress = useCoreStore((s: any) => s.vacsHandleButtonPress);
   const positionData = useCoreStore((s: any) => s.positionData);
   const overrideStatus = useCoreStore((s: any) => s.overrideStatus); // OV_ calls from WebSocket
   const isBeingOverridden = useCoreStore((s: any) => s.isBeingOverridden); // Active override state
@@ -1750,6 +1766,13 @@ function VscsPanel(props: VscsProps & { panelId?: string; defaultScreenMode?: st
     
     // Only proceed if we have valid button data
     if (buttonData) {
+      // VACS WebRTC calls — route through VACS handler
+      if (buttonData.isVacs && buttonData.vacsCallId) {
+        console.log('VACS call button pressed:', buttonData.vacsCallId, 'status:', buttonData.status);
+        vacsHandleButtonPress(buttonData.vacsCallId, buttonData.status);
+        return;
+      }
+
       // Extract call ID properly - handle different formats
       let call_id;
       const fullCall = buttonData.call;

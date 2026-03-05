@@ -39,6 +39,7 @@ const GroundGroundPage: React.FC<GroundGroundPageProps> = ({
   const sendMsg = useCoreStore((s: any) => s.sendMessageNow);
   const ptt = useCoreStore((s: any) => s.ptt);
   const gg_status = useCoreStore((s: any) => s.gg_status);
+  const vacsHandleButtonPress = useCoreStore((s: any) => s.vacsHandleButtonPress);
   const ITEM_PER_PAGE = 18;
   const currentSlice = useMemo(() => {
     // Implement overflow logic: if there are more G/G entries than can fit on page 1,
@@ -85,6 +86,38 @@ const GroundGroundPage: React.FC<GroundGroundPageProps> = ({
   let onClick: (() => void) | undefined = undefined;
   let indicator = false;
   let indicatorClassName = '';
+
+      // VACS WebRTC calls — route through VACS handler instead of AFV
+      if (data.isVacs && data.vacsCallId) {
+        if (data.status === 'ok' || data.status === 'active') {
+          indicator = ptt;
+          indicatorClassName = indicator ? 'flutter active' : 'steady green';
+        } else if (data.status === 'chime' || data.status === 'ringing') {
+          indicator = true;
+          indicatorClassName = 'flutter receive flashing';
+        }
+        onClick = () => vacsHandleButtonPress(data.vacsCallId, data.status);
+
+        const callNameStr = data.call_name || data.call || '';
+        const callNameParts = callNameStr.includes(',')
+          ? callNameStr.split(',').map((part: string) => part.trim())
+          : [callNameStr];
+
+        buttons.push(
+          <DAButton
+            key={index}
+            topLine={callNameParts[0] || ''}
+            middleLine={callNameParts[1]}
+            bottomLine={callNameParts[2]}
+            latching={false}
+            onClick={onClick}
+            controlledIndicator={indicator}
+            indicatorClassName={indicatorClassName}
+          />
+        );
+        return;
+      }
+
       // Simplified mapping; follow panel.tsx behavior
       if (call_type === 'SO') {
         if (data.status === 'idle') {
