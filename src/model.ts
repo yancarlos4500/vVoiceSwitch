@@ -3,6 +3,8 @@ import type { RDVSColorPattern } from './types/ted_pattern_types';
 import { vacsStore, INITIAL_VACS_STATE } from './lib/vacs/store';
 import type { VacsStoreState } from './lib/vacs/store';
 import type { CallId as VacsCallId, ClientInfo as VacsClientInfo } from './lib/vacs/types';
+import { vvscsStore, INITIAL_VVSCS_STATE } from './lib/vvscs/store';
+import type { VvscsStoreState } from './lib/vvscs/store';
 
 interface Position {
     cs: string;
@@ -99,7 +101,7 @@ export function resolveDialCode(dialCodeTable: DialCodeTable | null, trunkName: 
     return trunkCodes[dialCode] || null;
 }
 
-interface CoreState extends VacsStoreState {
+interface CoreState extends VacsStoreState, VvscsStoreState {
     connected: boolean;
     afv_version: string;
     ptt: boolean;
@@ -179,6 +181,11 @@ interface CoreState extends VacsStoreState {
     vacsAcceptCall: (callId: string) => void;
     vacsEndCall: (callId: string) => void;
     vacsHandleButtonPress: (callId: string, currentStatus: string) => void;
+
+    // v-VSCS integration
+    connectVvscs: (facility: string, position: string, assumedPositions?: string[]) => void;
+    disconnectVvscs: () => void;
+    vvscsHandleButtonPress: (vvscsLineId: string, currentStatus: string) => void;
 }
 
 let call_table: Record<string, [string, number]> = {}
@@ -415,6 +422,8 @@ export function chime(audio: HTMLAudioElement | null | undefined) {
 export const useCoreStore = create<CoreState>((set: any, get: any) => {
     // Bind VACS store bridge to this zustand instance
     vacsStore.bindStore(set, get);
+    // Bind v-VSCS store bridge to this zustand instance
+    vvscsStore.bindStore(set, get);
 
     let socket: WebSocket | null;
     const ds: CoreState = {
@@ -442,10 +451,10 @@ export const useCoreStore = create<CoreState>((set: any, get: any) => {
     heldLandlines: [],
     buttonPress: () => {},
     holdBtn: () => {
-        // Hold all active G/G calls (AFV only — VACS does not support hold)
+        // Hold all active G/G calls (AFV only — VACS/v-VSCS do not support hold)
         const { gg_status, sendMessageNow } = get();
         const activeCalls = (gg_status || []).filter((call: any) =>
-            call && (call.status === 'ok' || call.status === 'active') && !call.isVacs
+            call && (call.status === 'ok' || call.status === 'active') && !call.isVacs && !call.isVvscs
         );
 
         console.log('[holdBtn] Holding', activeCalls.length, 'active AFV calls');
@@ -475,6 +484,13 @@ export const useCoreStore = create<CoreState>((set: any, get: any) => {
             if (call.isVacs && call.vacsCallId) {
                 console.log('[releaseBtn] Ending VACS call:', call.vacsCallId);
                 vacsStore.endCall(call.vacsCallId);
+                return;
+            }
+
+            // v-VSCS calls: end via v-VSCS WebRTC
+            if (call.isVvscs && call.vvscsLineId) {
+                console.log('[releaseBtn] Ending v-VSCS call:', call.vvscsLineId);
+                vvscsStore.endCall(call.vvscsLineId);
                 return;
             }
 
@@ -658,6 +674,20 @@ export const useCoreStore = create<CoreState>((set: any, get: any) => {
         vacsHandleButtonPress: (callId: string, currentStatus: string) => {
             vacsStore.handleButtonPress(callId, currentStatus);
         },
+
+        // v-VSCS integration state
+        ...INITIAL_VVSCS_STATE,
+
+        // v-VSCS integration methods
+        connectVvscs: (facility: string, position: string, assumedPositions: string[] = []) => {
+            vvscsStore.connectVvscs(facility, position, assumedPositions);
+        },
+        disconnectVvscs: () => {
+            vvscsStore.disconnectVvscs();
+        },
+        vvscsHandleButtonPress: (vvscsLineId: string, currentStatus: string) => {
+            vvscsStore.handleButtonPress(vvscsLineId, currentStatus);
+        },
     }
 
     function addCall(callType: number, cmd1: string) {
@@ -749,8 +779,9 @@ export const useCoreStore = create<CoreState>((set: any, get: any) => {
         ag_freq_order = [];
         placeholder_indices = placeholderPositions;
 
-        // Separate VACS lines (vacs: prefix) from AFV lines
+        // Separate VACS lines (vacs: prefix) and v-VSCS lines (vvscs: prefix) from AFV lines
         const vacsConfigLines: Array<{ target: string; targetType: 'position' | 'station' | 'client'; label: string; lineType: number; sortIndex: number }> = [];
+        const vvscsConfigLines: Array<{ target: string; targetType: 'position' | 'shout'; remoteFacility?: string; label: string; lineType: number; sortIndex: number }> = [];
         
         for (const item of dedup_ordered) {
             const line = item.line;
@@ -785,6 +816,39 @@ export const useCoreStore = create<CoreState>((set: any, get: any) => {
                     lineType: line[1] ?? 2,
                     sortIndex: item.originalIndex,
                 });
+            } else if (lineId.startsWith('vvscs:')) {
+                // v-VSCS line — parse target from ID, don't register with AFV
+                // Formats:
+                //   "vvscs:R62"                    → override to position R62
+                //   "vvscs:pos:R62"                → override to position R62 (explicit)
+                //   "vvscs:shout:HIGH:ZLA"         → shout line "HIGH" to facility ZLA
+                const afterPrefix = lineId.substring(6); // remove 'vvscs:'
+                let targetType: 'position' | 'shout' = 'position';
+                let target = afterPrefix;
+                let remoteFacility: string | undefined;
+
+                if (afterPrefix.startsWith('pos:')) {
+                    target = afterPrefix.substring(4);
+                    targetType = 'position';
+                } else if (afterPrefix.startsWith('shout:')) {
+                    const shoutParts = afterPrefix.substring(6).split(':');
+                    target = shoutParts[0] || afterPrefix.substring(6);
+                    remoteFacility = shoutParts[1];
+                    targetType = 'shout';
+                }
+
+                // Still add to call_table and line_order so labels resolve and sort correctly
+                call_table[lineId] = [line[2], line[1]];
+                line_order[lineId] = item.originalIndex;
+
+                vvscsConfigLines.push({
+                    target: target.toUpperCase(),
+                    targetType,
+                    remoteFacility: remoteFacility?.toUpperCase(),
+                    label: String(line[2] || target),
+                    lineType: line[1] ?? 2,
+                    sortIndex: item.originalIndex,
+                });
             } else {
                 // AFV line — register normally
                 call_table[line[0]] = [line[2], line[1]];
@@ -795,6 +859,8 @@ export const useCoreStore = create<CoreState>((set: any, get: any) => {
 
         // Pass configured VACS lines to the VACS store
         vacsStore.setConfiguredLines(vacsConfigLines);
+        // Pass configured v-VSCS lines to the v-VSCS store
+        vvscsStore.setConfiguredLines(vvscsConfigLines);
         cid && addIaCall(1, '' + cid)
         syncTimeout = setTimeout(() => {
             sendMessageNow({ type: 'sync' })
@@ -952,9 +1018,10 @@ export const useCoreStore = create<CoreState>((set: any, get: any) => {
                         return aIdx - bIdx;
                     });
 
-                    // Append any active VACS G/G entries so they aren't wiped by AFV updates
+                    // Append any active VACS and v-VSCS G/G entries so they aren't wiped by AFV updates
                     const vacsGg = vacsStore.getGgStatusEntries();
-                    const merged_gg = [...new_gg, ...vacsGg];
+                    const vvscsGg = vvscsStore.getGgStatusEntries();
+                    const merged_gg = [...new_gg, ...vacsGg, ...vvscsGg];
 
                     debounce_set({
                         ag_status: new_ag,

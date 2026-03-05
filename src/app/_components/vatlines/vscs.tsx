@@ -841,6 +841,7 @@ function VikKeypad() {
   
   const sendMsg = useCoreStore((s: any) => s.sendMessageNow);
   const vacsHandleButtonPress = useCoreStore((s: any) => s.vacsHandleButtonPress);
+  const vvscsHandleButtonPress = useCoreStore((s: any) => s.vvscsHandleButtonPress);
   const positionData = useCoreStore((s: any) => s.positionData);
   const selectedPositions = useCoreStore((s: any) => s.selectedPositions);
   const gg_status = useCoreStore((s: any) => s.gg_status);
@@ -1155,6 +1156,20 @@ function VikKeypad() {
     if (callState === 'active' || callState === 'ringing') {
       // Release active call using the stored line ID
       console.log('VIK: Releasing call, lineId:', activeLineId);
+
+      // Check if this is a v-VSCS call — find matching entry in gg_status
+      const vvscsEntry = activeLineId && (gg_status || []).find((call: any) =>
+        call?.isVvscs && call?.call?.includes(activeLineId)
+      );
+      if (vvscsEntry) {
+        console.log('VIK: Releasing v-VSCS call:', vvscsEntry.vvscsLineId);
+        vvscsHandleButtonPress(vvscsEntry.vvscsLineId, vvscsEntry.status);
+        setDisplayLine1(VIK_MESSAGES.CALL_RELEASED);
+        setDisplayLine2('');
+        setCallState('released');
+        setTimeout(() => { setDisplayLine1(''); setDisplayLine2(''); setCallState('idle'); setDialBuffer(''); setActiveLineId(null); }, 3000);
+        return;
+      }
 
       // Check if this is a VACS call — find matching entry in gg_status
       const vacsEntry = activeLineId && (gg_status || []).find((call: any) =>
@@ -1525,6 +1540,7 @@ function VscsPanel(props: VscsProps & { panelId?: string; defaultScreenMode?: st
   const ag_status = useCoreStore((s: any) => s.ag_status);
   const sendMsg = useCoreStore((s: any) => s.sendMessageNow);
   const vacsHandleButtonPress = useCoreStore((s: any) => s.vacsHandleButtonPress);
+  const vvscsHandleButtonPress = useCoreStore((s: any) => s.vvscsHandleButtonPress);
   const positionData = useCoreStore((s: any) => s.positionData);
   const overrideStatus = useCoreStore((s: any) => s.overrideStatus); // OV_ calls from WebSocket
   const isBeingOverridden = useCoreStore((s: any) => s.isBeingOverridden); // Active override state
@@ -1766,6 +1782,13 @@ function VscsPanel(props: VscsProps & { panelId?: string; defaultScreenMode?: st
     
     // Only proceed if we have valid button data
     if (buttonData) {
+      // v-VSCS WebRTC calls — route through v-VSCS handler
+      if (buttonData.isVvscs && buttonData.vvscsLineId) {
+        console.log('v-VSCS call button pressed:', buttonData.vvscsLineId, 'status:', buttonData.status);
+        vvscsHandleButtonPress(buttonData.vvscsLineId, buttonData.status);
+        return;
+      }
+
       // VACS WebRTC calls — route through VACS handler
       if (buttonData.isVacs && buttonData.vacsCallId) {
         console.log('VACS call button pressed:', buttonData.vacsCallId, 'status:', buttonData.status);

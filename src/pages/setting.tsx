@@ -6,6 +6,7 @@ import Switch from 'antd/es/switch'
 import { useCoreStore, type Facility } from '../model';
 import { useMemo, useState, useCallback } from 'react';
 import { VACS_DEV_CONFIG, VACS_PROD_CONFIG } from '../lib/vacs/types';
+import { VVSCS_SERVER_URL } from '../lib/vvscs/types';
 
 interface Position {
     cs: string;
@@ -44,12 +45,19 @@ function SettingModal({ open, setModal }: SettingModalProps) {
     const vacsError = useCoreStore(s => s.vacsError)
     const connectVacs = useCoreStore(s => s.connectVacs)
     const disconnectVacs = useCoreStore(s => s.disconnectVacs)
+    const vvscsConnected = useCoreStore(s => s.vvscsConnected)
+    const vvscsStatus = useCoreStore(s => s.vvscsStatus)
+    const vvscsError = useCoreStore(s => s.vvscsError)
+    const connectVvscs = useCoreStore(s => s.connectVvscs)
+    const disconnectVvscs = useCoreStore(s => s.disconnectVvscs)
     const callsign = useCoreStore(s => s.callsign)
     const [selectedFacility, setSelectedFacility] = useState<string | null>(null)
     const [search, setSearch] = useState('')
     const [selectedPosition, setSelectedPosition] = useState<Position | null>(null)
     const [vacsToken, setVacsToken] = useState('')
     const [useProdVacs, setUseProdVacs] = useState(false)
+    const [vvscsFacility, setVvscsFacility] = useState('')
+    const [vvscsPosition, setVvscsPosition] = useState('')
 
     // Build facility options from top-level childFacilities
     const facilities = useMemo(() => {
@@ -101,6 +109,12 @@ function SettingModal({ open, setModal }: SettingModalProps) {
     }, [vacsToken, callsign, connectVacs, useProdVacs]);
 
     const vacsBaseUrl = useProdVacs ? VACS_PROD_CONFIG.httpBaseUrl : VACS_DEV_CONFIG.httpBaseUrl;
+
+    const handleVvscsConnect = useCallback(() => {
+        if (!vvscsFacility.trim() || !vvscsPosition.trim()) return;
+        connectVvscs(vvscsFacility.trim().toUpperCase(), vvscsPosition.trim());
+        // Don't clear inputs so user can see what they connected as
+    }, [vvscsFacility, vvscsPosition, connectVvscs]);
 
     return (
         <Modal
@@ -241,6 +255,61 @@ function SettingModal({ open, setModal }: SettingModalProps) {
                             </div>
                         </div>
                     </>
+                )}
+            </div>
+
+            {/* v-VSCS WebRTC Connection */}
+            <div style={{ marginTop: 16, borderTop: '1px solid #d9d9d9', paddingTop: 12 }}>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
+                    <span style={{ fontWeight: 500 }}>v-VSCS (WebRTC)</span>
+                    <span style={{
+                        fontSize: 12,
+                        padding: '2px 8px',
+                        borderRadius: 4,
+                        background: vvscsConnected ? '#52c41a' : '#d9d9d9',
+                        color: vvscsConnected ? '#fff' : '#666',
+                    }}>
+                        {vvscsStatus}
+                    </span>
+                </div>
+                <div style={{ fontSize: 11, color: '#999', marginBottom: 8 }}>
+                    Server: {VVSCS_SERVER_URL}
+                </div>
+                {vvscsError && (
+                    <div style={{ fontSize: 12, color: '#ff4d4f', marginBottom: 8 }}>
+                        {vvscsError}
+                    </div>
+                )}
+                {vvscsConnected ? (
+                    <Button size="small" danger onClick={disconnectVvscs}>
+                        Disconnect
+                    </Button>
+                ) : (
+                    <div style={{ display: 'flex', gap: 8 }}>
+                        <Input
+                            size="small"
+                            placeholder="Facility (e.g. ZOA)"
+                            value={vvscsFacility}
+                            onChange={e => setVvscsFacility(e.target.value)}
+                            style={{ width: 110 }}
+                        />
+                        <Input
+                            size="small"
+                            placeholder="Position (e.g. R62)"
+                            value={vvscsPosition}
+                            onChange={e => setVvscsPosition(e.target.value)}
+                            onPressEnter={handleVvscsConnect}
+                            style={{ flex: 1 }}
+                        />
+                        <Button
+                            size="small"
+                            type="primary"
+                            disabled={!vvscsFacility.trim() || !vvscsPosition.trim()}
+                            onClick={handleVvscsConnect}
+                        >
+                            Connect
+                        </Button>
+                    </div>
                 )}
             </div>
         </Modal>

@@ -19,6 +19,7 @@ const AreaThree: React.FC<AreaThreeProps> = ({ setSettingModal, onToggleKeypad, 
   const sendMsg = useCoreStore((s: any) => s.sendMessageNow);
   const gg_status = useCoreStore((s: any) => s.gg_status);
   const vacsHandleButtonPress = useCoreStore((s: any) => s.vacsHandleButtonPress);
+  const vvscsHandleButtonPress = useCoreStore((s: any) => s.vvscsHandleButtonPress);
   const selectedChime = useCoreStore((s: any) => s.selectedChime);
   const cycleChime = useCoreStore((s: any) => s.cycleChime);
 
@@ -49,6 +50,13 @@ const AreaThree: React.FC<AreaThreeProps> = ({ setSettingModal, onToggleKeypad, 
     console.log('[REL] Releasing', activeCalls.length, 'active calls');
     
     activeCalls.forEach((call: any) => {
+      // v-VSCS calls: end via v-VSCS WebRTC
+      if (call.isVvscs && call.vvscsLineId) {
+        console.log('[REL] Ending v-VSCS call:', call.vvscsLineId);
+        vvscsHandleButtonPress(call.vvscsLineId, call.status);
+        return;
+      }
+
       // VACS calls: end via WebRTC
       if (call.isVacs && call.vacsCallId) {
         console.log('[REL] Ending VACS call:', call.vacsCallId);

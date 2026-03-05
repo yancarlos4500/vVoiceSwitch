@@ -11,6 +11,7 @@ const GroundGroundPage3: React.FC = () => {
   const ptt = useCoreStore((s: any) => s.ptt);
   const gg_status = useCoreStore((s: any) => s.gg_status);
   const vacsHandleButtonPress = useCoreStore((s: any) => s.vacsHandleButtonPress);
+  const vvscsHandleButtonPress = useCoreStore((s: any) => s.vvscsHandleButtonPress);
   
   const ITEM_PER_PAGE_3 = 30; // 6 rows x 5 columns
   
@@ -38,6 +39,23 @@ const GroundGroundPage3: React.FC = () => {
       let onClick: (() => void) | undefined = undefined;
       let indicator = false;
       let indicatorClassName = '';
+
+      // v-VSCS WebRTC calls — route through v-VSCS handler
+      if (data.isVvscs && data.vvscsLineId) {
+        if (data.status === 'ok' || data.status === 'active') {
+          indicator = ptt;
+          indicatorClassName = indicator ? 'flutter active' : 'steady green';
+        } else if (data.status === 'chime' || data.status === 'ringing') {
+          indicator = true;
+          indicatorClassName = 'flutter receive flashing';
+        }
+        onClick = () => vvscsHandleButtonPress(data.vvscsLineId, data.status);
+        buttons.push(
+          <DAButton key={index} topLine={data.call_name || data.call} latching={false}
+            onClick={onClick} controlledIndicator={indicator} indicatorClassName={indicatorClassName} />
+        );
+        return;
+      }
 
       // VACS WebRTC calls — route through VACS handler
       if (data.isVacs && data.vacsCallId) {
