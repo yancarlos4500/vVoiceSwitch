@@ -4,7 +4,7 @@ import Input from 'antd/es/input'
 import Button from 'antd/es/button'
 import Switch from 'antd/es/switch'
 import { useCoreStore, type Facility } from '../model';
-import { useMemo, useState, useCallback } from 'react';
+import { useMemo, useState, useCallback, useEffect, useRef } from 'react';
 import { loadVacsCredentials, clearVacsCredentials } from '../lib/vacs/store';
 import { VVSCS_SERVER_URL } from '../lib/vvscs/types';
 
@@ -44,6 +44,7 @@ function SettingModal({ open, setModal }: SettingModalProps) {
     const vacsStatus = useCoreStore(s => s.vacsStatus)
     const vacsError = useCoreStore(s => s.vacsError)
     const connectVacs = useCoreStore(s => s.connectVacs)
+    const connectVacsWithVatsimToken = useCoreStore(s => s.connectVacsWithVatsimToken)
     const disconnectVacs = useCoreStore(s => s.disconnectVacs)
     const vvscsConnected = useCoreStore(s => s.vvscsConnected)
     const vvscsStatus = useCoreStore(s => s.vvscsStatus)
@@ -55,6 +56,7 @@ function SettingModal({ open, setModal }: SettingModalProps) {
     const [search, setSearch] = useState('')
     const [selectedPosition, setSelectedPosition] = useState<Position | null>(null)
     const [vacsToken, setVacsToken] = useState('')
+    const [vacsLoggingIn, setVacsLoggingIn] = useState(false)
     const [useProdVacs, setUseProdVacs] = useState(() => {
         const saved = loadVacsCredentials();
         return saved?.useProd ?? false;
@@ -62,6 +64,77 @@ function SettingModal({ open, setModal }: SettingModalProps) {
     const [hasSavedToken, setHasSavedToken] = useState(() => !!loadVacsCredentials())
     const [vvscsFacility, setVvscsFacility] = useState('')
     const [vvscsPosition, setVvscsPosition] = useState('')
+    const vacsPopupRef = useRef<Window | null>(null)
+
+    // Listen for OAuth callback messages from the popup
+    useEffect(() => {
+        const handleMessage = (event: MessageEvent) => {
+            // Only accept messages from our own origin
+            if (event.origin !== window.location.origin) return;
+
+            let data: any;
+            try {
+                data = typeof event.data === 'string' ? JSON.parse(event.data) : event.data;
+            } catch {
+                return; // Not a JSON message
+            }
+
+            // Check if this is a VACS auth result
+            if (!data || typeof data.success === 'undefined') return;
+            if (!data.wsToken && !data.error) return;
+
+            setVacsLoggingIn(false);
+
+            if (data.success && data.wsToken) {
+                console.log('[Settings] VACS OAuth success, CID:', data.cid);
+                const positionId = callsign || undefined;
+                const isProd = data.env === 'prod';
+                connectVacs(data.wsToken, positionId, isProd);
+                setTimeout(() => setHasSavedToken(!!loadVacsCredentials()), 3000);
+            } else {
+                console.error('[Settings] VACS OAuth failed:', data.error);
+            }
+        };
+
+        window.addEventListener('message', handleMessage);
+        return () => window.removeEventListener('message', handleMessage);
+    }, [callsign, connectVacs]);
+
+    /** Login with VATSIM via OAuth2 popup */
+    const handleVatsimLogin = useCallback(async () => {
+        setVacsLoggingIn(true);
+        try {
+            const env = useProdVacs ? 'prod' : 'dev';
+            const res = await fetch(`/api/vacs/auth/vatsim-login?env=${env}`);
+            const data = await res.json();
+
+            if (!data.url) {
+                console.error('[Settings] No auth URL returned:', data.error);
+                setVacsLoggingIn(false);
+                return;
+            }
+
+            // Open VATSIM login in a popup
+            const popup = window.open(
+                data.url,
+                'vatsim-login',
+                'width=600,height=700,menubar=no,toolbar=no,location=no,status=no'
+            );
+            vacsPopupRef.current = popup;
+
+            // Watch for popup close without completing
+            const checkClosed = setInterval(() => {
+                if (popup?.closed) {
+                    clearInterval(checkClosed);
+                    setVacsLoggingIn(false);
+                    vacsPopupRef.current = null;
+                }
+            }, 500);
+        } catch (err) {
+            console.error('[Settings] VATSIM login error:', err);
+            setVacsLoggingIn(false);
+        }
+    }, [useProdVacs]);
 
     // Build facility options from top-level childFacilities
     const facilities = useMemo(() => {
@@ -104,26 +177,20 @@ function SettingModal({ open, setModal }: SettingModalProps) {
         setSelectedPosition(null);
     };
 
-    /** Connect with a WS token */
-    const handleVacsConnect = useCallback(() => {
+    /** Connect with a VATSIM access token (exchanges for WS token automatically) */
+    const handleVacsConnect = useCallback(async () => {
         if (!vacsToken.trim()) return;
         const positionId = callsign || undefined;
-        connectVacs(vacsToken.trim(), positionId, useProdVacs);
+        await connectVacsWithVatsimToken(vacsToken.trim(), positionId, useProdVacs);
         setVacsToken('');
         setTimeout(() => setHasSavedToken(!!loadVacsCredentials()), 3000);
-    }, [vacsToken, callsign, connectVacs, useProdVacs]);
+    }, [vacsToken, callsign, connectVacsWithVatsimToken, useProdVacs]);
 
     /** Clear saved VACS token from localStorage */
     const handleClearSavedToken = useCallback(() => {
         clearVacsCredentials();
         setHasSavedToken(false);
     }, []);
-
-    /** Open VACS in browser to get a token */
-    const handleOpenVacs = useCallback(() => {
-        const base = useProdVacs ? 'https://vacs.network' : 'https://dev.vacs.network';
-        window.open(base, '_blank');
-    }, [useProdVacs]);
 
     const handleVvscsConnect = useCallback(() => {
         if (!vvscsFacility.trim() || !vvscsPosition.trim()) return;
@@ -242,13 +309,6 @@ function SettingModal({ open, setModal }: SettingModalProps) {
                                 </Button>
                             </div>
                         )}
-                        <div style={{ fontSize: 11, color: '#666', marginBottom: 6 }}>
-                            Get your WS token from the{' '}
-                            <a onClick={handleOpenVacs} style={{ color: '#1677ff', cursor: 'pointer' }}>
-                                VACS website
-                            </a>
-                            {' '}→ login → open browser console → look for the token in the WebSocket connection.
-                        </div>
                         <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
                             <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
                                 <span style={{ fontSize: 12, color: '#999' }}>Dev</span>
@@ -260,10 +320,22 @@ function SettingModal({ open, setModal }: SettingModalProps) {
                                 <span style={{ fontSize: 12, color: '#999' }}>Prod</span>
                             </div>
                         </div>
+                        <Button
+                            type="primary"
+                            size="small"
+                            loading={vacsLoggingIn}
+                            onClick={handleVatsimLogin}
+                            style={{ marginBottom: 8 }}
+                        >
+                            {vacsLoggingIn ? 'Waiting for VATSIM...' : 'Login with VATSIM'}
+                        </Button>
+                        <div style={{ fontSize: 11, color: '#999', marginBottom: 4 }}>
+                            Or paste a VATSIM access token:
+                        </div>
                         <div style={{ display: 'flex', gap: 8 }}>
                             <Input
                                 size="small"
-                                placeholder="Paste VACS WS token"
+                                placeholder="Paste VATSIM access token"
                                 value={vacsToken}
                                 onChange={e => setVacsToken(e.target.value)}
                                 onPressEnter={handleVacsConnect}

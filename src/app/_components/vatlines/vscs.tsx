@@ -244,7 +244,7 @@ const DTMF_FREQUENCIES: { [key: string]: [number, number] } = {
 
 let audioContext: AudioContext | null = null;
 
-function playDTMFTone(key: string, duration: number = 100) {
+function playDTMFTone(key: string, duration: number = 250) {
   const frequencies = DTMF_FREQUENCIES[key];
   if (!frequencies) return;
 
@@ -269,7 +269,7 @@ function playDTMFTone(key: string, duration: number = 100) {
 
   // Set volume (DTMF is typically mixed at equal levels)
   gainNode.gain.setValueAtTime(0.15, now);
-  gainNode.gain.exponentialRampToValueAtTime(0.01, endTime);
+  gainNode.gain.exponentialRampToValueAtTime(0.001, endTime);
 
   // Connect the oscillators through the gain node to output
   osc1.connect(gainNode);
