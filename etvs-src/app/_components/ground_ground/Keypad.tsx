@@ -20,7 +20,7 @@ const DTMF_FREQUENCIES: { [key: string]: [number, number] } = {
 
 let audioContext: AudioContext | null = null;
 
-function playDTMFTone(key: string, duration: number = 250) {
+function playDTMFTone(key: string, duration: number = 400) {
   const frequencies = DTMF_FREQUENCIES[key];
   if (!frequencies) return;
   if (!audioContext) {
@@ -28,7 +28,9 @@ function playDTMFTone(key: string, duration: number = 250) {
   }
   const [lowFreq, highFreq] = frequencies;
   const now = audioContext.currentTime;
-  const endTime = now + duration / 1000;
+  const dur = duration / 1000;
+  const rampOff = 0.03;
+  const endTime = now + dur;
   const osc1 = audioContext.createOscillator();
   const osc2 = audioContext.createOscillator();
   const gainNode = audioContext.createGain();
@@ -37,6 +39,7 @@ function playDTMFTone(key: string, duration: number = 250) {
   osc1.frequency.value = lowFreq;
   osc2.frequency.value = highFreq;
   gainNode.gain.setValueAtTime(0.15, now);
+  gainNode.gain.setValueAtTime(0.15, endTime - rampOff);
   gainNode.gain.exponentialRampToValueAtTime(0.001, endTime);
   osc1.connect(gainNode);
   osc2.connect(gainNode);

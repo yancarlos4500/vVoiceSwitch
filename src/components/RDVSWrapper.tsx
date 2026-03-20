@@ -1993,7 +1993,8 @@ export default function RDVSWrapper({ variant = 'default' }: RDVSWrapperProps) {
     try {
       const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
       const [lowFreq, highFreq] = freqs;
-      const duration = 0.25; // 250ms tone
+      const duration = 0.4; // 400ms tone
+      const rampOff = 0.03;
       const now = audioContext.currentTime;
       const endTime = now + duration;
 
@@ -2008,6 +2009,7 @@ export default function RDVSWrapper({ variant = 'default' }: RDVSWrapperProps) {
       osc2.type = 'sine';
 
       gainNode.gain.setValueAtTime(0.15, now);
+      gainNode.gain.setValueAtTime(0.15, endTime - rampOff);
       gainNode.gain.exponentialRampToValueAtTime(0.001, endTime);
 
       osc1.connect(gainNode);

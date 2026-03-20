@@ -91,7 +91,7 @@ export default function RdvsKeypad({
   }, []);
   
   // Play DTMF tone for a key
-  const playDTMF = useCallback((key: string, duration: number = 250) => {
+  const playDTMF = useCallback((key: string, duration: number = 400) => {
     const frequencies = DTMF_FREQUENCIES[key];
     if (!frequencies) return;
     
@@ -100,7 +100,9 @@ export default function RdvsKeypad({
     
     const [lowFreq, highFreq] = frequencies;
     const now = ctx.currentTime;
-    const endTime = now + duration / 1000;
+    const dur = duration / 1000;
+    const rampOff = 0.03; // 30ms ramp-off at the end
+    const endTime = now + dur;
     
     const osc1 = ctx.createOscillator();
     const osc2 = ctx.createOscillator();
@@ -116,6 +118,7 @@ export default function RdvsKeypad({
     gainNode.connect(ctx.destination);
     
     gainNode.gain.setValueAtTime(0.15, now);
+    gainNode.gain.setValueAtTime(0.15, endTime - rampOff);
     gainNode.gain.exponentialRampToValueAtTime(0.001, endTime);
     
     osc1.start(now);

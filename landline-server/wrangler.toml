@@ -1,0 +1,14 @@
+name = "landline-signaling"
+main = "src/index.ts"
+compatibility_date = "2024-12-05"
+
+# Durable Object bindings
+[durable_objects]
+bindings = [
+  { name = "SIGNALING_ROOM", class_name = "SignalingRoom" }
+]
+
+# Durable Object migrations
+[[migrations]]
+tag = "v1"
+new_sqlite_classes = ["SignalingRoom"]

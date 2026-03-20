@@ -21,7 +21,7 @@ const DTMF_FREQUENCIES: { [key: string]: [number, number] } = {
 
 let audioContext: AudioContext | null = null;
 
-function playDTMFTone(key: string, duration: number = 250) {
+function playDTMFTone(key: string, duration: number = 400) {
   const frequencies = DTMF_FREQUENCIES[key];
   if (!frequencies) return;
 
@@ -31,7 +31,9 @@ function playDTMFTone(key: string, duration: number = 250) {
 
   const [lowFreq, highFreq] = frequencies;
   const now = audioContext.currentTime;
-  const endTime = now + duration / 1000;
+  const dur = duration / 1000;
+  const rampOff = 0.03; // 30ms ramp-off at the end
+  const endTime = now + dur;
 
   const osc1 = audioContext.createOscillator();
   const osc2 = audioContext.createOscillator();
@@ -43,6 +45,7 @@ function playDTMFTone(key: string, duration: number = 250) {
   osc2.frequency.value = highFreq;
 
   gainNode.gain.setValueAtTime(0.15, now);
+  gainNode.gain.setValueAtTime(0.15, endTime - rampOff);
   gainNode.gain.exponentialRampToValueAtTime(0.001, endTime);
 
   osc1.connect(gainNode);
@@ -167,7 +170,7 @@ const Keypad: React.FC<KeypadProps> = ({ dialLineInfo, onClose }) => {
   };
 
   return (
-    <div className="flex flex-col items-center p-2" style={{ marginTop: '8px' }}>
+    <div className="flex flex-col p-2" style={{ marginTop: '8px' }}>
       {/* Top indicator bar */}
       <div 
         className="flex items-center mb-1"
@@ -182,7 +185,7 @@ const Keypad: React.FC<KeypadProps> = ({ dialLineInfo, onClose }) => {
         <div 
           style={{ 
             flex: 1, 
-            height: '44px', 
+            height: '34px', 
             backgroundColor: '#003399',
           }}
         />
@@ -190,7 +193,7 @@ const Keypad: React.FC<KeypadProps> = ({ dialLineInfo, onClose }) => {
 
       {/* Status display showing dialed digits or status */}
       <div 
-        className="w-full text-center mb-2"
+        className="w-full text-center mb-3"
         style={{
           color: '#CCCC00',
           fontFamily: 'monospace',
@@ -200,11 +203,13 @@ const Keypad: React.FC<KeypadProps> = ({ dialLineInfo, onClose }) => {
           minHeight: '18px'
         }}
       >
-        {iaDisplayBuffer || (displayMessage !== 'READY' ? displayMessage : '')}
+        {callState === 'ready' || callState === 'dialing'
+          ? iaDisplayBuffer || ''
+          : displayMessage}
       </div>
 
       {/* Keypad grid - 4 rows of 3 columns */}
-      <div className="grid grid-cols-3 gap-1">
+      <div className="grid grid-cols-3 gap-1" style={{ width: '100%' }}>
         <SquareButton topLine="" bottomLine="1" onClick={() => handleDigitPress("1")} />
         <SquareButton topLine="ABC" bottomLine="2" onClick={() => handleDigitPress("2")} />
         <SquareButton topLine="DEF" bottomLine="3" onClick={() => handleDigitPress("3")} />

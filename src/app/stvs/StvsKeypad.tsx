@@ -52,7 +52,7 @@ const StvsKeypad: React.FC<StvsKeypadProps> = ({ brightness = 1.0, trunkName, on
   }, []);
   
   // Play DTMF tone
-  const playDTMF = useCallback((key: string, duration: number = 250) => {
+  const playDTMF = useCallback((key: string, duration: number = 400) => {
     const frequencies = DTMF_FREQUENCIES[key];
     if (!frequencies) return;
     
@@ -61,7 +61,9 @@ const StvsKeypad: React.FC<StvsKeypadProps> = ({ brightness = 1.0, trunkName, on
     
     const [lowFreq, highFreq] = frequencies;
     const now = ctx.currentTime;
-    const endTime = now + duration / 1000;
+    const dur = duration / 1000;
+    const rampOff = 0.03;
+    const endTime = now + dur;
     
     const osc1 = ctx.createOscillator();
     const osc2 = ctx.createOscillator();
@@ -77,6 +79,7 @@ const StvsKeypad: React.FC<StvsKeypadProps> = ({ brightness = 1.0, trunkName, on
     gainNode.connect(ctx.destination);
     
     gainNode.gain.setValueAtTime(0.15, now);
+    gainNode.gain.setValueAtTime(0.15, endTime - rampOff);
     gainNode.gain.exponentialRampToValueAtTime(0.001, endTime);
     
     osc1.start(now);

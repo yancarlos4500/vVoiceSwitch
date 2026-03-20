@@ -244,7 +244,7 @@ const DTMF_FREQUENCIES: { [key: string]: [number, number] } = {
 
 let audioContext: AudioContext | null = null;
 
-function playDTMFTone(key: string, duration: number = 250) {
+function playDTMFTone(key: string, duration: number = 400) {
   const frequencies = DTMF_FREQUENCIES[key];
   if (!frequencies) return;
 
@@ -255,7 +255,9 @@ function playDTMFTone(key: string, duration: number = 250) {
 
   const [lowFreq, highFreq] = frequencies;
   const now = audioContext.currentTime;
-  const endTime = now + duration / 1000;
+  const dur = duration / 1000;
+  const rampOff = 0.03;
+  const endTime = now + dur;
 
   // Create oscillators for the two frequencies
   const osc1 = audioContext.createOscillator();
@@ -267,8 +269,9 @@ function playDTMFTone(key: string, duration: number = 250) {
   osc1.frequency.value = lowFreq;
   osc2.frequency.value = highFreq;
 
-  // Set volume (DTMF is typically mixed at equal levels)
+  // Hold steady gain, then ramp off in the last 30ms
   gainNode.gain.setValueAtTime(0.15, now);
+  gainNode.gain.setValueAtTime(0.15, endTime - rampOff);
   gainNode.gain.exponentialRampToValueAtTime(0.001, endTime);
 
   // Connect the oscillators through the gain node to output
@@ -577,7 +580,7 @@ function RtAuxiliaryMessageArea({
   // R/T ON with override or no forwarding: Green (#008000)
   // R/T OFF or ON with call forwarding: Light blue/cyan (#87CEEB - matching doc images)
   const hasOverride = overridingPositions.length > 0;
-  const bgColor = rtEnabled && !callForwardInfo ? '#008000' : '#87CEEB'; // Green when R/T ON without forwarding, light blue otherwise
+  const bgColor = rtEnabled && !callForwardInfo ? '#008000' : '#40e0d0'; // Green when R/T ON without forwarding, light blue otherwise
   const textColor = rtEnabled && !callForwardInfo ? 'white' : 'black';
   
   return (
@@ -2299,7 +2302,7 @@ function VscsPanel(props: VscsProps & { panelId?: string; defaultScreenMode?: st
                               bottom: '200px', 
                               left: '345px', 
                               zIndex: 25,
-                              backgroundColor: overridingPositions.length > 0 ? '#008000' : '#87CEEB',
+                              backgroundColor: overridingPositions.length > 0 ? '#008000' : '#40e0d0',
                               color: 'black'
                             }}
                             onClick={() => setRtEnabled(!rtEnabled)}
@@ -2394,7 +2397,7 @@ function VscsPanel(props: VscsProps & { panelId?: string; defaultScreenMode?: st
                               bottom: '200px', 
                               left: '345px', 
                               zIndex: 25,
-                              backgroundColor: overridingPositions.length > 0 ? '#008000' : '#87CEEB',
+                              backgroundColor: overridingPositions.length > 0 ? '#008000' : '#40e0d0',
                               color: 'black'
                             }}
                             onClick={() => setRtEnabled(!rtEnabled)}

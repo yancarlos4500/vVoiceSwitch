@@ -18,12 +18,17 @@ interface Position {
 // e.g., { "APCH": { "11": "OAK_40_CTR", "12": "SFO_U_APP" }, ... }
 export type DialCodeTable = Record<string, Record<string, string>>;
 
+// LandlineDialCodeTable maps trunk names to code->FACILITY:POSITION targets
+// e.g., { "NTWRS": { "68": "RNO:RNO_TWR", "80": "SMF:SMF_TWR" }, ... }
+export type LandlineDialCodeTable = Record<string, Record<string, string>>;
+
 export interface Facility {
     childFacilities: Facility[];
     id: string;
     name: string;
     positions: Position[];
     dialCodeTable?: DialCodeTable;
+    llDialCodeTable?: LandlineDialCodeTable;
     rdvsColorPattern?: RDVSColorPattern;
 }
 
@@ -872,7 +877,7 @@ export const useCoreStore = create<CoreState>((set: any, get: any) => {
         // Auto-connect to v-VSCS if position has vvscs: lines and we're not already connected
         if (vvscsConfigLines.length > 0 && !vvscsStore.isConnected) {
             const selectedPos = selected_positions[0] as any;
-            const posName = selectedPos?.pos || selectedPos?.cs || callsign;
+            const posName = selectedPos?.cs || selectedPos?.pos || callsign;
             // Derive facility ID by walking positionData tree to find which facility owns this position
             const { positionData } = get();
             let facilityId = '';
