@@ -162,7 +162,9 @@ class LandlineStore {
     assumedPositions: PositionName[] = [],
     serverUrl?: string,
   ): void {
+    console.log('[Landline Store] connectLandline called:', { facility, position, assumedPositions, serverUrl: serverUrl || 'default (ws://localhost:8787/ws)' });
     if (this.client) {
+      console.log('[Landline Store] Destroying previous client');
       this.client.destroy();
     }
 
@@ -171,6 +173,7 @@ class LandlineStore {
 
     this.updateState({ landlineStatus: 'connecting', landlineError: null });
     this.client.connect(facility, position, assumedPositions, serverUrl);
+    console.log('[Landline Store] connect() dispatched, waiting for WebSocket...');
   }
 
   /** Disconnect from landline */
@@ -192,6 +195,7 @@ class LandlineStore {
     targetPosition: PositionName,
     lineType: LineType = 2,
   ): CallId | null {
+    console.log('[Landline Store] callPosition:', { targetFacility, targetPosition, lineType, isConnected: this.client?.isConnected });
     return this.client?.callPosition(targetFacility, targetPosition, lineType) ?? null;
   }
 
@@ -221,12 +225,17 @@ class LandlineStore {
    * @param currentStatus - Current button status (off, chime, ringing, ok, hold)
    */
   handleButtonPress(landlineCallId: string, currentStatus: string): void {
+    console.log('[Landline Store] handleButtonPress:', { landlineCallId, currentStatus, isConnected: this.isConnected, hasClient: !!this.client });
     switch (currentStatus) {
       case 'off':
         // Button was idle — initiate a call from config
         if (landlineCallId.startsWith('ll_cfg:')) {
           if (!this.client) {
-            console.warn('[Landline Store] Cannot call: not connected');
+            console.warn('[Landline Store] Cannot call: no client instance. Was connectLandline() called?');
+            return;
+          }
+          if (!this.client.isConnected) {
+            console.warn('[Landline Store] Cannot call: client exists but WebSocket not connected. Check ws://localhost:8787/ws');
             return;
           }
           // Find the configured line that produced this cfgId
@@ -422,6 +431,7 @@ class LandlineStore {
   // ─── Event Handling ──────────────────────────────────────────────────
 
   private handleEvent(event: LandlineClientEvent): void {
+    console.log('[Landline Store] Event:', event.type, event);
     // Forward to external listeners
     for (const handler of this.listeners) {
       try {
@@ -433,10 +443,12 @@ class LandlineStore {
 
     switch (event.type) {
       case 'connected':
+        console.log('[Landline Store] WebSocket connected successfully');
         this.updateState({ landlineStatus: 'connected', landlineError: null });
         break;
 
       case 'disconnected':
+        console.warn('[Landline Store] WebSocket disconnected');
         this.updateState({
           landlineConnected: false,
           landlineStatus: 'disconnected',
