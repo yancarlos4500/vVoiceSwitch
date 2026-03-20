@@ -1675,8 +1675,9 @@ function VscsPanel(props: VscsProps & { panelId?: string; defaultScreenMode?: st
       const callId = data.call?.substring(3) || ''; // Get everything after "gg_" or "SO_"
       
       // Look up line type by matching call ID to the line ID in the JSON
-      let lineType = null;
-      if (currentPosition && currentPosition.lines && Array.isArray(currentPosition.lines)) {
+      // Landline entries already carry lineType directly — use it when available
+      let lineType: number | null = data.lineType ?? null;
+      if (lineType === null && currentPosition && currentPosition.lines && Array.isArray(currentPosition.lines)) {
         // Find the line where the first element (line ID) matches the call ID
         const matchingLine = currentPosition.lines.find((line: any) => {
           if (Array.isArray(line) && line.length >= 1) {
@@ -1717,10 +1718,11 @@ function VscsPanel(props: VscsProps & { panelId?: string; defaultScreenMode?: st
     const parts = callName.split(/[_\s]/); // Only split on underscore and space, not hyphen
     
     // Look up line type by matching call ID to the line ID in the JSON
-    let lineType = null;
+    // Landline entries already carry lineType directly — use it when available
+    let lineType: number | null = data.lineType ?? null;
     console.log('Debug - Button index:', buttonIndex, 'Call ID:', callIdFull, 'Call name:', callName);
     
-    if (currentPosition && currentPosition.lines && Array.isArray(currentPosition.lines)) {
+    if (lineType === null && currentPosition && currentPosition.lines && Array.isArray(currentPosition.lines)) {
       // Find the line where the first element (line ID) matches the call ID
       const matchingLine = currentPosition.lines.find((line: any) => {
         if (Array.isArray(line) && line.length >= 1) {

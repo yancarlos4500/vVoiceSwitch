@@ -1211,10 +1211,11 @@ export const useCoreStore = create<CoreState>((set: any, get: any) => {
                         return aIdx - bIdx;
                     });
 
-                    // Append any active VACS and v-VSCS G/G entries so they aren't wiped by AFV updates
+                    // Append any active VACS, v-VSCS, and Landline G/G entries so they aren't wiped by AFV updates
                     const vacsGg = vacsStore.getGgStatusEntries();
                     const vvscsGg = vvscsStore.getGgStatusEntries();
-                    const merged_gg = [...new_gg, ...vacsGg, ...vvscsGg];
+                    const landlineGg = landlineStore.getGgStatusEntries();
+                    const merged_gg = [...new_gg, ...vacsGg, ...vvscsGg, ...landlineGg];
 
                     debounce_set({
                         ag_status: new_ag,
