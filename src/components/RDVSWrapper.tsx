@@ -370,6 +370,7 @@ export default function RDVSWrapper({ variant = 'default' }: RDVSWrapperProps) {
   const sendMsg = useCoreStore((s: any) => s.sendMessageNow);
   const vacsHandleButtonPress = useCoreStore((s: any) => s.vacsHandleButtonPress);
   const vvscsHandleButtonPress = useCoreStore((s: any) => s.vvscsHandleButtonPress);
+  const landlineHandleButtonPress = useCoreStore((s: any) => s.landlineHandleButtonPress);
   const selectedPositions = useCoreStore((s: any) => s.selectedPositions);
   const gg_status = useCoreStore((s: any) => s.gg_status);
   const ag_status = useCoreStore((s: any) => s.ag_status);
@@ -528,6 +529,12 @@ export default function RDVSWrapper({ variant = 'default' }: RDVSWrapperProps) {
     // v-VSCS WebRTC calls — route through v-VSCS handler
     if (statusObj?.isVvscs && statusObj?.vvscsLineId) {
       vvscsHandleButtonPress(statusObj.vvscsLineId, status);
+      return;
+    }
+
+    // Landline WebRTC calls — route through Landline handler
+    if (statusObj?.isLandline && statusObj?.landlineCallId) {
+      landlineHandleButtonPress(statusObj.landlineCallId, status);
       return;
     }
 

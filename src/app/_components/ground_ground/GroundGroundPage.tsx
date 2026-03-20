@@ -41,6 +41,7 @@ const GroundGroundPage: React.FC<GroundGroundPageProps> = ({
   const gg_status = useCoreStore((s: any) => s.gg_status);
   const vacsHandleButtonPress = useCoreStore((s: any) => s.vacsHandleButtonPress);
   const vvscsHandleButtonPress = useCoreStore((s: any) => s.vvscsHandleButtonPress);
+  const landlineHandleButtonPress = useCoreStore((s: any) => s.landlineHandleButtonPress);
   const ITEM_PER_PAGE = 18;
   const currentSlice = useMemo(() => {
     // Implement overflow logic: if there are more G/G entries than can fit on page 1,
@@ -98,6 +99,37 @@ const GroundGroundPage: React.FC<GroundGroundPageProps> = ({
           indicatorClassName = 'flutter receive flashing';
         }
         onClick = () => vvscsHandleButtonPress(data.vvscsLineId, data.status);
+
+        const callNameStr = data.call_name || data.call || '';
+        const callNameParts = callNameStr.includes(',')
+          ? callNameStr.split(',').map((part: string) => part.trim())
+          : [callNameStr];
+
+        buttons.push(
+          <DAButton
+            key={index}
+            topLine={callNameParts[0] || ''}
+            middleLine={callNameParts[1]}
+            bottomLine={callNameParts[2]}
+            latching={false}
+            onClick={onClick}
+            controlledIndicator={indicator}
+            indicatorClassName={indicatorClassName}
+          />
+        );
+        return;
+      }
+
+      // Landline WebRTC calls — route through Landline handler
+      if (data.isLandline && data.landlineCallId) {
+        if (data.status === 'ok' || data.status === 'active') {
+          indicator = ptt;
+          indicatorClassName = indicator ? 'flutter active' : 'steady green';
+        } else if (data.status === 'chime' || data.status === 'ringing') {
+          indicator = true;
+          indicatorClassName = 'flutter receive flashing';
+        }
+        onClick = () => landlineHandleButtonPress(data.landlineCallId, data.status);
 
         const callNameStr = data.call_name || data.call || '';
         const callNameParts = callNameStr.includes(',')

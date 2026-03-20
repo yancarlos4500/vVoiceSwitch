@@ -846,6 +846,7 @@ function VikKeypad() {
   const sendMsg = useCoreStore((s: any) => s.sendMessageNow);
   const vacsHandleButtonPress = useCoreStore((s: any) => s.vacsHandleButtonPress);
   const vvscsHandleButtonPress = useCoreStore((s: any) => s.vvscsHandleButtonPress);
+  const landlineHandleButtonPress = useCoreStore((s: any) => s.landlineHandleButtonPress);
   const positionData = useCoreStore((s: any) => s.positionData);
   const selectedPositions = useCoreStore((s: any) => s.selectedPositions);
   const gg_status = useCoreStore((s: any) => s.gg_status);
@@ -1160,6 +1161,20 @@ function VikKeypad() {
     if (callState === 'active' || callState === 'ringing') {
       // Release active call using the stored line ID
       console.log('VIK: Releasing call, lineId:', activeLineId);
+
+      // Check if this is a Landline call — find matching entry in gg_status
+      const landlineEntry = activeLineId && (gg_status || []).find((call: any) =>
+        call?.isLandline && call?.call?.includes(activeLineId)
+      );
+      if (landlineEntry) {
+        console.log('VIK: Releasing Landline call:', landlineEntry.landlineCallId);
+        landlineHandleButtonPress(landlineEntry.landlineCallId, landlineEntry.status);
+        setDisplayLine1(VIK_MESSAGES.CALL_RELEASED);
+        setDisplayLine2('');
+        setCallState('released');
+        setTimeout(() => { setDisplayLine1(''); setDisplayLine2(''); setCallState('idle'); setDialBuffer(''); setActiveLineId(null); }, 3000);
+        return;
+      }
 
       // Check if this is a v-VSCS call — find matching entry in gg_status
       const vvscsEntry = activeLineId && (gg_status || []).find((call: any) =>
@@ -1545,6 +1560,7 @@ function VscsPanel(props: VscsProps & { panelId?: string; defaultScreenMode?: st
   const sendMsg = useCoreStore((s: any) => s.sendMessageNow);
   const vacsHandleButtonPress = useCoreStore((s: any) => s.vacsHandleButtonPress);
   const vvscsHandleButtonPress = useCoreStore((s: any) => s.vvscsHandleButtonPress);
+  const landlineHandleButtonPress = useCoreStore((s: any) => s.landlineHandleButtonPress);
   const positionData = useCoreStore((s: any) => s.positionData);
   const overrideStatus = useCoreStore((s: any) => s.overrideStatus); // OV_ calls from WebSocket
   const isBeingOverridden = useCoreStore((s: any) => s.isBeingOverridden); // Active override state
@@ -1786,6 +1802,13 @@ function VscsPanel(props: VscsProps & { panelId?: string; defaultScreenMode?: st
     
     // Only proceed if we have valid button data
     if (buttonData) {
+      // Landline WebRTC calls — route through Landline handler
+      if (buttonData.isLandline && buttonData.landlineCallId) {
+        console.log('Landline call button pressed:', buttonData.landlineCallId, 'status:', buttonData.status);
+        landlineHandleButtonPress(buttonData.landlineCallId, buttonData.status);
+        return;
+      }
+
       // v-VSCS WebRTC calls — route through v-VSCS handler
       if (buttonData.isVvscs && buttonData.vvscsLineId) {
         console.log('v-VSCS call button pressed:', buttonData.vvscsLineId, 'status:', buttonData.status);

@@ -20,6 +20,7 @@ const AreaThree: React.FC<AreaThreeProps> = ({ setSettingModal, onToggleKeypad, 
   const gg_status = useCoreStore((s: any) => s.gg_status);
   const vacsHandleButtonPress = useCoreStore((s: any) => s.vacsHandleButtonPress);
   const vvscsHandleButtonPress = useCoreStore((s: any) => s.vvscsHandleButtonPress);
+  const landlineHandleButtonPress = useCoreStore((s: any) => s.landlineHandleButtonPress);
   const selectedChime = useCoreStore((s: any) => s.selectedChime);
   const cycleChime = useCoreStore((s: any) => s.cycleChime);
 
@@ -50,6 +51,13 @@ const AreaThree: React.FC<AreaThreeProps> = ({ setSettingModal, onToggleKeypad, 
     console.log('[REL] Releasing', activeCalls.length, 'active calls');
     
     activeCalls.forEach((call: any) => {
+      // Landline calls: end via Landline WebRTC
+      if (call.isLandline && call.landlineCallId) {
+        console.log('[REL] Ending Landline call:', call.landlineCallId);
+        landlineHandleButtonPress(call.landlineCallId, call.status);
+        return;
+      }
+
       // v-VSCS calls: end via v-VSCS WebRTC
       if (call.isVvscs && call.vvscsLineId) {
         console.log('[REL] Ending v-VSCS call:', call.vvscsLineId);

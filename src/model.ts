@@ -5,6 +5,8 @@ import type { VacsStoreState } from './lib/vacs/store';
 import type { CallId as VacsCallId, ClientInfo as VacsClientInfo } from './lib/vacs/types';
 import { vvscsStore, INITIAL_VVSCS_STATE } from './lib/vvscs/store';
 import type { VvscsStoreState } from './lib/vvscs/store';
+import { landlineStore, INITIAL_LANDLINE_STATE } from './lib/landline/store';
+import type { LandlineStoreState, LandlineConfiguredLine, LandlineTarget } from './lib/landline/store';
 
 interface Position {
     cs: string;
@@ -96,6 +98,29 @@ export function findRdvsColorPattern(positionData: Facility, positionCallsign: s
     return result.rdvsColorPattern || null;
 }
 
+// Helper function to find a llDialCodeTable for a given position
+// Searches up the facility tree from the position's parent facility
+export function findLlDialCodeTable(positionData: Facility, positionCallsign: string): LandlineDialCodeTable | null {
+    function searchFacility(facility: Facility): { llDialCodeTable?: LandlineDialCodeTable; hasPosition: boolean } {
+        const hasPosition = facility.positions?.some(p => p.cs === positionCallsign);
+        if (hasPosition && facility.llDialCodeTable) {
+            return { llDialCodeTable: facility.llDialCodeTable, hasPosition: true };
+        }
+        for (const child of facility.childFacilities || []) {
+            const result = searchFacility(child);
+            if (result.hasPosition) {
+                return {
+                    llDialCodeTable: result.llDialCodeTable || facility.llDialCodeTable,
+                    hasPosition: true
+                };
+            }
+        }
+        return { hasPosition: false };
+    }
+    const result = searchFacility(positionData);
+    return result.llDialCodeTable || null;
+}
+
 // Helper function to resolve a dial code to a destination CRC line ID
 // trunkName: The trunk name from the type 3 line label (e.g., "APCH", "S-BAY")
 // dialCode: The 2-digit code entered by the user (e.g., "11", "42")
@@ -106,7 +131,7 @@ export function resolveDialCode(dialCodeTable: DialCodeTable | null, trunkName: 
     return trunkCodes[dialCode] || null;
 }
 
-interface CoreState extends VacsStoreState, VvscsStoreState {
+interface CoreState extends VacsStoreState, VvscsStoreState, LandlineStoreState {
     connected: boolean;
     afv_version: string;
     ptt: boolean;
@@ -192,6 +217,12 @@ interface CoreState extends VacsStoreState, VvscsStoreState {
     connectVvscs: (facility: string, position: string, assumedPositions?: string[]) => void;
     disconnectVvscs: () => void;
     vvscsHandleButtonPress: (vvscsLineId: string, currentStatus: string) => void;
+
+    // Landline integration
+    connectLandline: (facility: string, position: string, assumedPositions?: string[], serverUrl?: string) => void;
+    disconnectLandline: () => void;
+    landlineHandleButtonPress: (landlineCallId: string, currentStatus: string) => void;
+    sendLandlineDialCall: (trunkName: string, dialCode: string) => void;
 }
 
 let call_table: Record<string, [string, number]> = {}
@@ -430,6 +461,8 @@ export const useCoreStore = create<CoreState>((set: any, get: any) => {
     vacsStore.bindStore(set, get);
     // Bind v-VSCS store bridge to this zustand instance
     vvscsStore.bindStore(set, get);
+    // Bind Landline store bridge to this zustand instance
+    landlineStore.bindStore(set, get);
 
     let socket: WebSocket | null;
     const ds: CoreState = {
@@ -497,6 +530,17 @@ export const useCoreStore = create<CoreState>((set: any, get: any) => {
             if (call.isVvscs && call.vvscsLineId) {
                 console.log('[releaseBtn] Ending v-VSCS call:', call.vvscsLineId);
                 vvscsStore.endCall(call.vvscsLineId);
+                return;
+            }
+
+            // Landline calls: end via Landline WebRTC
+            if (call.isLandline && call.landlineCallId) {
+                console.log('[releaseBtn] Ending Landline call:', call.landlineCallId);
+                if (call.isShout) {
+                    landlineStore.handleButtonPress(call.landlineCallId, 'ok');
+                } else {
+                    landlineStore.endCall(call.landlineCallId);
+                }
                 return;
             }
 
@@ -697,6 +741,23 @@ export const useCoreStore = create<CoreState>((set: any, get: any) => {
         vvscsHandleButtonPress: (vvscsLineId: string, currentStatus: string) => {
             vvscsStore.handleButtonPress(vvscsLineId, currentStatus);
         },
+
+        // Landline integration state
+        ...INITIAL_LANDLINE_STATE,
+
+        // Landline integration methods
+        connectLandline: (facility: string, position: string, assumedPositions: string[] = [], serverUrl?: string) => {
+            landlineStore.connectLandline(facility, position, assumedPositions, serverUrl);
+        },
+        disconnectLandline: () => {
+            landlineStore.disconnectLandline();
+        },
+        landlineHandleButtonPress: (landlineCallId: string, currentStatus: string) => {
+            landlineStore.handleButtonPress(landlineCallId, currentStatus);
+        },
+        sendLandlineDialCall: (trunkName: string, dialCode: string) => {
+            landlineStore.sendLandlineDialCall(trunkName, dialCode);
+        },
     }
 
     function addCall(callType: number, cmd1: string) {
@@ -788,9 +849,28 @@ export const useCoreStore = create<CoreState>((set: any, get: any) => {
         ag_freq_order = [];
         placeholder_indices = placeholderPositions;
 
-        // Separate VACS lines (vacs: prefix) and v-VSCS lines (vvscs: prefix) from AFV lines
+        // Separate VACS lines (vacs: prefix), v-VSCS lines (vvscs: prefix), and Landline lines (ll: prefix) from AFV lines
         const vacsConfigLines: Array<{ target: string; targetType: 'position' | 'station' | 'client'; label: string; lineType: number; sortIndex: number }> = [];
         const vvscsConfigLines: Array<{ target: string; targetType: 'position' | 'shout'; remoteFacility?: string; label: string; lineType: number; sortIndex: number }> = [];
+        const landlineConfigLines: LandlineConfiguredLine[] = [];
+
+        // Derive facility ID for landline lines (all targets share the position's parent facility)
+        let llFacilityId = '';
+        {
+            const selPos = selected_positions[0] as any;
+            const { positionData: pd } = get();
+            const findFac = (fac: any): boolean => {
+                if (fac.positions?.some((p: any) => p.cs === selPos?.cs)) {
+                    llFacilityId = fac.id || '';
+                    return true;
+                }
+                for (const child of fac.childFacilities || []) {
+                    if (findFac(child)) return true;
+                }
+                return false;
+            };
+            findFac(pd);
+        }
         
         for (const item of dedup_ordered) {
             const line = item.line;
@@ -860,6 +940,49 @@ export const useCoreStore = create<CoreState>((set: any, get: any) => {
                 };
                 console.log('[resetWindow] v-VSCS line found:', lineId, cfgEntry);
                 vvscsConfigLines.push(cfgEntry);
+            } else if (lineId.startsWith('ll:')) {
+                // Landline line — parse target(s) from ID, don't register with AFV
+                // Formats:
+                //   "ll:OAK_10_CTR"                → single target
+                //   "ll:OAK_S_APP,OAK_G_APP"       → multi-target shout (comma-separated)
+                //   "ll:dial"                       → type 3 dial/trunk line
+                const afterPrefix = lineId.substring(3); // remove 'll:'
+                const label = String(line[2] || afterPrefix);
+                const lineType = (line[1] ?? 2) as 0 | 1 | 2 | 3;
+
+                // Still add to call_table and line_order so labels resolve and sort correctly
+                call_table[lineId] = [line[2], line[1]];
+                line_order[lineId] = item.originalIndex;
+
+                if (afterPrefix === 'dial') {
+                    // Type 3 dial line — trunk name from first label segment
+                    const labelParts = label.split(',');
+                    const trunkName = labelParts[0] || 'DIAL';
+                    landlineConfigLines.push({
+                        targetFacility: llFacilityId,
+                        targetPosition: `DIAL_${trunkName}_${item.originalIndex}`,
+                        targets: [],
+                        label,
+                        lineType: 3,
+                        trunkName,
+                        sortIndex: item.originalIndex,
+                    });
+                } else {
+                    // Single or multi-target line
+                    const callsigns = afterPrefix.split(',').map(s => s.trim()).filter(Boolean);
+                    const targets: LandlineTarget[] = callsigns.map(cs => ({
+                        facility: llFacilityId,
+                        position: cs,
+                    }));
+                    landlineConfigLines.push({
+                        targetFacility: targets[0]?.facility || llFacilityId,
+                        targetPosition: targets[0]?.position || afterPrefix,
+                        targets,
+                        label,
+                        lineType,
+                        sortIndex: item.originalIndex,
+                    });
+                }
             } else {
                 // AFV line — register normally
                 call_table[line[0]] = [line[2], line[1]];
@@ -873,28 +996,43 @@ export const useCoreStore = create<CoreState>((set: any, get: any) => {
         // Pass configured v-VSCS lines to the v-VSCS store
         console.log('[resetWindow] Passing', vvscsConfigLines.length, 'v-VSCS lines to store:', vvscsConfigLines);
         vvscsStore.setConfiguredLines(vvscsConfigLines);
+        // Pass configured Landline lines to the Landline store
+        console.log('[resetWindow] Passing', landlineConfigLines.length, 'Landline lines to store:', landlineConfigLines);
+        landlineStore.setConfiguredLines(landlineConfigLines);
+        // Pass landline dial code table if present
+        const llDialTable = findLlDialCodeTable(get().positionData, callsign);
+        landlineStore.setLlDialCodeTable(llDialTable);
+
+        // Derive facility ID by walking positionData tree to find which facility owns this position
+        const selectedPos = selected_positions[0] as any;
+        const posName = selectedPos?.cs || selectedPos?.pos || callsign;
+        const { positionData } = get();
+        let facilityId = '';
+        const findFacility = (fac: any): boolean => {
+            if (fac.positions?.some((p: any) => p.cs === selectedPos?.cs)) {
+                facilityId = fac.id || '';
+                return true;
+            }
+            for (const child of fac.childFacilities || []) {
+                if (findFacility(child)) return true;
+            }
+            return false;
+        };
+        findFacility(positionData);
 
         // Auto-connect to v-VSCS if position has vvscs: lines and we're not already connected
         if (vvscsConfigLines.length > 0 && !vvscsStore.isConnected) {
-            const selectedPos = selected_positions[0] as any;
-            const posName = selectedPos?.cs || selectedPos?.pos || callsign;
-            // Derive facility ID by walking positionData tree to find which facility owns this position
-            const { positionData } = get();
-            let facilityId = '';
-            const findFacility = (fac: any): boolean => {
-                if (fac.positions?.some((p: any) => p.cs === selectedPos?.cs)) {
-                    facilityId = fac.id || '';
-                    return true;
-                }
-                for (const child of fac.childFacilities || []) {
-                    if (findFacility(child)) return true;
-                }
-                return false;
-            };
-            findFacility(positionData);
             if (facilityId && posName) {
                 console.log('[resetWindow] Auto-connecting to v-VSCS as', facilityId, posName);
                 vvscsStore.connectVvscs(facilityId, posName);
+            }
+        }
+
+        // Auto-connect to Landline if position has ll: lines and we're not already connected
+        if (landlineConfigLines.length > 0 && !landlineStore.isConnected) {
+            if (facilityId && posName) {
+                console.log('[resetWindow] Auto-connecting to Landline as', facilityId, posName);
+                landlineStore.connectLandline(facilityId, posName);
             }
         }
 

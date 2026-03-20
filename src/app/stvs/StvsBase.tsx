@@ -83,6 +83,7 @@ const StvsBase: React.FC = () => {
   const sendMsg = useCoreStore((s: any) => s.sendMessageNow);
   const vacsHandleButtonPress = useCoreStore((s: any) => s.vacsHandleButtonPress);
   const vvscsHandleButtonPress = useCoreStore((s: any) => s.vvscsHandleButtonPress);
+  const landlineHandleButtonPress = useCoreStore((s: any) => s.landlineHandleButtonPress);
   
   // Convert ILLUM knob angle (-135 to +135) to brightness (0.1 to 1.0)
   const handleIllumChange = useCallback((angle: number) => {
@@ -257,7 +258,9 @@ const StvsBase: React.FC = () => {
           
           if (ggItem && ggItem.call) {
             // v-VSCS WebRTC calls — route through v-VSCS handler
-            if (ggItem.isVvscs && ggItem.vvscsLineId) {
+            if (ggItem.isLandline && ggItem.landlineCallId) {
+              onClick = () => landlineHandleButtonPress(ggItem.landlineCallId, ggItem.status);
+            } else if (ggItem.isVvscs && ggItem.vvscsLineId) {
               onClick = () => vvscsHandleButtonPress(ggItem.vvscsLineId, ggItem.status);
             } else if (ggItem.isVacs && ggItem.vacsCallId) {
             // VACS WebRTC calls — route through VACS handler

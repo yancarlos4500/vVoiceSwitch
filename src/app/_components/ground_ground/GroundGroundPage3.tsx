@@ -12,6 +12,7 @@ const GroundGroundPage3: React.FC = () => {
   const gg_status = useCoreStore((s: any) => s.gg_status);
   const vacsHandleButtonPress = useCoreStore((s: any) => s.vacsHandleButtonPress);
   const vvscsHandleButtonPress = useCoreStore((s: any) => s.vvscsHandleButtonPress);
+  const landlineHandleButtonPress = useCoreStore((s: any) => s.landlineHandleButtonPress);
   
   const ITEM_PER_PAGE_3 = 30; // 6 rows x 5 columns
   
@@ -50,6 +51,23 @@ const GroundGroundPage3: React.FC = () => {
           indicatorClassName = 'flutter receive flashing';
         }
         onClick = () => vvscsHandleButtonPress(data.vvscsLineId, data.status);
+        buttons.push(
+          <DAButton key={index} topLine={data.call_name || data.call} latching={false}
+            onClick={onClick} controlledIndicator={indicator} indicatorClassName={indicatorClassName} />
+        );
+        return;
+      }
+
+      // Landline WebRTC calls — route through Landline handler
+      if (data.isLandline && data.landlineCallId) {
+        if (data.status === 'ok' || data.status === 'active') {
+          indicator = ptt;
+          indicatorClassName = indicator ? 'flutter active' : 'steady green';
+        } else if (data.status === 'chime' || data.status === 'ringing') {
+          indicator = true;
+          indicatorClassName = 'flutter receive flashing';
+        }
+        onClick = () => landlineHandleButtonPress(data.landlineCallId, data.status);
         buttons.push(
           <DAButton key={index} topLine={data.call_name || data.call} latching={false}
             onClick={onClick} controlledIndicator={indicator} indicatorClassName={indicatorClassName} />
