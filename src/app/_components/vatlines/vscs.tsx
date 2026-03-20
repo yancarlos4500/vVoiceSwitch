@@ -7,6 +7,7 @@ import VscsStaticButton from './vscs_static_button';
 import VscsAG from './vscs_ag';
 import VscsUtil from './vscs_util';
 import { useCoreStore } from '~/model';
+import { landlineStore } from '~/lib/landline/store';
 import './styles.css';
 
 // Utility function to get line type from position configuration data
@@ -1604,6 +1605,32 @@ function VscsPanel(props: VscsProps & { panelId?: string; defaultScreenMode?: st
     const msg = VDM_MESSAGES[messageKey];
     showVdmMessage(msg, autoDismissMs);
   };
+
+  // Subscribe to landline call errors and show appropriate VDM messages
+  useEffect(() => {
+    const unsubscribe = landlineStore.on((event) => {
+      if (event.type === 'callError') {
+        switch (event.reason) {
+          case 'not_found':
+            showVdmMessage(VDM_MESSAGES.CALL_DENIED_DEST_OTS, 5000);
+            break;
+          case 'busy':
+            showVdmMessage(VDM_MESSAGES.CALL_DENIED_ALREADY_ACTIVE, 5000);
+            break;
+          case 'rejected':
+            showVdmMessage(VDM_MESSAGES.CALL_DENIED_NO_RESPONSE, 5000);
+            break;
+          case 'timeout':
+            showVdmMessage(VDM_MESSAGES.CALL_DENIED_NO_RESPONSE, 5000);
+            break;
+          default:
+            showVdmMessage(VDM_MESSAGES.CALL_DENIED_DEST_OTS, 5000);
+            break;
+        }
+      }
+    });
+    return unsubscribe;
+  }, []);
   
   // Check if guard frequencies (121.500, 243.000) are currently active in A/G status
   const hasGuardFrequencies = useMemo(() => {
