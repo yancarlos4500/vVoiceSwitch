@@ -16,9 +16,9 @@
 /**
  * Default signaling server URL — override via connect().
  * Local dev: ws://localhost:8787/ws  (wrangler dev)
- * Production: wss://landline-signaling.<your-subdomain>.workers.dev/ws
+ * Production: wss://landline-signaling.domynguyen-4.workers.dev/ws
  */
-export const LANDLINE_SERVER_URL = 'ws://localhost:8787/ws';
+export const LANDLINE_SERVER_URL = 'wss://landline-signaling.domynguyen-4.workers.dev/ws';
 
 export const LANDLINE_ICE_SERVERS: RTCIceServer[] = [
   { urls: 'stun:stun.l.google.com:19302' },
