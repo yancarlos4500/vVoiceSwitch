@@ -430,9 +430,27 @@ export default function RDVSWrapper({ variant = 'default' }: RDVSWrapperProps) {
 
         let statusObj: any = {};
         if (gg_status) {
-          statusObj = gg_status.find((s: any) =>
-            s?.call === call_id || s?.call?.endsWith('_' + call_id)
-          ) || {};
+          if (call_id.startsWith('ll:')) {
+            // Landline lines: config ID format (ll:XX) differs from gg_status
+            // call format (LL_XX). Match via landlineTargetPosition instead.
+            const afterLl = call_id.substring(3);
+            if (afterLl === 'dial') {
+              // Dial lines: match by label and lineType 3
+              statusObj = gg_status.find((s: any) =>
+                s?.isLandline && s?.lineType === 3 && s?.call_name === label
+              ) || {};
+            } else {
+              // Non-dial: extract primary target (first in comma-separated list)
+              const primaryTarget = afterLl.split(',')[0]?.trim() || '';
+              statusObj = gg_status.find((s: any) =>
+                s?.isLandline && s?.landlineTargetPosition === primaryTarget
+              ) || {};
+            }
+          } else {
+            statusObj = gg_status.find((s: any) =>
+              s?.call === call_id || s?.call?.endsWith('_' + call_id)
+            ) || {};
+          }
         }
 
         const callStatus = statusObj.status || 'off';
@@ -1350,10 +1368,25 @@ export default function RDVSWrapper({ variant = 'default' }: RDVSWrapperProps) {
         else if (lineType === 1) typeLetter = 'C';
         else if (lineType === 2) typeLetter = 'A';
 
-        // Find status
-        const statusObj = gg_status?.find((s: any) =>
-          s?.call === call_id || s?.call?.endsWith('_' + call_id)
-        ) || {};
+        // Find status — landline lines need special matching
+        let statusObj: any = {};
+        if (call_id.startsWith('ll:')) {
+          const afterLl = call_id.substring(3);
+          if (afterLl === 'dial') {
+            statusObj = gg_status?.find((s: any) =>
+              s?.isLandline && s?.lineType === 3 && s?.call_name === label
+            ) || {};
+          } else {
+            const primaryTarget = afterLl.split(',')[0]?.trim() || '';
+            statusObj = gg_status?.find((s: any) =>
+              s?.isLandline && s?.landlineTargetPosition === primaryTarget
+            ) || {};
+          }
+        } else {
+          statusObj = gg_status?.find((s: any) =>
+            s?.call === call_id || s?.call?.endsWith('_' + call_id)
+          ) || {};
+        }
 
         const callStatus = statusObj.status || 'off';
         const callPrefix = statusObj?.call?.substring(0, 2);

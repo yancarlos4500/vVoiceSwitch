@@ -374,11 +374,17 @@ class LandlineStore {
 
       case 'ok':
       case 'active':
-        // Active call — end it
+        // Active call — end it (but NOT if we're the overridden party on a type-0 call)
         if (landlineCallId.startsWith('ll_cfg:')) {
           // Shout line still active — end all sub-calls
           this.endShoutGroup(landlineCallId);
         } else {
+          const callInfo = this.client?.getCallInfo(landlineCallId);
+          if (callInfo && callInfo.lineType === 0 && callInfo.direction === 'incoming') {
+            // Overridden party cannot hang up an override call — only the caller can
+            console.log('[Landline Store] Override call — overridden party cannot hang up:', landlineCallId);
+            return;
+          }
           this.endCall(landlineCallId);
         }
         break;

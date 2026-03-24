@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { ButtonType, CALL_TYPE, Configuration, ActiveLandline, IncomingLandline, Button } from './types';
 import HeadphoneSvgComponent from './headphone_svg';
 import SpeakerSvgComponent from './speaker_svg';
@@ -570,12 +570,10 @@ function RtAuxiliaryMessageArea({
   rtEnabled, 
   callForwardInfo, 
   overridingPositions,
-  isBeingOverridden 
 }: { 
   rtEnabled: boolean; 
   callForwardInfo: CallForwardInfo | null;
   overridingPositions: OverridingPosition[];
-  isBeingOverridden: boolean;
 }) {
   // Determine background color based on state
   // R/T ON with override or no forwarding: Green (#008000)
@@ -607,7 +605,7 @@ function RtAuxiliaryMessageArea({
       )}
       
       {/* Overriding Positions Display (only shown to the receiver of the override) */}
-      {rtEnabled && hasOverride && isBeingOverridden && (
+      {rtEnabled && hasOverride && (
         <div className="text-sm w-full">
           {overridingPositions.map((pos, idx) => (
             <div key={idx} className="w-full">
@@ -843,6 +841,7 @@ function VikKeypad() {
   const [keysIlluminated, setKeysIlluminated] = useState(false);
   const [activeLineId, setActiveLineId] = useState<string | null>(null); // Track the active line ID for release
   const [showBrightnessScale, setShowBrightnessScale] = useState<'disp' | 'key' | null>(null); // Show brightness scale in display
+  const ringTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   
   const sendMsg = useCoreStore((s: any) => s.sendMessageNow);
   const vacsHandleButtonPress = useCoreStore((s: any) => s.vacsHandleButtonPress);
@@ -854,6 +853,58 @@ function VikKeypad() {
   
   // Get current selected position
   const currentPosition = selectedPositions && selectedPositions.length > 0 ? selectedPositions[0] : null;
+
+  // Sync VIK callState with real gg_status from the backend
+  useEffect(() => {
+    if (!activeLineId) return;
+
+    // Find matching entry in gg_status for our active line
+    // Check both AFV entries (by call field) and landline entries (by target position)
+    const entry = (gg_status || []).find((call: any) => {
+      if (!call) return false;
+      // Landline entries: match by target position
+      if (call.isLandline && call.landlineTargetPosition === activeLineId) return true;
+      // v-VSCS entries: match by target or call field
+      if (call.isVvscs && (call.vvscsTarget === activeLineId || call.call?.includes(activeLineId))) return true;
+      // VACS entries: match by target or call field
+      if (call.isVacs && (call.vacsTarget === activeLineId || call.call?.includes(activeLineId))) return true;
+      // AFV entries: match by call field
+      if (call.call && !call.isLandline && !call.isVvscs && !call.isVacs) return call.call.includes(activeLineId);
+      return false;
+    });
+
+    if (callState === 'ringing') {
+      if (entry && (entry.status === 'ok' || entry.status === 'active' || entry.status === 'online')) {
+        // Call connected — clear ring timeout and show CALL ACTIVE
+        if (ringTimeoutRef.current) { clearTimeout(ringTimeoutRef.current); ringTimeoutRef.current = null; }
+        setDisplayLine1(VIK_MESSAGES.CALL_ACTIVE);
+        setCallState('active');
+      } else if (entry && entry.status === 'busy') {
+        if (ringTimeoutRef.current) { clearTimeout(ringTimeoutRef.current); ringTimeoutRef.current = null; }
+        setDisplayLine1(VIK_MESSAGES.BUSY);
+        setDisplayLine2('');
+        setCallState('busy');
+        setTimeout(() => {
+          setDisplayLine1(''); setDisplayLine2(''); setDialBuffer(''); setActiveLineId(null); setCallState('idle'); setKeysIlluminated(false);
+        }, 3000);
+      }
+    } else if (callState === 'active') {
+      // Detect external release (peer hung up, or G/G button toggled off)
+      if (!entry || entry.status === 'idle' || entry.status === '' || entry.status === 'off') {
+        setDisplayLine1(VIK_MESSAGES.CALL_RELEASED);
+        setDisplayLine2('');
+        setCallState('released');
+        setTimeout(() => {
+          setDisplayLine1(''); setDisplayLine2(''); setDialBuffer(''); setActiveLineId(null); setCallState('idle'); setKeysIlluminated(false);
+        }, 3000);
+      }
+    }
+  }, [gg_status, activeLineId, callState]);
+
+  // Cleanup ring timeout on unmount
+  useEffect(() => {
+    return () => { if (ringTimeoutRef.current) clearTimeout(ringTimeoutRef.current); };
+  }, []);
 
   // Determine call type prompt based on first digit
   const getCallTypePrompt = (firstDigit: string): string => {
@@ -882,10 +933,11 @@ function VikKeypad() {
     const targetCode = buffer.substring(1);
     
     // Override calls (2,3,4,5,6,7): ss(s) format - 2-3 digits for sector
-    // Auto-initiate when we have a valid line match
+    // Auto-initiate when we have a valid line match (override lineType 0 or shout lineType 2)
     if (['2', '3', '4', '5', '6', '7'].includes(firstDigit || '')) {
-      // Try to find matching line - if found, auto-initiate
-      const lineId = findLineIdByDialCode(positionData, currentPosition, targetCode, LINE_TYPE_OVERRIDE);
+      // Try to find matching override line first, then shout line
+      const lineId = findLineIdByDialCode(positionData, currentPosition, targetCode, LINE_TYPE_OVERRIDE)
+        || findLineIdByDialCode(positionData, currentPosition, targetCode, LINE_TYPE_SHOUT);
       if (lineId) return true;
       // If 3 digits entered and no match, also trigger (will show INVALID CODE)
       if (targetCode.length >= 3) return true;
@@ -923,20 +975,94 @@ function VikKeypad() {
     const firstDigit = buf[0] || '';
     const targetCode = buf.substring(1);
     
-    // Ring timeout timer ID for cleanup
-    let ringTimeoutId: ReturnType<typeof setTimeout> | null = null;
-    
     // Helper to set up call with ring timeout handling
     const initiateCallWithTimeout = (lineId: string, displayText: string, dbl1: number) => {
       setDisplayLine1(VIK_MESSAGES.CALL_RINGING);
       setDisplayLine2(displayText);
-      setActiveLineId(lineId);
-      sendMsg({ type: 'call', cmd1: lineId, dbl1 });
-      setCallState('ringing');
       setKeysIlluminated(false); // Keys no longer illuminated during call
+
+      // Landline lines (ll: prefix) must be routed through WebRTC, not CRC
+      if (lineId.startsWith('ll:')) {
+        const afterLl = lineId.substring(3); // e.g. "OAK_10_CTR"
+        const primaryTarget = afterLl.split(',')[0]?.trim() || '';
+        // Find matching landline gg_status entry by target position
+        const llEntry = (gg_status || []).find((e: any) =>
+          e?.isLandline && e?.landlineTargetPosition === primaryTarget
+        );
+        if (llEntry && llEntry.landlineCallId) {
+          console.log('VIK: Routing landline call via WebRTC:', llEntry.landlineCallId);
+          setActiveLineId(primaryTarget); // Store target for gg_status matching
+          landlineHandleButtonPress(llEntry.landlineCallId, llEntry.status || 'off');
+          setCallState('ringing');
+        } else {
+          console.warn('VIK: Landline entry not found for target:', primaryTarget);
+          setDisplayLine1(VIK_MESSAGES.INVALID_CODE);
+          setDisplayLine2(displayText);
+          setTimeout(() => {
+            setDisplayLine1(''); setDisplayLine2(''); setDialBuffer(''); setActiveLineId(null); setCallState('idle'); setKeysIlluminated(false);
+          }, 2000);
+          return;
+        }
+      } else if (lineId.startsWith('vvscs:')) {
+        // v-VSCS lines must be routed through v-VSCS WebRTC, not CRC
+        const afterPrefix = lineId.substring(6);
+        let primaryTarget = afterPrefix;
+        if (afterPrefix.startsWith('pos:')) primaryTarget = afterPrefix.substring(4);
+        else if (afterPrefix.startsWith('shout:')) primaryTarget = afterPrefix.substring(6).split(':')[0] || '';
+        primaryTarget = primaryTarget.toUpperCase();
+        const vvscsEntry = (gg_status || []).find((e: any) =>
+          e?.isVvscs && e?.vvscsTarget === primaryTarget
+        );
+        if (vvscsEntry && vvscsEntry.vvscsLineId) {
+          console.log('VIK: Routing v-VSCS call via WebRTC:', vvscsEntry.vvscsLineId);
+          setActiveLineId(primaryTarget);
+          vvscsHandleButtonPress(vvscsEntry.vvscsLineId, vvscsEntry.status || 'off');
+          setCallState('ringing');
+        } else {
+          console.warn('VIK: v-VSCS entry not found for target:', primaryTarget);
+          setDisplayLine1(VIK_MESSAGES.INVALID_CODE);
+          setDisplayLine2(displayText);
+          setTimeout(() => {
+            setDisplayLine1(''); setDisplayLine2(''); setDialBuffer(''); setActiveLineId(null); setCallState('idle'); setKeysIlluminated(false);
+          }, 2000);
+          return;
+        }
+      } else if (lineId.startsWith('vacs:')) {
+        // VACS lines must be routed through VACS WebRTC, not CRC
+        const afterPrefix = lineId.substring(5);
+        let primaryTarget = afterPrefix;
+        if (afterPrefix.startsWith('pos:')) primaryTarget = afterPrefix.substring(4);
+        else if (afterPrefix.startsWith('stn:')) primaryTarget = afterPrefix.substring(4);
+        else if (afterPrefix.startsWith('cid:')) primaryTarget = afterPrefix.substring(4);
+        primaryTarget = primaryTarget.toUpperCase();
+        const vacsEntry = (gg_status || []).find((e: any) =>
+          e?.isVacs && e?.vacsTarget === primaryTarget
+        );
+        if (vacsEntry && vacsEntry.vacsCallId) {
+          console.log('VIK: Routing VACS call via WebRTC:', vacsEntry.vacsCallId);
+          setActiveLineId(primaryTarget);
+          vacsHandleButtonPress(vacsEntry.vacsCallId, vacsEntry.status || 'off');
+          setCallState('ringing');
+        } else {
+          console.warn('VIK: VACS entry not found for target:', primaryTarget);
+          setDisplayLine1(VIK_MESSAGES.INVALID_CODE);
+          setDisplayLine2(displayText);
+          setTimeout(() => {
+            setDisplayLine1(''); setDisplayLine2(''); setDialBuffer(''); setActiveLineId(null); setCallState('idle'); setKeysIlluminated(false);
+          }, 2000);
+          return;
+        }
+      } else {
+        setActiveLineId(lineId);
+        sendMsg({ type: 'call', cmd1: lineId, dbl1 });
+        setCallState('ringing');
+      }
+      
+      // Clear any previous ring timeout
+      if (ringTimeoutRef.current) clearTimeout(ringTimeoutRef.current);
       
       // Set up ring timeout (30 seconds per typical VSCS behavior)
-      ringTimeoutId = setTimeout(() => {
+      ringTimeoutRef.current = setTimeout(() => {
         setCallState(currentState => {
           if (currentState === 'ringing') {
             setDisplayLine1(VIK_MESSAGES.RING_TIME_OUT);
@@ -953,26 +1079,20 @@ function VikKeypad() {
           return currentState;
         });
       }, 30000);
-      
-      // Simulate call connecting (2 seconds for demo)
-      setTimeout(() => {
-        setCallState(currentState => {
-          if (currentState === 'ringing') {
-            if (ringTimeoutId) clearTimeout(ringTimeoutId);
-            setDisplayLine1(VIK_MESSAGES.CALL_ACTIVE);
-            return 'active';
-          }
-          return currentState;
-        });
-      }, 2000);
+      // Actual call state transition (ringing → active) is handled by useEffect watching gg_status
     };
     
     if (['2', '3', '4', '5', '6', '7'].includes(firstDigit)) {
-      // Override call
-      const lineId = findLineIdByDialCode(positionData, currentPosition, targetCode, LINE_TYPE_OVERRIDE);
+      // Override / shout call — try override (lineType 0) first, then shout (lineType 2)
+      let lineId = findLineIdByDialCode(positionData, currentPosition, targetCode, LINE_TYPE_OVERRIDE);
+      let dbl1 = 0; // override
+      if (!lineId) {
+        lineId = findLineIdByDialCode(positionData, currentPosition, targetCode, LINE_TYPE_SHOUT);
+        dbl1 = 2; // shout
+      }
       
       if (lineId) {
-        initiateCallWithTimeout(lineId, `D-${targetCode}`, 0);
+        initiateCallWithTimeout(lineId, `D-${targetCode}`, dbl1);
       } else {
         console.log('VIK: Override line not found for code:', targetCode);
         setDisplayLine1(VIK_MESSAGES.INVALID_CODE);
@@ -1027,16 +1147,7 @@ function VikKeypad() {
       sendMsg({ type: 'call', cmd1: targetCode, dbl1: 2 });
       setCallState('ringing');
       setKeysIlluminated(false);
-      
-      setTimeout(() => {
-        setCallState(currentState => {
-          if (currentState === 'ringing') {
-            setDisplayLine1(VIK_MESSAGES.CALL_ACTIVE);
-            return 'active';
-          }
-          return currentState;
-        });
-      }, 2000);
+      // Actual state transition handled by useEffect watching gg_status
     } else if (firstDigit === '9') {
       // Meet-Me conference
       setDisplayLine1(VIK_MESSAGES.CALL_RINGING);
@@ -1045,16 +1156,7 @@ function VikKeypad() {
       sendMsg({ type: 'call', cmd1: targetCode, dbl1: 3 });
       setCallState('ringing');
       setKeysIlluminated(false);
-      
-      setTimeout(() => {
-        setCallState(currentState => {
-          if (currentState === 'ringing') {
-            setDisplayLine1(VIK_MESSAGES.MEET_ME_CONF);
-            return 'active';
-          }
-          return currentState;
-        });
-      }, 2000);
+      // Actual state transition handled by useEffect watching gg_status
     } else {
       // Generic call fallback
       setDisplayLine1(VIK_MESSAGES.CALL_RINGING);
@@ -1063,16 +1165,7 @@ function VikKeypad() {
       sendMsg({ type: 'call', cmd1: buf, dbl1: 2 });
       setCallState('ringing');
       setKeysIlluminated(false);
-      
-      setTimeout(() => {
-        setCallState(currentState => {
-          if (currentState === 'ringing') {
-            setDisplayLine1(VIK_MESSAGES.CALL_ACTIVE);
-            return 'active';
-          }
-          return currentState;
-        });
-      }, 2000);
+      // Actual state transition handled by useEffect watching gg_status
     }
   };
 
@@ -1158,12 +1251,15 @@ function VikKeypad() {
 
   const handleRelease = () => {
     if (callState === 'active' || callState === 'ringing') {
+      // Clear any pending ring timeout
+      if (ringTimeoutRef.current) { clearTimeout(ringTimeoutRef.current); ringTimeoutRef.current = null; }
+      
       // Release active call using the stored line ID
       console.log('VIK: Releasing call, lineId:', activeLineId);
 
       // Check if this is a Landline call — find matching entry in gg_status
       const landlineEntry = activeLineId && (gg_status || []).find((call: any) =>
-        call?.isLandline && call?.call?.includes(activeLineId)
+        call?.isLandline && (call?.landlineTargetPosition === activeLineId || call?.call?.includes(activeLineId))
       );
       if (landlineEntry) {
         console.log('VIK: Releasing Landline call:', landlineEntry.landlineCallId);
@@ -1177,7 +1273,7 @@ function VikKeypad() {
 
       // Check if this is a v-VSCS call — find matching entry in gg_status
       const vvscsEntry = activeLineId && (gg_status || []).find((call: any) =>
-        call?.isVvscs && call?.call?.includes(activeLineId)
+        call?.isVvscs && (call?.vvscsTarget === activeLineId || call?.call?.includes(activeLineId))
       );
       if (vvscsEntry) {
         console.log('VIK: Releasing v-VSCS call:', vvscsEntry.vvscsLineId);
@@ -1191,7 +1287,7 @@ function VikKeypad() {
 
       // Check if this is a VACS call — find matching entry in gg_status
       const vacsEntry = activeLineId && (gg_status || []).find((call: any) =>
-        call?.isVacs && call?.call?.includes(activeLineId)
+        call?.isVacs && (call?.vacsTarget === activeLineId || call?.call?.includes(activeLineId))
       );
       if (vacsEntry) {
         console.log('VIK: Releasing VACS call:', vacsEntry.vacsCallId);
@@ -1562,33 +1658,45 @@ function VscsPanel(props: VscsProps & { panelId?: string; defaultScreenMode?: st
   const landlineHandleButtonPress = useCoreStore((s: any) => s.landlineHandleButtonPress);
   const positionData = useCoreStore((s: any) => s.positionData);
   const overrideStatus = useCoreStore((s: any) => s.overrideStatus); // OV_ calls from WebSocket
-  const isBeingOverridden = useCoreStore((s: any) => s.isBeingOverridden); // Active override state
   const selectedPositions = useCoreStore((s: any) => s.selectedPositions);
   
   // Get the currently selected position for line type lookups
   const currentPosition = selectedPositions && selectedPositions.length > 0 ? selectedPositions[0] : null;
   
-  // Update overridingPositions from WebSocket OV_ data
+  // Update overridingPositions from WebSocket OV_ data AND WebRTC override calls
   useEffect(() => {
+    const activeOverrides: OverridingPosition[] = [];
+
+    // 1. AFV overrides (OV_ prefixed entries from overrideStatus)
     if (overrideStatus && Array.isArray(overrideStatus)) {
-      // Filter for active overrides and map to OverridingPosition format
-      const activeOverrides = overrideStatus
-        .filter((ov: any) => ov && (ov.status === 'ok' || ov.status === 'active'))
-        .map((ov: any) => ({
-          position: ov.call_name || ov.call?.substring(3) || 'Unknown',
-          dialCode: ov.call?.substring(3) || ''
-        }));
-      
-      setOverridingPositions(activeOverrides);
-      
-      // Log for debugging
-      if (activeOverrides.length > 0) {
-        console.log('[VSCS] Override positions updated:', activeOverrides);
+      for (const ov of overrideStatus) {
+        if (ov && (ov.status === 'ok' || ov.status === 'active')) {
+          activeOverrides.push({
+            position: ov.call_name || ov.call?.substring(3) || 'Unknown',
+            dialCode: ov.call?.substring(3) || ''
+          });
+        }
       }
-    } else {
-      setOverridingPositions([]);
     }
-  }, [overrideStatus]);
+
+    // 2. WebRTC landline incoming override calls (lineType 0, direction incoming, active)
+    if (gg_status && Array.isArray(gg_status)) {
+      for (const entry of gg_status) {
+        if (entry?.isLandline && entry?.lineType === 0 && entry?.landlineDirection === 'incoming'
+            && (entry?.status === 'ok' || entry?.status === 'active')) {
+          activeOverrides.push({
+            position: entry.otherPosition || entry.call_name || 'Unknown',
+            dialCode: entry.landlineCallId || ''
+          });
+        }
+      }
+    }
+
+    setOverridingPositions(activeOverrides);
+    if (activeOverrides.length > 0) {
+      console.log('[VSCS] Override positions updated:', activeOverrides);
+    }
+  }, [overrideStatus, gg_status]);
   
   // Helper function to show VDM message with optional auto-dismiss
   const showVdmMessage = (message: VdmMessage, autoDismissMs?: number) => {
@@ -1915,6 +2023,11 @@ function VscsPanel(props: VscsProps & { panelId?: string; defaultScreenMode?: st
           
         case 'ok':
         case 'active':
+          // Block overridden party from hanging up an incoming override call
+          if (buttonData.call?.startsWith('OV_') && lineType === 0) {
+            console.log('Override call — overridden party cannot hang up:', call_id);
+            return;
+          }
           // Add immediate visual feedback for disconnecting
           if (buttonEl) {
             buttonEl.classList.remove('state-active', 'state-busy', 'state-ringing', 'state-hold', 'state-unavailable');
@@ -2111,8 +2224,17 @@ function VscsPanel(props: VscsProps & { panelId?: string; defaultScreenMode?: st
             
           case 'chime':
           case 'ringing':
-          case 'online':
             // Incoming call - amber background, black text, flashing
+            buttonEl.classList.add('state-ringing');
+            break;
+            
+          case 'online':
+            // For shout lines (lineType 2), "online" means subscribed/listening — treat as idle
+            // For other line types, "online" means incoming call — show as ringing
+            if (data.lineType === 2 || data.call?.startsWith('SO_')) {
+              // Shout line is just subscribed to the multicast frequency — idle/normal
+              break;
+            }
             buttonEl.classList.add('state-ringing');
             break;
             
@@ -2380,7 +2502,7 @@ function VscsPanel(props: VscsProps & { panelId?: string; defaultScreenMode?: st
                               </div>
                             )}
                             {/* Overriding Positions Display (only shown to the receiver of the override) */}
-                            {isBeingOverridden && overridingPositions.length > 0 && (
+                            {overridingPositions.length > 0 && (
                               <div className="text-sm w-full leading-tight">
                                 {overridingPositions.map((pos, idx) => (
                                   <div key={idx} className="w-full">
@@ -2475,7 +2597,7 @@ function VscsPanel(props: VscsProps & { panelId?: string; defaultScreenMode?: st
                               </div>
                             )}
                             {/* Overriding Positions Display (only shown to the receiver of the override) */}
-                            {isBeingOverridden && overridingPositions.length > 0 && (
+                            {overridingPositions.length > 0 && (
                               <div className="text-sm w-full leading-tight">
                                 {overridingPositions.map((pos, idx) => (
                                   <div key={idx} className="w-full">
@@ -2628,7 +2750,7 @@ function VscsPanel(props: VscsProps & { panelId?: string; defaultScreenMode?: st
                 )}
                 
                 {/* Overriding Positions Display (only shown to the receiver of the override) */}
-                {isBeingOverridden && overridingPositions.length > 0 && (
+                {overridingPositions.length > 0 && (
                   <div className="text-sm w-full leading-tight">
                     {overridingPositions.map((pos, idx) => (
                       <div key={idx} className="w-full">
