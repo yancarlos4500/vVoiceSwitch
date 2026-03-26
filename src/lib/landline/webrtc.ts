@@ -80,7 +80,8 @@ export class LandlinePeerManager {
   }
 
   private async ensureLocalStream(): Promise<MediaStream> {
-    if (!this.localStream) {
+    // Re-acquire if the previous stream's tracks were stopped (e.g. after last peer closed)
+    if (!this.localStream || !this.localStream.getAudioTracks().some(t => t.readyState === 'live')) {
       this.localStream = await acquireStream();
     }
     return this.localStream;
