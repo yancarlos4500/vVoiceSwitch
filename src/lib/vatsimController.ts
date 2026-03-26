@@ -171,13 +171,30 @@ export function matchControllerToPosition(
     }
   }
   
-  // If still no match, try partial matching (e.g., "OAK_TWR" matches "OAK_1_TWR")
+  // If still no match, try partial matching for relieving controllers
   if (!match) {
+    // Strategy 1: Remove standalone digit segments (e.g., "OAK_1_TWR" → "OAK_TWR")
     const baseCallsign = controllerCallsign.replace(/_\d+_/, '_');
     match = positions.find(p => {
       const posBase = p.cs?.replace(/_\d+_/, '_');
       return posBase === baseCallsign || p.cs === baseCallsign;
     });
+
+    // Strategy 2: Strip trailing digit from sector designator
+    // e.g., "OAK_S1_APP" → "OAK_S_APP", "OAK_621_CTR" → "OAK_62_CTR"
+    if (!match) {
+      const parts = controllerCallsign.split('_');
+      if (parts.length >= 3) {
+        const sectorIdx = parts.length - 2;
+        const sector = parts[sectorIdx];
+        if (sector.length > 1 && /\d$/.test(sector)) {
+          const newParts = [...parts];
+          newParts[sectorIdx] = sector.slice(0, -1);
+          const strippedCallsign = newParts.join('_');
+          match = positions.find(p => p.cs === strippedCallsign);
+        }
+      }
+    }
   }
   
   // If still no match, try matching by frequency
