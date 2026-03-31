@@ -10,18 +10,21 @@
 
 import type { CallId, ClientId } from './types';
 import { LANDLINE_ICE_SERVERS } from './types';
+import { landlineSettingsStore } from './settingsStore';
 
 // ─── Shared Microphone Stream ────────────────────────────────────────────────
 
 let sharedStream: MediaStream | null = null;
 let streamRefCount = 0;
+let micAudioCtx: AudioContext | null = null;
+let micGainNode: GainNode | null = null;
 
 async function acquireStream(): Promise<MediaStream> {
   if (sharedStream && sharedStream.getAudioTracks().length > 0) {
     streamRefCount++;
     return sharedStream;
   }
-  sharedStream = await navigator.mediaDevices.getUserMedia({
+  const rawStream = await navigator.mediaDevices.getUserMedia({
     audio: {
       echoCancellation: true,
       noiseSuppression: true,
@@ -31,15 +34,42 @@ async function acquireStream(): Promise<MediaStream> {
     },
     video: false,
   });
+
+  // Route mic through a GainNode so micGain setting is applied
+  micAudioCtx = new AudioContext({ sampleRate: 48000 });
+  const source = micAudioCtx.createMediaStreamSource(rawStream);
+  micGainNode = micAudioCtx.createGain();
+  micGainNode.gain.value = landlineSettingsStore.getSettings().micGain / 100;
+  const dest = micAudioCtx.createMediaStreamDestination();
+  source.connect(micGainNode).connect(dest);
+
+  sharedStream = dest.stream;
+  // Keep raw stream reference so we can stop hardware tracks on release
+  (sharedStream as any)._rawStream = rawStream;
   streamRefCount = 1;
   return sharedStream;
+}
+
+/** Update the mic gain on the shared stream (called when settings change) */
+export function setMicGain(gain: number): void {
+  if (micGainNode) {
+    micGainNode.gain.value = gain / 100;
+  }
 }
 
 function releaseStream(): void {
   streamRefCount = Math.max(0, streamRefCount - 1);
   if (streamRefCount === 0 && sharedStream) {
+    // Stop the raw hardware tracks
+    const raw = (sharedStream as any)._rawStream as MediaStream | undefined;
+    if (raw) raw.getTracks().forEach((t) => t.stop());
     sharedStream.getTracks().forEach((t) => t.stop());
     sharedStream = null;
+    if (micAudioCtx) {
+      micAudioCtx.close().catch(() => {});
+      micAudioCtx = null;
+    }
+    micGainNode = null;
   }
 }
 
@@ -227,6 +257,9 @@ export class LandlinePeerManager {
       entry.audioElement.pause();
       entry.audioElement.srcObject = null;
     }
+    if ((entry as any)._audioCtx) {
+      (entry as any)._audioCtx.close().catch(() => {});
+    }
     this.peers.delete(callId);
     releaseStream();
   }
@@ -271,6 +304,20 @@ export class LandlinePeerManager {
     return this.peers.size;
   }
 
+  /** Get all active call IDs */
+  getAllCallIds(): CallId[] {
+    return [...this.peers.keys()];
+  }
+
+  /** Set headset volume for all active peers (0–100) */
+  setVolume(volume: number): void {
+    const v = Math.max(0, Math.min(1, volume / 100));
+    this.peers.forEach((entry) => {
+      const gain = (entry as any)._gainNode as GainNode | undefined;
+      if (gain) gain.gain.value = v;
+    });
+  }
+
   // ─── Internal ──────────────────────────────────────────────────────
 
   private setupPcListeners(entry: PeerEntry): void {
@@ -285,8 +332,67 @@ export class LandlinePeerManager {
     pc.ontrack = (event) => {
       const stream = event.streams[0];
       if (stream) {
+        // Route remote audio through a PSTN telephone filter chain:
+        // Bandpass 300–3400 Hz (ITU-T G.712) + dynamics compression + soft clip
+        const ctx = new AudioContext();
+        const source = ctx.createMediaStreamSource(stream);
+
+        // High-pass at 300 Hz — cuts low rumble
+        const hpf = ctx.createBiquadFilter();
+        hpf.type = 'highpass';
+        hpf.frequency.value = 300;
+        hpf.Q.value = 0.7;
+
+        // Low-pass at 3400 Hz — cuts high-end clarity
+        const lpf = ctx.createBiquadFilter();
+        lpf.type = 'lowpass';
+        lpf.frequency.value = 3400;
+        lpf.Q.value = 0.7;
+
+        // Slight mid-presence boost at 1kHz (telephone resonance)
+        const peak = ctx.createBiquadFilter();
+        peak.type = 'peaking';
+        peak.frequency.value = 1000;
+        peak.gain.value = 3;
+        peak.Q.value = 1.0;
+
+        // Compressor — squashes dynamic range like a phone AGC
+        const compressor = ctx.createDynamicsCompressor();
+        compressor.threshold.value = -30;
+        compressor.knee.value = 20;
+        compressor.ratio.value = 8;
+        compressor.attack.value = 0.003;
+        compressor.release.value = 0.1;
+
+        // Waveshaper for subtle saturation / soft clipping
+        const waveshaper = ctx.createWaveShaper();
+        const samples = 256;
+        const curve = new Float32Array(samples);
+        for (let i = 0; i < samples; i++) {
+          const x = (i * 2) / samples - 1;
+          // tanh soft-clip
+          curve[i] = Math.tanh(x * 1.5);
+        }
+        waveshaper.curve = curve;
+        waveshaper.oversample = '2x';
+
+        // Volume gain node (controlled by settings store)
+        const gainNode = ctx.createGain();
+        const vol = landlineSettingsStore.getSettings().headsetVolume;
+        gainNode.gain.value = vol / 100;
+
+        // Chain: source → HPF → LPF → peak → compressor → waveshaper → gain → destination
+        const dest = ctx.createMediaStreamDestination();
+        source.connect(hpf);
+        hpf.connect(lpf);
+        lpf.connect(peak);
+        peak.connect(compressor);
+        compressor.connect(waveshaper);
+        waveshaper.connect(gainNode);
+        gainNode.connect(dest);
+
         const audio = new Audio();
-        audio.srcObject = stream;
+        audio.srcObject = dest.stream;
         audio.autoplay = true;
         audio.play().catch((err) => {
           console.warn('[Landline Peers] Autoplay blocked, retrying on user interaction:', err);
@@ -297,6 +403,9 @@ export class LandlinePeerManager {
           document.addEventListener('click', resume, { once: true });
         });
         entry.audioElement = audio;
+        // Keep AudioContext and gain node alive on the entry so GC doesn't collect them
+        (entry as any)._audioCtx = ctx;
+        (entry as any)._gainNode = gainNode;
         this.callbacks.onTrack(callId, stream);
       }
     };

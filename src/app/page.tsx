@@ -10,6 +10,7 @@ import IVSRPage from './ivsr/page';
 import RDVSWrapper from '../components/RDVSWrapper';
 import LSTARWrapper from '../components/LSTARWrapper';
 import SettingModal from '../pages/setting';
+import GeneralSettingsModal from '../pages/generalSettings';
 import { Alert } from 'antd';
 import { loadAllFacilities, SUPPORTED_FACILITIES } from '../lib/facilityLoader';
 import { autoDetectPosition } from '../lib/vatsimController';
@@ -17,6 +18,7 @@ import TestBenchIcon from '../testbench/TestBenchIcon';
 
 export default function Page() {
   const [settingModal, setSettingModal] = useState(false);
+  const [generalSettingsModal, setGeneralSettingsModal] = useState(false);
   const [uiLoaded, setUiLoaded] = useState(false);
   const [loadedFacilities, setLoadedFacilities] = useState<string[]>([]);
   const [autoDetectStatus, setAutoDetectStatus] = useState<'idle' | 'detecting' | 'success' | 'failed'>('idle');
@@ -43,6 +45,18 @@ export default function Page() {
       hostname === 'localhost' || hostname === '127.0.0.1' ||
       hostname === '[::1]' || hostname === '0.0.0.0'
     );
+  }, []);
+
+  // Ctrl+G opens General Settings
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => {
+      if (e.ctrlKey && e.code === 'KeyG') {
+        e.preventDefault();
+        setGeneralSettingsModal(prev => !prev);
+      }
+    };
+    window.addEventListener('keydown', handler);
+    return () => window.removeEventListener('keydown', handler);
   }, []);
 
   // Load JSON data and version info on component mount
@@ -352,6 +366,7 @@ export default function Page() {
         renderUI()
       )}
       <SettingModal open={settingModal} setModal={setSettingModal} />
+      <GeneralSettingsModal open={generalSettingsModal} setModal={setGeneralSettingsModal} />
       <TestBenchIcon />
     </div>
   );

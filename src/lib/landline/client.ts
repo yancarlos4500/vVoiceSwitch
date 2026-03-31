@@ -18,7 +18,7 @@
 
 import { LandlineSignalingClient } from './signaling';
 import type { LandlineSignalingEvent } from './signaling';
-import { LandlinePeerManager } from './webrtc';
+import { LandlinePeerManager, setMicGain } from './webrtc';
 import type {
   FacilityId,
   PositionName,
@@ -31,6 +31,7 @@ import type {
   IncomingCallPdu,
 } from './types';
 import { LANDLINE_SERVER_URL } from './types';
+import { landlineSettingsStore } from './settingsStore';
 
 // ─── Client Events ───────────────────────────────────────────────────────────
 
@@ -62,6 +63,8 @@ export class LandlineClient {
   private activeCalls = new Map<CallId, ActiveCall>();
   private roster: RosterEntry[] = [];
   private unsubSignaling: (() => void) | null = null;
+  private unsubPtt: (() => void) | null = null;
+  private unsubSettings: (() => void) | null = null;
 
   constructor() {
     this.signaling = new LandlineSignalingClient();
@@ -89,6 +92,10 @@ export class LandlineClient {
           } else {
             call.state = 'connected';
             this.emitEvent({ type: 'callStateChanged', callId, state: 'connected' });
+            // PTT: For non-override calls, mute mic unless PTT is currently held
+            if (call.lineType !== 0 && !landlineSettingsStore.isPttPressed()) {
+              this.peers.muteLocalTracks(callId);
+            }
           }
         }
       },
@@ -101,6 +108,30 @@ export class LandlineClient {
           this.cleanupCall(callId);
         }
       },
+    });
+
+    // PTT listener: mute/unmute non-override calls based on key state
+    this.unsubPtt = landlineSettingsStore.onPttChange((pressed) => {
+      this.activeCalls.forEach((call, callId) => {
+        // Override (type 0) calls are always hot mic — skip them
+        if (call.lineType === 0) return;
+        // Shout lines pending pickup are already muted by their own logic
+        if (call.shoutPendingPickup) return;
+        // Only affect connected calls
+        if (call.state !== 'connected') return;
+
+        if (pressed) {
+          this.peers.unmuteLocalTracks(callId);
+        } else {
+          this.peers.muteLocalTracks(callId);
+        }
+      });
+    });
+
+    // Volume change listener
+    this.unsubSettings = landlineSettingsStore.onSettingsChange((settings) => {
+      this.peers.setVolume(settings.headsetVolume);
+      setMicGain(settings.micGain);
     });
   }
 
@@ -168,6 +199,14 @@ export class LandlineClient {
     if (this.unsubSignaling) {
       this.unsubSignaling();
       this.unsubSignaling = null;
+    }
+    if (this.unsubPtt) {
+      this.unsubPtt();
+      this.unsubPtt = null;
+    }
+    if (this.unsubSettings) {
+      this.unsubSettings();
+      this.unsubSettings = null;
     }
   }
 
@@ -250,7 +289,10 @@ export class LandlineClient {
     console.log('[Landline Client] Shout pickup — enabling full duplex:', callId);
     call.shoutPendingPickup = false;
     call.state = 'connected';
-    this.peers.unmuteLocalTracks(callId);
+    // After shout pickup, respect PTT: only unmute if PTT is held (shout = type 2, not override)
+    if (landlineSettingsStore.isPttPressed()) {
+      this.peers.unmuteLocalTracks(callId);
+    }
     this.emitEvent({ type: 'callStateChanged', callId, state: 'connected' });
   }
 
